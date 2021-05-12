@@ -1,0 +1,122 @@
+\documentclass[a4paper, table]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{float}
+\usepackage{pdfpages}
+\usepackage{textcomp}
+
+
+% Colour Management
+\usepackage{color}
+
+% Multi-Line Comments
+\usepackage{comment}
+
+% Customisable Sections
+\usepackage{titlesec}
+
+% Images and Captions
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{wrapfig}
+\graphicspath{{./images/}}
+\usepackage{fancyhdr} 
+
+
+% Bibliography
+
+
+
+% Tables
+\usepackage{xcolor}
+\usepackage{array}
+\newcolumntype{L}{>{\raggedright\arraybackslash}m{0.9\linewidth}}
+
+% Contents Page
+\usepackage{hyperref}
+
+% Appendices
+\usepackage[toc,page]{appendix}
+
+% Bold Maths Symbols
+\usepackage{bm}
+
+% Allowing lower levels of Contents Page
+\setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{5}
+
+
+
+
+
+\title{Engineering Design Project}
+\author{Georgio Chaimali \and Dimitrios Georgakopoulos \and Edvard J.S. Holen 
+        \and Hyunjoon Jeon \and Josiah Mendes \and Raghav Viswakumar}
+\begin{document} 
+\begin{titlepage}
+    \setlength{\headheight}{66.89pt}
+    \thispagestyle{fancy}
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0pt}
+    \lhead{\includegraphics[scale=0.1]{logo.png}}
+    \cfoot{} % this is to remove the page number
+    \hbox{}\vfill
+    \begin{center} 
+	    {\scshape\LARGE Imperial College London  \par}
+	    \vspace{1cm}
+        {\scshape\Large Second Year Design Project\par}
+        \vspace{0.25cm}
+        {\scshape\Large ELEC50003/ELEC50008\par}
+        \vspace{1.5cm}
+        {\huge\bfseries The MARS Rover\par}
+        \vspace{2cm}
+        {\Large\itshape Gorup 1\par}
+        \vfill
+        \begin{flushright}
+            \textsl{ \large
+            Georgio Chaimali \\ Dimitrios Georgakopoulos \\ Edvard J.S. Holen 
+            \\ Hyunjoon Jeon \\ Josiah Mendes \\ Raghav Viswakumar
+            }
+        \end{flushright}
+        \vfill
+
+        % Bottom of the page
+        {\large Word Count: XXXX Words \\ \today\par}
+    \end{center}
+\end{titlepage}
+ 
+
+\tableofcontents
+
+\newpage
+
+\section{Overview}
+
+\section{Systems}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.2]{logo.png}
+\caption{Sample Figure}
+\label{fig:image1}
+\end{figure}
+
+Sample Reference\cite{sample}
+
+\subsection{Vision}
+\subsection{Control}
+\subsection{Comms}
+
+\section{Evaluation and Conclusion}
+
+\newpage
+
+\nocite{*}
+\begin{thebibliography}{9}
+    \bibitem{sample} 
+    John Doe. 
+    \textit{The Book}. 
+    Publisher, Location, 1993.
+\end{thebibliography}
+\listoffigures
+
+\end{document}
