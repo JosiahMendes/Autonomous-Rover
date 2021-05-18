@@ -1,0 +1,182 @@
+[
+  {
+    "id": 0,
+    "word": "\u03c3\u03c4\u03b1",
+    "begin": 0.02,
+    "dur": 1.1
+  },
+  {
+    "id": 1,
+    "word": "\u03c0\u03c1\u03b1\u03b3\u03bc\u03b1\u03c4\u03bf\u03c0\u03bf\u03b9\u03ae\u03b8\u03b7\u03ba\u03b5",
+    "begin": 1.14,
+    "dur": 0.92
+  },
+  {
+    "id": 2,
+    "word": "\u03bc\u03b5",
+    "begin": 2.1,
+    "dur": 0.14
+  },
+  {
+    "id": 3,
+    "word": "\u03c0\u03bf\u03bb\u03c5\u03c4\u03bf\u03bc\u03b9\u03ba\u03ae",
+    "begin": 2.28,
+    "dur": 0.52
+  },
+  {
+    "id": 4,
+    "word": "\u03c4\u03b5\u03c7\u03bd\u03b9\u03ba\u03ae",
+    "begin": 2.86,
+    "dur": 0.54
+  },
+  {
+    "id": 5,
+    "word": "\u03c4\u03b5\u03bb\u03b5\u03af\u03b1",
+    "begin": 3.46,
+    "dur": 0.48
+  },
+  {
+    "id": 6,
+    "word": "\u03c0\u03b1\u03c1\u03ac\u03b3\u03c1\u03b1\u03c6\u03bf\u03c2",
+    "begin": 3.96,
+    "dur": 0.68
+  },
+  {
+    "id": 7,
+    "word": "\u03b9\u03c3\u03c4\u03bf\u03c1\u03b9\u03ba\u03cc",
+    "begin": 4.72,
+    "dur": 1.0
+  },
+  {
+    "id": 8,
+    "word": "\u03ba\u03ac\u03ba\u03c9\u03c3\u03b7\u03c2",
+    "begin": 5.76,
+    "dur": 0.48
+  },
+  {
+    "id": 9,
+    "word": "\u03ba\u03b5\u03c6\u03b1\u03bb\u03ae\u03c2",
+    "begin": 6.26,
+    "dur": 0.7
+  },
+  {
+    "id": 10,
+    "word": "\u03c0\u03c1\u03bf",
+    "begin": 7.0,
+    "dur": 0.18
+  },
+  {
+    "id": 11,
+    "word": "\u03c4\u03c1\u03af\u03b1",
+    "begin": 7.28,
+    "dur": 0.7
+  },
+  {
+    "id": 12,
+    "word": "\u03c4\u03b5\u03bb\u03b5\u03af\u03b1",
+    "begin": 8.04,
+    "dur": 0.28
+  },
+  {
+    "id": 13,
+    "word": "\u03c0\u03b1\u03c1\u03ac\u03b3\u03c1\u03b1\u03c6\u03bf\u03c2",
+    "begin": 8.36,
+    "dur": 0.58
+  },
+  {
+    "id": 14,
+    "word": "\u03b4\u03b5\u03bd",
+    "begin": 9.36,
+    "dur": 0.16
+  },
+  {
+    "id": 15,
+    "word": "\u03c0\u03b1\u03c1\u03b1\u03c4\u03b7\u03c1\u03bf\u03cd\u03bd\u03c4\u03b1\u03b9",
+    "begin": 9.58,
+    "dur": 0.58
+  },
+  {
+    "id": 16,
+    "word": "\u03c0\u03b5\u03c1\u03b9\u03bf\u03c7\u03ad\u03c2",
+    "begin": 10.18,
+    "dur": 0.48
+  },
+  {
+    "id": 17,
+    "word": "\u03c0\u03b1\u03b8\u03bf\u03bb\u03bf\u03b3\u03b9\u03ba\u03ae\u03c2",
+    "begin": 10.7,
+    "dur": 0.66
+  },
+  {
+    "id": 18,
+    "word": "\u03c0\u03c5\u03ba\u03bd\u03cc\u03c4\u03b7\u03c4\u03b1\u03c2",
+    "begin": 11.44,
+    "dur": 0.84
+  },
+  {
+    "id": 19,
+    "word": "\u03c3\u03c4\u03b1",
+    "begin": 12.34,
+    "dur": 0.46
+  },
+  {
+    "id": 20,
+    "word": "\u03b5\u03b3\u03ba\u03b5\u03c6\u03b1\u03bb\u03b9\u03ba\u03ac",
+    "begin": 12.86,
+    "dur": 0.54
+  },
+  {
+    "id": 21,
+    "word": "\u03b7\u03bc\u03b9\u03c3\u03c6\u03b1\u03af\u03c1\u03b9\u03b1",
+    "begin": 13.42,
+    "dur": 0.6
+  },
+  {
+    "id": 22,
+    "word": "\u03ba\u03b1\u03b9",
+    "begin": 14.4,
+    "dur": 0.14
+  },
+  {
+    "id": 23,
+    "word": "\u03c3\u03c4\u03b9\u03c2",
+    "begin": 14.58,
+    "dur": 0.14
+  },
+  {
+    "id": 24,
+    "word": "\u03b4\u03bf\u03bc\u03ad\u03c2",
+    "begin": 14.76,
+    "dur": 0.38
+  },
+  {
+    "id": 25,
+    "word": "\u03c4\u03bf\u03c5",
+    "begin": 15.22,
+    "dur": 0.14
+  },
+  {
+    "id": 26,
+    "word": "\u03bf\u03c0\u03af\u03c3\u03b8\u03b9\u03bf\u03c5",
+    "begin": 15.4,
+    "dur": 0.42
+  },
+  {
+    "id": 27,
+    "word": "\u03b2\u03cc\u03b8\u03c1\u03bf\u03c5",
+    "begin": 15.92,
+    "dur": 0.42
+  },
+  {
+    "id": 28,
+    "word": "\u03c4\u03b5\u03bb\u03b5\u03af\u03b1",
+    "begin": 16.7,
+    "dur": 0.26
+  },
+  {
+    "id": 29,
+    "word": "\u03c0\u03b1\u03c1\u03ac\u03b3\u03c1\u03b1\u03c6\u03bf\u03c2",
+    "begin": 17.02,
+    "dur": 0.48
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "id": 0,
+    "word": "\u03ba\u03b1\u03bb\u03ce\u03b4\u03b9\u03bf",
+    "begin": 0.0,
+    "dur": 2.24
+  },
+  {
+    "id": 1,
+    "word": "\u03c4\u03c1\u03af\u03b1",
+    "begin": 2.3,
+    "dur": 0.22
+  },
+  {
+    "id": 2,
+    "word": "\u03c0\u03b1\u03c1\u03ac\u03b3\u03c1\u03b1\u03c6\u03bf\u03c2",
+    "begin": 4.64,
+    "dur": 0.72
+  },
+  {
+    "id": 3,
+    "word": "\u03b5\u03af\u03c4\u03b5",
+    "begin": 5.46,
+    "dur": 3.32
+  },
+  {
+    "id": 4,
+    "word": "\u03c0\u03b1\u03c1\u03ac\u03b3\u03c1\u03b1\u03c6\u03bf\u03c2",
+    "begin": 8.84,
+    "dur": 0.78
+  },
+  {
+    "id": 5,
+    "word": "\u03ad\u03bd\u03b4\u03bf",
+    "begin": 9.74,
+    "dur": 1.18
+  },
+  {
+    "id": 6,
+    "word": "\u03c4\u03b1",
+    "begin": 10.98,
+    "dur": 0.04
+  }
+]
