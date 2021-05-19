@@ -1,0 +1,212 @@
+[
+  {
+    "id": 0,
+    "word": "\u03b4\u03b5\u03bd",
+    "begin": 1.26,
+    "dur": 0.14
+  },
+  {
+    "id": 1,
+    "word": "\u03c0\u03b1\u03c1\u03b1\u03c4\u03b7\u03c1\u03b5\u03af\u03c4\u03b1\u03b9",
+    "begin": 1.46,
+    "dur": 0.54
+  },
+  {
+    "id": 2,
+    "word": "\u03c0\u03b5\u03c1\u03b9\u03ba\u03b1\u03c1\u03b4\u03b9\u03b1\u03ba\u03ae",
+    "begin": 2.14,
+    "dur": 0.82
+  },
+  {
+    "id": 3,
+    "word": "\u03c3\u03c5\u03bb\u03bb\u03bf\u03b3\u03ae",
+    "begin": 3.12,
+    "dur": 0.42
+  },
+  {
+    "id": 4,
+    "word": "\u03c5\u03b3\u03c1\u03bf\u03cd",
+    "begin": 3.58,
+    "dur": 0.32
+  },
+  {
+    "id": 5,
+    "word": "\u03c4\u03b5\u03bb\u03b5\u03af\u03b1",
+    "begin": 3.94,
+    "dur": 0.5
+  },
+  {
+    "id": 6,
+    "word": "\u03c0\u03b1\u03c1\u03ac\u03b3\u03c1\u03b1\u03c6\u03bf\u03c2",
+    "begin": 4.46,
+    "dur": 0.7
+  },
+  {
+    "id": 7,
+    "word": "\u03ba\u03bb\u03b9\u03bd\u03b9\u03ba\u03ae",
+    "begin": 5.38,
+    "dur": 0.72
+  },
+  {
+    "id": 8,
+    "word": "\u03c3\u03c5\u03bd\u03b5\u03ba\u03c4\u03af\u03bc\u03b7\u03c3\u03b7",
+    "begin": 6.16,
+    "dur": 0.64
+  },
+  {
+    "id": 9,
+    "word": "\u03c4\u03b5\u03bb\u03b5\u03af\u03b1",
+    "begin": 6.88,
+    "dur": 0.44
+  },
+  {
+    "id": 10,
+    "word": "\u03c0\u03b1\u03c1\u03ac\u03b3\u03c1\u03b1\u03c6\u03bf\u03c2",
+    "begin": 7.34,
+    "dur": 0.64
+  },
+  {
+    "id": 11,
+    "word": "\u03b9\u03c3\u03c4\u03bf\u03c1\u03b9\u03ba\u03cc",
+    "begin": 8.02,
+    "dur": 1.16
+  },
+  {
+    "id": 12,
+    "word": "\u03ac\u03bd\u03c9",
+    "begin": 9.22,
+    "dur": 0.5
+  },
+  {
+    "id": 13,
+    "word": "\u03ba\u03ac\u03c4\u03c9",
+    "begin": 9.76,
+    "dur": 0.18
+  },
+  {
+    "id": 14,
+    "word": "\u03c4\u03b5\u03bb\u03b5\u03af\u03b1",
+    "begin": 10.02,
+    "dur": 0.48
+  },
+  {
+    "id": 15,
+    "word": "\u03b1\u03c1\u03b9\u03c3\u03c4\u03b5\u03c1\u03ae",
+    "begin": 10.52,
+    "dur": 0.78
+  },
+  {
+    "id": 16,
+    "word": "\u03c0\u03bb\u03b1\u03b3\u03af\u03b1",
+    "begin": 11.34,
+    "dur": 0.88
+  },
+  {
+    "id": 17,
+    "word": "\u03b1\u03c0\u03cc",
+    "begin": 12.24,
+    "dur": 0.72
+  },
+  {
+    "id": 18,
+    "word": "\u03b4\u03b9\u03bc\u03ae\u03bd\u03bf\u03c5",
+    "begin": 13.02,
+    "dur": 0.66
+  },
+  {
+    "id": 19,
+    "word": "\u03c4\u03b5\u03bb\u03b5\u03af\u03b1",
+    "begin": 13.74,
+    "dur": 0.22
+  },
+  {
+    "id": 20,
+    "word": "\u03c0\u03b1\u03c1\u03ac\u03b3\u03c1\u03b1\u03c6\u03bf\u03c2",
+    "begin": 13.98,
+    "dur": 0.64
+  },
+  {
+    "id": 21,
+    "word": "\u03b4\u03b5\u03bd",
+    "begin": 14.78,
+    "dur": 0.5
+  },
+  {
+    "id": 22,
+    "word": "\u03c0\u03b1\u03c1\u03b1\u03c4\u03b7\u03c1\u03bf\u03cd\u03bd\u03c4\u03b1\u03b9",
+    "begin": 15.34,
+    "dur": 0.54
+  },
+  {
+    "id": 23,
+    "word": "\u03b5\u03c3\u03c4\u03af\u03b5\u03c2",
+    "begin": 15.9,
+    "dur": 0.32
+  },
+  {
+    "id": 24,
+    "word": "\u03c0\u03b1\u03b8\u03bf\u03bb\u03bf\u03b3\u03b9\u03ba\u03ae\u03c2",
+    "begin": 16.26,
+    "dur": 0.6
+  },
+  {
+    "id": 25,
+    "word": "\u03ad\u03bd\u03c4\u03b1\u03c3\u03b7\u03c2",
+    "begin": 16.92,
+    "dur": 0.38
+  },
+  {
+    "id": 26,
+    "word": "\u03c3\u03ae\u03bc\u03b1\u03c4\u03bf\u03c2",
+    "begin": 17.32,
+    "dur": 0.6
+  },
+  {
+    "id": 27,
+    "word": "\u03c3\u03c4\u03b1",
+    "begin": 18.0,
+    "dur": 0.64
+  },
+  {
+    "id": 28,
+    "word": "\u03bf\u03c3\u03c4\u03b9\u03ba\u03ac",
+    "begin": 18.66,
+    "dur": 0.42
+  },
+  {
+    "id": 29,
+    "word": "\u03b1\u03bd\u03b1\u03c4\u03bf\u03bc\u03b9\u03ba\u03ac",
+    "begin": 19.16,
+    "dur": 0.78
+  },
+  {
+    "id": 30,
+    "word": "\u03bc\u03cc\u03c1\u03b9\u03b1",
+    "begin": 19.98,
+    "dur": 0.42
+  },
+  {
+    "id": 31,
+    "word": "\u03c4\u03b7\u03c2",
+    "begin": 20.44,
+    "dur": 0.2
+  },
+  {
+    "id": 32,
+    "word": "\u03b1\u03c1\u03b9\u03c3\u03c4\u03b5\u03c1\u03ae\u03c2",
+    "begin": 20.68,
+    "dur": 1.0
+  },
+  {
+    "id": 33,
+    "word": "\u03ba\u03b1\u03c4",
+    "begin": 21.76,
+    "dur": 0.24
+  },
+  {
+    "id": 34,
+    "word": "\u03c3\u03ce\u03bc\u03b1\u03c4\u03bf\u03c2",
+    "begin": 22.06,
+    "dur": 0.64
+  }
+]
