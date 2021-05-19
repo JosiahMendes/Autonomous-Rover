@@ -18,7 +18,8 @@ SdVolume volume;
 SdFile root;
 
 const int chipSelect = 10;
-float open_loop, closed_loop; // Duty Cycles
+float open_loop = 0; 
+float closed_loop; // Duty Cycles
 float vpd,vb,vref,iL,dutyref,current_mA; // Measurement Variables
 unsigned int sensorValue0,sensorValue1,sensorValue2,sensorValue3;  // ADC sample values declaration
 float ev=0,cv=0,ei=0,oc=0; //internal signals
@@ -33,6 +34,10 @@ float current_limit = 0;
 boolean Boost_mode = 0;
 boolean CL_mode = 0;
 int counter = 0;
+String dataString;
+
+int state = 1;
+int switch_value;
 
 
 unsigned int loopTrigger;
@@ -47,6 +52,7 @@ void setup() {
   pinMode(3, INPUT_PULLUP); //Pin3 is the input from the Buck/Boost switch
   pinMode(2, INPUT_PULLUP); // Pin 2 is the input from the CL/OL switch
   analogReference(EXTERNAL); // We are using an external analogue reference for the ADC
+  Serial.begin(9600); // USB Communications
 
   // TimerA0 initialization for control-loop interrupt.
   
@@ -75,8 +81,8 @@ void setup() {
     Serial.println("Wiring is correct and a card is present.");
   }
 
-  if (SD.exists("PVCharacterisation.csv")) { // Wipe the datalog when starting
-    SD.remove("PVCharacterisation.csv");
+  if (SD.exists("PVCharac.csv")) { // Wipe the datalog when starting
+    SD.remove("PVCharac.csv");
   }
 
   //LEDs on pin 7 and 8
@@ -94,31 +100,29 @@ void setup() {
     
     // Sample all of the measurements and check which control mode we are in
     sampling();
-    CL_mode = digitalRead(3); // input from the OL_CL switch
-    Boost_mode = digitalRead(2); // input from the Buck_Boost switch
+    //CL_mode = digitalRead(2); // input from the OL_CL switch
+    //Boost_mode = digitalRead(2); // input from the Buck_Boost switch
+    CL_mode = 0;
+    Boost_mode = 1;
 
     if (Boost_mode){
       if (CL_mode) { //Closed Loop Boost
           pwm_modulate(1); // This disables the Boost as we are not using this mode
       }else{ // Open Loop Boost
-          pwm_modulate(1); // This disables the Boost as we are not using this mode
+          oc = iL-current_limit; // Calculate the difference between current measurement and current limit
+          if ( oc > 0) {
+            open_loop=open_loop+0.001; // We are above the current limit so less duty cycle
+          } else {
+            open_loop=open_loop-0.001; // We are below the current limit so more duty cycle
+          }
+          open_loop=saturation(open_loop,0.99,0.01); // saturate the duty cycle at the reference or a min of 0.01
+          pwm_modulate(open_loop); // and send it out
       }
     }else{      
       if (CL_mode) { // Closed Loop Buck
-          // The closed loop path has a voltage controller cascaded with a current controller. The voltage controller
-          // creates a current demand based upon the voltage error. This demand is saturated to give current limiting.
-          // The current loop then gives a duty cycle demand based upon the error between demanded current and measured
-          // current
-          current_limit = 3; // Buck has a higher current limit
-          ev = vref - vb;  //voltage error at this time
-          cv=pidv(ev);  //voltage pid
-          cv=saturation(cv, current_limit, 0); //current demand saturation
-          ei=cv-iL; //current error
-          closed_loop=pidi(ei);  //current pid
-          closed_loop=saturation(closed_loop,0.99,0.01);  //duty_cycle saturation
-          pwm_modulate(closed_loop); //pwm modulation
+        //Do nothing
       }else{ // Open Loop Buck
-          current_limit = 3; // Buck has a higher current limit
+          //current_limit = 3; // Buck has a higher current limit
           oc = iL-current_limit; // Calculate the difference between current measurement and current limit
           if ( oc > 0) {
             open_loop=open_loop-0.001; // We are above the current limit so less duty cycle
@@ -133,31 +137,46 @@ void setup() {
 
     digitalWrite(13, LOW);   // reset pin13.
     loopTrigger = 0;
+   
 
 //This is the stuff Edvard added
-    if (counter >= 10000){
-
-      counter = 0;
+    if (counter >= 800){
       
-      if (current_limit < 0.4){
-        current_limit += 0.0005;
+      counter = 0;
+      digitalWrite(8,state);
+
+      if(state){
+        if (current_limit < 0.3){
+        current_limit += 0.001;
 
         //Need to scale current by duty cycle!!!
-        dataString = String(current_limit) + "," + String(iL) + "," + String(vb); //build a datastring for the CSV file
+        dataString = String(current_limit, 4) + "," + String(iL, 4) + "," + String((2*vb), 4) + "," + String(open_loop, 4) + "," + String(millis()); //build a datastring for the CSV file
         Serial.println(dataString); // send it to serial as well in case a computer is connected
-        File dataFile = SD.open("BPVCharacterisation.csv", FILE_WRITE); // open our CSV file
+        File dataFile = SD.open("PVCharac.csv", FILE_WRITE); // open our CSV file
         if (dataFile){ //If we succeeded (usually this fails if the SD card is out)
           dataFile.println(dataString); // print the data
         } else {
           Serial.println("File not open"); //otherwise print an error
         }
         dataFile.close(); // close the file
-        int_count = 0; // reset the interrupt count so we dont come back here for 1000ms
         
+        }else{
+          digitalWrite(7,true);
+        }
+
+        if(int(1000*current_limit) == int(1000*0.045) || int(1000*current_limit) == int(1000*0.07)  || int(1000*current_limit) == int(1000*0.11) ){
+          Serial.println("Time to change resistors"); 
+          state = 0;
+          switch_value = digitalRead(2);
+        }
+       
       }else{
-        digitalWrite(7,true);
+        if(switch_value != digitalRead(2)){
+          state = 1;
+        }
       }
 
+      
     } else {
       counter++;
     }
