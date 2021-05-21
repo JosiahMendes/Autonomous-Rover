@@ -1,16 +1,61 @@
-const http = require('http'); // http library contains the function to create the server
-// host and port that the server will be bound to
-const host = 'localhost'; // special private address used to refer to the computer itself, only available to the local computer
-const port = 8000; // typically used as default ports in development
-// the server can be reached by visiting http://localhost:8000
+// TCP server communicates with the ESP32    
+var net = require('net');
+var tcpserver = net.createServer();
+var client;
+tcpserver.on('connection', handleConnection);
+const tcphost = '0.0.0.0'; // localhost
+const tcpport = 9000;
+tcpserver.listen(tcpport, tcphost, function() {
+    console.log('Server is listening to %j', tcpserver.address());
+});
+function handleConnection(socket) {
+    client = socket; // storing client so it can be accessed by the web server
+    console.log('client saved');
+    var remoteAddress = socket.remoteAddress + ':' + socket.remotePort;  
+    console.log('new client connection from %s', remoteAddress);
+    socket.write("You are connected");
+    socket.on('data', onDataReceived);  
+    socket.once('close', onConnClose);  
+    socket.on('error', onConnError);
+    function onDataReceived(data) {  
+      console.log('connection data from %s: %j', remoteAddress, data.toString());  
+      //conn.write(d); send back to client  
+    }
+    function onConnClose() {  
+      console.log('connection from %s closed', remoteAddress);  
+    }
+    function onConnError(err) {  
+      console.log('Connection %s error: %s', remoteAddress, err.message);  
+    }  
+  }
 
-// request listener: handles an incoming HTTP request and return an HTTP response
+const http = require('http');
+const fs = require('fs').promises; // this module contains a readFile() function: used to load HTML file
+
+const httphost = 'localhost';
+const httpport = 8000;
+
+let indexFile;
+
 const requestListener = function(req, res) {
-    res.writeHead(200); // http status code 200 means request succeeded
-    res.end("Welcome to the web server!\n"); // end() function returns the argument to the client
+    if(req.method == 'POST') {
+        client.write("button is pressed");
+    }
+    res.setHeader("Content-Type", "text/html");
+    res.writeHead(200);
+    res.end(indexFile);
 };
 
-const server = http.createServer(requestListener); // create a server object: this server accepts HTTP requests and passes them on to requestListener function
-server.listen(port, host, () => {
-    console.log(`Server is running on http://${host}:${port}`);
-}); // listen function accepts port, host, callback function that is executed when the server begins to listen
+const httpserver = http.createServer(requestListener);
+
+fs.readFile(__dirname + "/index.html")
+    .then(contents => {
+        indexFile = contents;
+        httpserver.listen(httpport, httphost, () => {
+            console.log(`Server is running on http://${httphost}:${httpport}`);
+        });
+    })
+    .catch(err => {
+        console.error(`Could not read index.html file: ${err}`);
+        process.exit(1);
+    });
