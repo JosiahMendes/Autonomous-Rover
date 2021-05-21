@@ -1,4 +1,6 @@
 #include "WiFi.h"
+#define RXD0 3 //Assigning pins to var name
+#define TXD0 1
 
 const char* ssid = "ENTER_NAME_HERE"; //Wifi Name
 const char* password = "ENTER_PASSWORD_HERE"; //Wifi password
@@ -49,6 +51,7 @@ void initWiFi() {
 
 void setup() {
   Serial.begin(115200);
+  Serial1.begin(9600, SERIAL_8N1, RXD0, TXD0); //Starting UART connection on RXD0 and TXD0
   WiFi.disconnect(true);
   delay(1000);
 
@@ -83,6 +86,7 @@ void loop() {
       client.write(thisChar);
       // write the bytes to all serial devices as well:
       Serial.write(thisChar);
+      Serial1.write(thisChar);
     }
   }
 }
