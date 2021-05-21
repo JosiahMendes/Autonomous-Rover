@@ -31,6 +31,7 @@ function handleConnection(socket) {
 
 const http = require('http');
 const fs = require('fs').promises; // this module contains a readFile() function: used to load HTML file
+const qs = require('querystring'); // contains parse() function to convert post data to plain text
 
 const httphost = 'localhost';
 const httpport = 8000;
@@ -38,8 +39,27 @@ const httpport = 8000;
 let indexFile;
 
 const requestListener = function(req, res) {
-    if(req.method == 'POST') {
-        client.write("button is pressed");
+	if(req.method == 'GET') {
+		// just serve the file
+	}
+    else if(req.method == 'POST') { // data are in several packets and can arrive at different times
+    	var body = ''; // this body variable will contain all the data arrived
+        req.on('data', (data) => { // data coming in
+        	body = body + data;
+        });
+        req.on('end', () => {
+        	postData = qs.parse(body);
+        	switch(postData.button) {
+        		case "1":
+        			client.write("Button 1 pressed");
+        			break
+        		case "2":
+        			client.write("Button 2 pressed");
+        			break
+        		default:
+        			client.write("Error");
+        	};
+        });
     }
     res.setHeader("Content-Type", "text/html");
     res.writeHead(200);
