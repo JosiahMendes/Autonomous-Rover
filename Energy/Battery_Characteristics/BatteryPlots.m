@@ -88,7 +88,38 @@ grid
 %grid
 
 
+%% Pulse charging results
+
+pulsed_cell3 = readtable('QuickerTest.CSV');
+x1 = (1:size(pulsed_cell3.Var1));
+
+figure('Position', [10 10 900 400]);
+hold on;
+plot(x1,pulsed_cell3.Var2)
+title('Pulsed charge cycle of cell3', 'fontSize', 16);
+xlabel('Time [s]','fontSize', 14);
+ylabel('Cell voltage [mV]',  'fontSize', 14);
+ylim([2400,3700]);
+%xlim([3000,18876]);
+grid
 
 
+pulsed_intg = zeros(size(pulsed_cell3.Var4));
+
+for i = 2:size(pulsed_cell3.Var4)
+    pulsed_intg(i) = pulsed_intg(i-1) + pulsed_cell3.Var4(i);
+end
+
+
+figure
+hold on
+plot(x1, pulsed_intg)
+grid on
+
+%Calculate capacity in mC
+pulsed_cap = max(pulsed_intg) - min(pulsed_intg);
+
+%Convert capacity to mAh
+pulsed_cap = pulsed_cap/3600;
 
 
