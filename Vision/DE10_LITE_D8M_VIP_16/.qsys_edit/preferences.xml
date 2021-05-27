@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<preferences>
+ <debug showDebugMenu="0" />
+ <systemtable filter="All Interfaces">
+  <columns>
+   <connections preferredWidth="319" />
+   <irq preferredWidth="34" />
+   <name preferredWidth="201" />
+   <export preferredWidth="267" />
+  </columns>
+ </systemtable>
+ <library
+   expandedCategories="Library/Basic Functions,Project/Interface Protocols,Library/Processors and Peripherals,Library/Interface Protocols,Project,Library,Library/Basic Functions/On Chip Memory,Library/Processors and Peripherals/Peripherals,Library/Interface Protocols/Serial,Project/Interface Protocols/Serial" />
+ <window width="1971" height="1159" x="8" y="31" />
+ <generation greybox="0" />
+</preferences>
