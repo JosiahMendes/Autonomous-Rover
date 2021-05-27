@@ -1,7 +1,6 @@
 #include "WiFi.h"
-#include <SoftwareSerial.h> //need to install the ESP32 software serial library through Arduino manager
-
-SoftwareSerial UART0(3, 1); //assign UART RX0 and TX0 pins to UART variable
+#define RXP2 3
+#define TXP2 1
 
 const char* ssid = "ENTER_NAME_HERE"; //Wifi Name
 const char* password = "ENTER_PASSWORD_HERE"; //Wifi password
@@ -52,9 +51,9 @@ void initWiFi() {
 
 void setup() {
   Serial.begin(115200);
+  Serial2.begin(115200, SERIAL_8N1, RXP2, TXP2);
   WiFi.disconnect(true);
   delay(1000);
-  UART0.begin(9600); //Begin UART Port
   //Initialising events so that they run when the corresponding events occur
   WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_STA_CONNECTED);
   WiFi.onEvent(WiFiGotIP, SYSTEM_EVENT_STA_GOT_IP);
@@ -86,7 +85,7 @@ void loop() {
       client.write(thisChar);
       // write the bytes to all serial devices as well:
       Serial.write(thisChar);
-      UART0.write(thisChar);
+      Serial2.write(thisChar);
     }
   }
 }
