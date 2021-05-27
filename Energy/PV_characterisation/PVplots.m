@@ -119,7 +119,7 @@ p5 = p1 + p2 + p3 + p4;
 figure
 hold on;
 xlabel('Panel Voltage [V]');
-title('Combined characteristics','fontSize',14);
+title('Parallel configuration','fontSize',14);
 yyaxis left
 ylabel('Array Current [A]');
 plot(x5, p5, 'b' ,'LineWidth',2)
@@ -127,6 +127,58 @@ yyaxis right
 ylabel('Array Power [W]');
 plot(x5, x5.*p5, 'r' ,'LineWidth',2)
 grid
+
+
+%% Power and characteristics of a series connected PV array
+
+panel1 = readtable('Panel1Lamp2.CSV');
+panel2 = readtable('Panel2Lamp.CSV');
+panel3 = readtable('Panel3Lamp.CSV');
+panel4 = readtable('Panel4Lamp.CSV');
+
+panel1 = sortrows(panel1,2);
+panel2 = sortrows(panel2,2);
+panel3 = sortrows(panel3,2);
+panel4 = sortrows(panel4,2);
+
+x1 = panel1.Var3;
+x2 = panel2.Var3;
+x3 = panel3.Var3;
+x4 = panel4.Var3;
+
+
+y1 = panel1.Var2;
+y2 = panel2.Var2;
+y3 = panel3.Var2;
+y4 = panel4.Var2;
+
+
+x=[1,2,4,6,8]';
+y=[100,140,160,170,175].';
+
+
+g = fittype('a-b*exp(-c*x)');
+f0 = fit(x,y,g,'StartPoint',[[ones(size(x)), -exp(-x)]\y; 1]);
+xx = linspace(1,8,50);
+plot(x,y,'o',xx,f0(xx),'r-');
+
+
+
+%y5 = linspace(0.0,0.11,100);
+
+
+figure
+hold on;
+xlabel('Panel Voltage [V]');
+title('Series configuration','fontSize',14);
+yyaxis left
+ylabel('Array Current [A]');
+plot(x4,y4, 'b' ,'LineWidth',2)
+yyaxis right
+ylabel('Array Power [W]');
+%plot(x5, x5.*p5, 'r' ,'LineWidth',2)
+grid
+
 
 
 

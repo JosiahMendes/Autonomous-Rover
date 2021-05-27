@@ -204,41 +204,40 @@ void loop() {
           //MAYBE STAGGER FROM OTHER SD data STUFF SO THAT IT TAKES LESS TIME
           //State of health (and some SOC)
 
+
+          //Calculate new SOH data
+          SOH[0] += current_sum; //How much capacity is left in battery
+          //SOH[1] = SOH[1] //If we need to change number of cycles, it is not done here, so don't change it
+          //SOH[2] = SOH[2] //If we need to change current capacity, it is not done here, so don't change it
+          //SOH[3] = SOH[3] //Initial capacity is a constant so don't change it
+          SOH[4] = V_Bat;
+          //For when we use more than one battery, NEED TO UPDATE WITH EXTRA MEASUREMENTS
+          SOH[5] = V_Bat;
+          SOH[6] = V_Bat;
+          SOH[7] = V_Bat;
+
           //Delete old SOH data:
           if (SD.exists("StateOfH.csv")) {
             SD.remove("StateOfH.csv");
           }
 
-          //Calculate new SOH data
-          SOH[0] += current_sum;
-          
-
           //Write new SOH data
-
           File SOHFile = SD.open("StateOfH.csv", FILE_WRITE); //Open the state of health data
+          
           dataString = "";
           for (int i = 0; i < size(SOH); i++){
-
-            //For ease, serial print the data as well
+            dataString += String(SOH[i]);
+            dataString += ",";
           }
 
+          //Remove extra comma at end of csv, just to keep it nice
+          dataString[strlen(dataString)-1] = '\0';
+
+
+          dataFile.println(dataString); //Write new SOH data to file 
+          Serial.println(dataString); //For ease, serial print the data as well
+
           SOHFile.close(); //Close the file
-
-
-
-
-         /*
-          * How much capacity has already been used, assuming continuous operation or only brief interruptions so this will work well, we can reset once we are fully charged or discharged.
-
-Number of cycles,
-Current maximum capacity
-Initial maximum capacity
-Cell1 voltage
-Cell2 voltage
-Cell3 voltage
-Cell4 voltage
-
-          */
     
 
           SOHFile.close(); //Close the file
@@ -284,6 +283,12 @@ Cell4 voltage
           if (current_sum > 0.05*standard_current){ // if not charged, stay put, wait until current is less than 5% of standard current
             next_state = 2;
           } else { // otherwise go to charge rest
+            //We have now finished a charge cycle so add 1 to SOH[1], could have done this in state 5 as well
+            SOH[1]++;
+
+            //Update the maximum capacity
+            SOH[2] = SOH[0];
+            
             next_state = 3;
           }
           
@@ -313,6 +318,10 @@ Cell4 voltage
              next_state = 4;
            } else { // If we reach full discharged, move to rest
              next_state = 5;
+
+             //At this point all charge stored in the cell has been used so SOH[0] should be o
+             SOH[0] = 0;
+             
            }
           if(input_switch == 0){ //UNLESS the switch = 0, then go back to start
             next_state = 0;
