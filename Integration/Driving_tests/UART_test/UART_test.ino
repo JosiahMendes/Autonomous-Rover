@@ -8,7 +8,7 @@ void loop() {
   
   if(Serial1.available()) {
     char data_rcvd = Serial1.read();
-    Serial.println("Driving module received: %c");
+    Serial.println("Driving module received: ");
     Serial.println(data_rcvd);
   }
   
