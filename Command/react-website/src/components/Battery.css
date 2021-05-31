@@ -1,0 +1,59 @@
+.battery {
+    width: 130px;
+    height: 200px;
+    background: transparent;
+    transform: rotate(0.5turn) perspective(10px) rotateX(1deg);
+    margin: 50px;
+    border: 2px solid black;
+    margin-left: 200px;
+    margin-top: 100px;
+}
+
+.batteryValue {
+    margin-left: 215px;
+    margin-top: -40px;
+}
+
+.zero {
+    background: linear-gradient(to bottom, rgb(30, 255, 0) 0%, transparent 0%);
+}
+
+.ten {
+    background: linear-gradient(to bottom, rgb(30, 255, 0) 10%, transparent 10%);
+}
+
+.twenty {
+    background: linear-gradient(to bottom, rgb(30, 255, 0) 20%, transparent 20%);
+}
+
+.thirty {
+    background: linear-gradient(to bottom, rgb(30, 255, 0) 30%, transparent 30%);
+}
+
+.fourty {
+    background: linear-gradient(to bottom, rgb(30, 255, 0) 40%, transparent 40%);
+}
+
+.fifty {
+    background: linear-gradient(to bottom, rgb(30, 255, 0) 50%, transparent 50%);
+}
+
+.sixty {
+    background: linear-gradient(to bottom, rgb(30, 255, 0) 60%, transparent 60%);
+}
+
+.seventy {
+    background: linear-gradient(to bottom, rgb(30, 255, 0) 70%, transparent 70%);
+}
+
+.eighty {
+    background: linear-gradient(to bottom, rgb(30, 255, 0) 80%, transparent 80%);
+}
+
+.ninety {
+    background: linear-gradient(to bottom, rgb(30, 255, 0) 90%, transparent 90%);
+}
+
+.hundred {
+    background: rgb(30, 255, 0);
+}
