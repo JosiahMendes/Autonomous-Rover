@@ -6,8 +6,12 @@
  */
 
 //Include relevant libraries
+#include <Wire.h> //Used for current sensor
+#include <INA219_WE.h> //Used for current sensor
+#include <SPI.h> //Used for current sensor
 #include <SD.h>  //Used for SD card logging
 
+INA219_WE ina219; // this is the instantiation of the library for the current sensor
 
 //Set up variables using the SD utility library functions:
 Sd2Card card;
@@ -18,6 +22,7 @@ SdFile root;
 //Declare global variables
 unsigned int loop_trigger; //variable which triggers main loop
 unsigned int int_count = 0; //counts the number of loops
+unsigned int cycle_count = 0;
 unsigned int cell_count = 1; //decides which cell we should measure voltage of
 
 int state_num = 0; //current state of state machine
@@ -38,9 +43,9 @@ float V05; //Voltage across current sensor
 float V_Bat; //Voltage over the batteries (V_out - V05)
 float I_setpoint = 0; //Value of desired current in balancing state
 float V_cell[4]; //Cell voltages of each battery cell
-float SOH[4]; //Array used for storing SOH data
-//unsigned long energy_lookup[600]; //Lookup table for how much energy is left based on SOC
-unsigned long energy_correction[600];  //Lookup table used to track how much energy has been expended
+float SOH[5]; //Array used for storing SOH data
+unsigned long energy_lookup[600]; //Lookup table for how much energy is left based on SOC
+unsigned int energy_correction[600];  //Lookup table used to track how much energy has been expended
 float min_cell; //Mininmum cell voltage
 float max_cell; //Maximum cell voltage
     
@@ -55,7 +60,7 @@ float kpv=0.05024,kiv=15.78,kdv=0; // voltage pid gains
 //float kpi = 0.02512, kii = 39.4, kdi = 0; // current pid gains
 float kpi = 0.02512, kii = 45, kdi = 0; // current pid gains
 
-float Ts = 0.002; //500 Hz control frequency.
+float Ts = 0.004; //250 Hz control frequency.
 float standard_current = 250; //the output current during normal operation
 //float standard_current = 62.5; //the output current during normal operation
 
@@ -79,7 +84,7 @@ float duty_cycle = 0.5; //Duty cycle of pulse charging, max 0.9
 void setup() {
 
   Serial.begin(38400); // USB Communications
-
+/*
   //Check for the SD Card
   Serial.println("\nInitializing SD card...");
   if (!SD.begin(chipSelect)) {
@@ -99,7 +104,7 @@ void setup() {
   File SOHFile = SD.open("StateOfH.csv",FILE_READ); //Open the state of health data
   dataChars = "";
   
-  for (int i = 0; i < 4; i++){
+  for (int i = 0; i < 5; i++){
     while(SOHFile.available()){
       if(SOHFile.peek() != ','){
         dataChars += SOHFile.read();
@@ -123,12 +128,14 @@ void setup() {
         dataChars += EnergyFile.read();
       }else{
         EnergyFile.read();
-        //energy_lookup[i] = strtoul(dataChars, NULL, 10);
+        energy_lookup[i] = strtoul(dataChars, NULL, 10);
         dataChars = "";
         break;
       }
     }
   }
+
+  */
 
 
   
@@ -168,9 +175,9 @@ void setup() {
   
   //------------ TIMING ------------/
 
-  // TimerA0 initialization for 500 Hz control-loop interrupt.
-  TCA0.SINGLE.PER = 1999; //
-  TCA0.SINGLE.CMP1 = 1999; //
+  // TimerA0 initialization for 250 Hz control-loop interrupt.
+  TCA0.SINGLE.PER = 3999; //
+  TCA0.SINGLE.CMP1 = 3999; //
   TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV16_gc | TCA_SINGLE_ENABLE_bm; //16 prescaler, 1M.
   TCA0.SINGLE.INTCTRL = TCA_SINGLE_CMP1_bm;
 
@@ -187,7 +194,7 @@ void setup() {
 //Note! Reason for every if statement to be triggered at different int_count is to give better timing constraints
 
 void loop() {
-  if (loop_trigger == 1){ // FAST LOOP (500 Hz)
+  if (loop_trigger == 1){ // FAST LOOP (250 Hz)
       
       loop_trigger = 0; //reset the trigger and move on with life
       int_count++; //count how many interrupts since last reset
@@ -195,249 +202,265 @@ void loop() {
 
       //Get sampled values
       sampling();
-
-      current_sum += I_out/500; //Calculate the average output current for the cycle
-      ref_sum += current_ref/500; //Calculate the average reference current for the cycle
-      power_sum -= I_out*V_Bat/500; //Calculate the average power usage for the current cycle
-
-
-      //----------- CELL VOLTAGE MEASUREMENT -----------//
-      //Measure only one cell voltage once per second, relays are switched at 900 ms and 1000 ms, which limits duty cycle to < 90%
       
-      if (int_count == 450){ //Switch relay on
-        digitalWrite(dig_order[cell_count - 1],true);
-      }
-         
-      if (int_count == 475){ //Check voltage some time after relay is switched so measurement is stable
-         V_cell[cell_count - 1] = analogRead(A1)*float(4096/1023)/1.012; //Get the cell voltage [mV]
-      }
-
-      if (int_count == 490){ //Switch relay off after measurement
-        digitalWrite(dig_order[cell_count - 1],false);
-
-        cell_count = (cell_count % 4) + 1;
-      }
-
-  
       //Check whether we should enter an error state
       check_for_errors();
 
+      current_sum += I_out/250; //Calculate the average output current for the cycle
+      ref_sum += current_ref/250; //Calculate the average reference current for the cycle
+      power_sum -= I_out*V_Bat/250; //Calculate the average power usage for the current cycle
 
       //--------- PID CONTROL FOR SMPS ------------//
       
       if(state_num == 3){ //In CV part of charging duty cycle is set by voltage
-        error_volts = (voltage_ref - (V_out - V05)) / 1000; //PID error calculation      
+        error_volts = (voltage_ref - V_Bat) / 1000; //PID error calculation      
         pwm_out = pidv(error_volts);
       } else { //Otherwise is set by current
         error_amps = (current_ref - I_out) / 1000; //PID error calculation
         pwm_out = pidi(error_amps); //Perform the PID controller calculation
       }
 
-      pwm_out = saturation(pwm_out, 0.99, 0.01); //duty_cycle saturation
+      //ADD SOME SAFETY STUFF HERE
+
+      pwm_out = saturation(pwm_out, 0.99, 0.01); //duty_cycle saturation //Saturation is done within each pid controller so don't need to do it here as well
       analogWrite(6, (int)(pwm_out * 255)); // write it out (non-inverting for Boost)
 
 
+      switch (int_count){
+
+        case 50:{
+
+          cycle_count++;
+          if(cycle_count % 1 == 0){ //Should be 4
+            
+            Serial.println(dataString); // send it to serial as well in case a computer is connected
+            /*File dataFile = SD.open("BatCharg.csv", FILE_WRITE); // open our CSV file
+            if (dataFile){ //If we succeeded (usually this fails if the SD card is out)
+              dataFile.println(dataString); // print the data
+            } else {
+              Serial.println("File not open"); //otherwise print an error
+            }
+            dataFile.close(); // close the file*/
+          }
+          break;
+        }
+
+        case 150:{//Writing of SOC/SOH data is staggered from other logging to get better timing constraints
+
+          if(cycle_count == 64){
+            cycle_count = 0;
+            
+            //Delete old SOH data:
+            if (SD.exists("StateOfH.csv")) {
+              SD.remove("StateOfH.csv");
+            }
+  
+            //Write new SOH data
+            File SOHFile = SD.open("StateOfH.csv", FILE_WRITE); //Open the state of health data
+            
+            dataString = "";
+            for (int i = 0; i < 5; i++){
+              dataString += String(SOH[i]);
+              dataString += ",";
+            }
+  
+            //Remove extra comma at end of csv, just to keep it nice
+            dataString[dataString.length()-1] = '\0';
+  
+  
+            SOHFile.println(dataString); //Write new SOH data to file 
+            Serial.println(dataString); //For ease, serial print the data as well
+  
+            SOHFile.close(); //Close the file
+          }
+          
+          break;
+        }
+
+        
+         //----------- CELL VOLTAGE MEASUREMENT -----------//
+        //Measure only one cell voltage once per second, relays are switched at 900 ms and 1000 ms, which limits duty cycle to < 90%
+        case 225:{ //Switch relay on
+          digitalWrite(dig_order[cell_count - 1],true);
+          break;
+        }
+           
+        case 238:{ //Check voltage some time after relay is switched so measurement is stable
+           V_cell[cell_count - 1] = analogRead(A1)*float(4096/1023)/1.012; //Get the cell voltage [mV]
+           break;
+        }
+  
+        case 245:{ //Switch relay off after measurement
+          digitalWrite(dig_order[cell_count - 1],false);
+          cell_count = (cell_count % 4) + 1;
+          break;
+        }
 
 
-      //------- DATA LOGGING --------//
-
-      if (int_count == 500){ //Do this once per second
+        case 250:{
 
           //Data logging
-          dataString = String(state_num) +  "," + String(ref_sum) + "," + String(current_sum) + "," + String(V_out) + "," + String(V_Bat) + "," + String(V_cell[0]) + "," + String(V_cell[1]) + "," + String(V_cell[2]) + "," + String(V_cell[3]); //build a datastring for the CSV file
-          Serial.println(dataString); // send it to serial as well in case a computer is connected
-          File dataFile = SD.open("BatCharg.csv", FILE_WRITE); // open our CSV file
-          if (dataFile){ //If we succeeded (usually this fails if the SD card is out)
-            dataFile.println(dataString); // print the data
-          } else {
-            Serial.println("File not open"); //otherwise print an error
-          }
-          dataFile.close(); // close the file
-
-
+          dataString = String(state_num) +  "," + String(ref_sum) + "," + String(current_sum) + "," + String(V_out) + "," + String(V_Bat) + "," + String(V_cell[0]) + "," + String(V_cell[1]) + "," + String(V_cell[2]) + "," + String(V_cell[3]) + "," + String(millis()); //build a datastring for the CSV file
           //Calculate new SOH and SOC data
           SOH[0] += current_sum; //How much capacity we have used so far
           //SOH[1] = SOH[1] //If we need to change number of cycles, it is not done here, so don't change it
           //SOH[2] = SOH[2] //If we need to change current capacity, it is not done here, so don't change it
           //SOH[3] = SOH[3] //Initial capacity is a constant so don't change it
-      }
-
-      if (int_count == 100){ //Writing of SOC/SOH data is staggered from other logging to get better timing constraints
-
-          //Delete old SOH data:
-          if (SD.exists("StateOfH.csv")) {
-            SD.remove("StateOfH.csv");
-          }
-
-          //Write new SOH data
-          File SOHFile = SD.open("StateOfH.csv", FILE_WRITE); //Open the state of health data
-          
-          dataString = "";
-          for (int i = 0; i < 4; i++){
-            dataString += String(SOH[i]);
-            dataString += ",";
-          }
-
-          //Remove extra comma at end of csv, just to keep it nice
-          dataString[dataString.length()-1] = '\0';
+          SOH[4] -= power_sum; //How much energy has been used so far
 
 
-          SOHFile.println(dataString); //Write new SOH data to file 
-          Serial.println(dataString); //For ease, serial print the data as well
-
-          SOHFile.close(); //Close the file
-    }
-          
-      
-
-      //------- STATE MACHINE ---------//
-
-    //Next state
-    if (int_count == 500){ // SLOW LOOP (1Hz)
-      int_count = 0; // reset the interrupt count so we dont come back here for 1000ms
-      input_switch = digitalRead(2); //get the OL/CL switch status
 
 
-      //This can be done on different int_count value
-      //Find max and min cell voltage
-      min_cell = V_cell[0]; //Mininmum cell voltage
-      max_cell = V_cell[0]; //Maximum cell voltage
+          //---------- STATE MACHINE -----------//
+
+          int_count = 0; // reset the interrupt count so we dont come back here for 1000ms
+          input_switch = digitalRead(2); //get the OL/CL switch status
     
-      //Find lowest and highest cell voltage
-      for (int i = 1; i < 4; i++){
-        if(V_cell[i] < min_cell){
-          min_cell = V_cell[i];
-        }else if(V_cell[i] > max_cell){
-          max_cell = V_cell[i];
-        }
-      }
-
-     
-      switch (state_num) { // STATE MACHINE (see diagram)
+    
+          //This can be done on different int_count value
+          //Find max and min cell voltage
+          min_cell = V_cell[0]; //Mininmum cell voltage
+          max_cell = V_cell[0]; //Maximum cell voltage
         
-        case 0:{ // Start state
-          if (input_switch == 1) { // if switch, move to charge
-            //next_state = 1;
-            next_state = 2;
-          } else { // otherwise stay put
-            next_state = 0;
-          }
-          break;
-        }
-        
-        case 1:{ // Charge state, constant current
-          if(input_switch == 0){ //If the switch = 0, then go back to start
-            next_state = 0;
-          }else if (max_cell < 3600) { // if not charged, stay put
-            next_state = 1;      
-          } else { //Once one of the cells reaches 3600 mV we go into the balancing state
-            I_setpoint = 250; //current setpoint during balancing
-            next_state = 2;
-          }
-          
-          break;
-        }
-
-        case 2:{ // Balancing state
-          if(input_switch == 0){ //If the switch = 0, then go back to start
-            next_state = 0;
-          }else if(min_cell < 3550){ //If not done balancing stay in balancing state
-            next_state = 2;
-            if (max_cell > 3620 and I_setpoint > 0){
-              I_setpoint -= 0.5;
-            }else if(max_cell < 3600 and I_setpoint < 250){
-              I_setpoint += 0.5;
+          //Find lowest and highest cell voltage
+          for (int i = 1; i < 4; i++){
+            if(V_cell[i] < min_cell){
+              min_cell = V_cell[i];
+            }else if(V_cell[i] > max_cell){
+              max_cell = V_cell[i];
             }
-          }else{ //If done balancing move to constant voltage
-            next_state = 3;
           }
-          
-          break;
-        }
-
-        case 3:{ // Charge state, constant voltage
-
-          if(input_switch == 0){ //If the switch = 0, then go back to start
-            next_state = 0;
-          }else if (current_sum > 0.05*standard_current){ // if not charged, stay put, wait until current is less than 5% of standard current
-            next_state = 3;
-          } else { // otherwise go to charge rest
-            SOH[1]++;//We have now finished a charge cycle so add 1 to SOH[1], could have done this in state 5 as well
-            SOH[0] = 0; //At this point no charged has been used so reset SOH[0]      
-            next_state = 4; //Go to charge rest
-          }
-          
-          break;
-        }
-        
-        case 4:{ // Charge Rest, no current
-          if(input_switch == 0){ // if the switch = 0, then go back to start
-            next_state = 0;
-            rest_timer = 0;
-          }else if (rest_timer < 30) { // Stay here if timer < 30
-            next_state = 4;
-            rest_timer++;
-          } else { // Or move to discharge (and reset the timer)
-            next_state = 5;
-            rest_timer = 0;
-          }
-          
-          break;        
-        }
-        
-        case 5:{ //Discharge state (-250mA)
-
-          if(input_switch == 0){ //if the switch = 0, then go back to start
-            next_state = 0;
-          }else if (min_cell > 2500){ //If all cell have voltage higher than 2500 mV, keep discharging
-            next_state = 5;
-            energy_correction[int(-SOH[0] / 3600)] += power_sum; 
-          }else{ //Otherwise we are done discharging and move to discharge rest
-            next_state = 6;
-            SOH[2] = SOH[0]; //Update the maximum capacity
-            update_energy();//Update energy look-up table
-          }
-          
-          break;
-          
-        }
-        
-        case 6:{ // Discharge rest, no current
-          if(input_switch == 0){ //if the switch = 0, then go back to start
-            next_state = 0;
-            rest_timer = 0;
-          }else if (rest_timer < 30) { // Rest here for 30s like before
-            next_state = 6;
-            rest_timer++;
-          } else { // When thats done, move back to charging (and light the green LED)
-            next_state = 1;
-            rest_timer = 0;
-          }
+    
          
-          break;
+          switch (state_num) { // STATE MACHINE (see diagram)
+            
+            case 0:{ // Start state
+              if (input_switch == 1) { // if switch, move to charge
+                next_state = 1;
+                //next_state = 2;
+              } else { // otherwise stay put
+                next_state = 0;
+              }
+              break;
+            }
+            
+            case 1:{ // Charge state, constant current
+              if(input_switch == 0){ //If the switch = 0, then go back to start
+                next_state = 0;
+              }else if (max_cell < 3600) { // if not charged, stay put
+                next_state = 1;      
+              } else { //Once one of the cells reaches 3600 mV we go into the balancing state
+                I_setpoint = 250; //current setpoint during balancing
+                next_state = 2;
+              }
+              
+              break;
+            }
+    
+            case 2:{ // Balancing state
+              if(input_switch == 0){ //If the switch = 0, then go back to start
+                next_state = 0;
+              }else if(min_cell < 3550){ //If not done balancing stay in balancing state
+                next_state = 2;
+                if (max_cell > 3620 and I_setpoint > 0){
+                  I_setpoint -= 0.5;
+                }else if(max_cell < 3600 and I_setpoint < 250){
+                  I_setpoint += 0.5;
+                }
+              }else{ //If done balancing move to constant voltage
+                next_state = 3;
+              }
+              
+              break;
+            }
+    
+            case 3:{ // Charge state, constant voltage
+    
+              if(input_switch == 0){ //If the switch = 0, then go back to start
+                next_state = 0;
+              }else if (current_sum > 0.05*standard_current){ // if not charged, stay put, wait until current is less than 5% of standard current
+                next_state = 3;
+              } else { // otherwise go to charge rest
+                SOH[1]++;//We have now finished a charge cycle so add 1 to SOH[1], could have done this in state 5 as well
+                SOH[0] = 0; //At this point no charged has been used so reset SOH[0] 
+                SOH[4] = 0; //At this point no energy has been expended so reset SOH[4]     
+                next_state = 4; //Go to charge rest
+              }
+              
+              break;
+            }
+            
+            case 4:{ // Charge Rest, no current
+              if(input_switch == 0){ // if the switch = 0, then go back to start
+                next_state = 0;
+                rest_timer = 0;
+              }else if (rest_timer < 30) { // Stay here if timer < 30
+                next_state = 4;
+                rest_timer++;
+              } else { // Or move to discharge (and reset the timer)
+                next_state = 5;
+                rest_timer = 0;
+              }
+              
+              break;        
+            }
+            
+            case 5:{ //Discharge state (-250mA)
+    
+              if(input_switch == 0){ //if the switch = 0, then go back to start
+                next_state = 0;
+              }else if (min_cell > 2500){ //If all cell have voltage higher than 2500 mV, keep discharging
+                next_state = 5;
+                energy_correction[int(-SOH[0] / 3600)] += power_sum; 
+              }else{ //Otherwise we are done discharging and move to discharge rest
+                next_state = 6;
+                SOH[2] = SOH[0]; //Update the maximum capacity
+                update_energy();//Update energy look-up table
+              }
+              
+              break;
+              
+            }
+            
+            case 6:{ // Discharge rest, no current
+              if(input_switch == 0){ //if the switch = 0, then go back to start
+                next_state = 0;
+                rest_timer = 0;
+              }else if (rest_timer < 30) { // Rest here for 30s like before
+                next_state = 6;
+                rest_timer++;
+              } else { // When thats done, move back to charging (and light the green LED)
+                next_state = 1;
+                rest_timer = 0;
+              }
+             
+              break;
+            }
+            
+            case 7: { // ERROR state, no current
+              next_state = 7; // Always stay here
+              if(input_switch == 0){ //UNLESS the switch = 0, then go back to start
+                next_state = 0;
+              }
+              break;
+            }
+      
+            default :{ // Should not end up here ....
+              Serial.println("Boop");
+              current_ref = 0;
+              next_state = 7; // So if we are here, we go to error
+              break;
+            }
+          }
+        
+          current_sum = 0; //reset the current sum so it is ready for the next cycle.
+          ref_sum = 0;  //resets the average reference current so it is ready for the next cycle
+          power_sum = 0; //Resets the average power so it is ready for the next cycle
+          
+          break;   
         }
         
-        case 7: { // ERROR state, no current
-          next_state = 7; // Always stay here
-          if(input_switch == 0){ //UNLESS the switch = 0, then go back to start
-            next_state = 0;
-          }
-          break;
-        }
-  
-        default :{ // Should not end up here ....
-          Serial.println("Boop");
-          current_ref = 0;
-          next_state = 7; // So if we are here, we go to error
-          break;
-        }
       }
-    
-      current_sum = 0; //reset the current sum so it is ready for the next cycle.
-      ref_sum = 0;  //resets the average reference current so it is ready for the next cycle
-      power_sum = 0; //Resets the average power so it is ready for the next cycle
-    
-    }
    
   
     //Output
@@ -468,7 +491,7 @@ void loop() {
           current_ref = 0;
         }
         
-        if(int_count == 50){ //Once a second do balancing stuff, only done once a second due to low update frequency of cell voltages
+        if(int_count == 25){ //Once a second do balancing stuff, only done once a second due to low update frequency of cell voltages
           balancing();
         }
   
@@ -480,7 +503,7 @@ void loop() {
         voltage_ref = 3600 * num_cells;
 
         //Note! Balancing is also done in constant voltage state for good measure
-        if(int_count == 50){ //Once a second do balancing stuff, only done once a second due to low update frequency of cell voltages
+        if(int_count == 25){ //Once a second do balancing stuff, only done once a second due to low update frequency of cell voltages
           balancing();
         }
         
@@ -526,7 +549,10 @@ void update_energy(){
 
   //Iterate energy approximation and reset energy correction array
   for(int i = 0; i < 600; i++){ //Reset energy_correction array
-    //energy_lookup[i] = 0.99*energy_lookup[i] + 0.01*energy_correction[i];
+    energy_lookup[i] = 0.99*energy_lookup[i];
+    for(int j = i; j < 600; j++){
+      energy_lookup[i] += 0.01*energy_correction[j];
+    }
     energy_correction[i] = 0;
   }
 
@@ -540,7 +566,7 @@ void update_energy(){
   
   dataString = "";
   for (int i = 0; i < 600; i++){
-    //dataString += String(energy_lookup[i]);
+    dataString += String(energy_lookup[i]);
     dataString += ",";
   }
 
@@ -605,7 +631,7 @@ void check_for_errors(){ //Check whether we should enter an error state
 
 }
 
-// Timer A CMP1 interrupt. Every 2000us the program enters this interrupt. This is the fast 500 Hz loop
+// Timer A CMP1 interrupt. Every 4000us the program enters this interrupt. This is the fast 250 Hz loop
 ISR(TCA0_CMP1_vect) {
   loop_trigger = 1; //trigger the loop when we are back in normal flow
   TCA0.SINGLE.INTFLAGS |= TCA_SINGLE_CMP1_bm; //clear interrupt flag
