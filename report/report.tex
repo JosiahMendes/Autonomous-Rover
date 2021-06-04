@@ -26,8 +26,9 @@
 
 % Bibliography
 \usepackage[nottoc]{tocbibind}
-\usepackage[style=ieee]{biblatex}
-
+\usepackage[
+    backend=biber,
+    style=ieee]{biblatex}
 
 \addbibresource{report_citations.bib} %Imports bibliography file
 
@@ -103,7 +104,7 @@
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.2]{logo.png}
+\includegraphics[scale=0.18]{logo.png}
 \caption{Sample Figure}
 \label{fig:image1}
 \end{figure}
@@ -157,6 +158,9 @@ a FPGA with a hard core, known as a FPGA System-On-Chip (FPGA SoC) \cite{FPGASoC
 
 \newpage
 
-\printbibliography
+\printbibliography[
+heading=bibintoc,
+title={References}
+]
 
 \end{document}
