@@ -11,7 +11,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Compile
-        run: docker run --mount src=$GITHUB_WORKSPACE/report,target=/usr/report/tex,type=bind dxjoke/tectonic-docker:latest /bin/sh -c "tectonic main.tex"
+        run: docker run --mount src=$GITHUB_WORKSPACE/report,target=/usr/report/tex,type=bind dxjoke/tectonic-docker:latest /bin/sh -c "tectonic report.tex"
       - name: Upload pdf
         uses: actions/upload-artifact@v2
         with:
