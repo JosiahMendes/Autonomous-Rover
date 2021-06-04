@@ -198,11 +198,11 @@ always@(posedge clk) begin
         gr_bot   <= gr_y_max;	
 		
 		//Start message writer FSM once every MSG_INTERVAL frames, if there is room in the FIFO
-		frame_count <= frame_count - 1;
+		frame_count <= frame_count - 8'd1;
 		
 		if (frame_count == 0 && msg_buf_size < MESSAGE_BUF_MAX - 3) begin
 			msg_state <= 4'b0001;
-			frame_count <= MSG_INTERVAL-1;
+			frame_count <= MSG_INTERVAL-8'd1;
 		end
 	end
 	

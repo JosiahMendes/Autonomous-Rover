@@ -26,13 +26,14 @@ logic[8:0] hsv_h_temp;
 logic[7:0] hsv_s_temp;
 
 always@(*) begin
-    hsv_s_temp = 255 * rgb_DIF /rgb_MAX;
+    hsv_h_temp = 9'd0;
+    hsv_s_temp = 8'd255 * rgb_DIF /rgb_MAX;
     if(rgb_MAX == rgb_r) begin
-        hsv_h_temp = 0   + 43 * (rgb_g - rgb_b)/rgb_DIF;
+        hsv_h_temp = 8'd0   + 8'd43 * (rgb_g - rgb_b)/rgb_DIF;
     end else if (rgb_MAX == rgb_g) begin
-        hsv_h_temp = 85  + 43 * (rgb_b - rgb_r)/rgb_DIF;
+        hsv_h_temp = 8'd85  + 8'd43 * (rgb_b - rgb_r)/rgb_DIF;
     end else if (rgb_MAX == rgb_b) begin
-        hsv_h_temp = 171 + 43 * (rgb_r - rgb_g)/rgb_DIF;
+        hsv_h_temp = 8'd171 + 8'd43 * (rgb_r - rgb_g)/rgb_DIF;
     end
 end
 
