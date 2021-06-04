@@ -55,7 +55,7 @@ assign grey = greenStreamIN[7:1] + redStreamIN[7:2] + blueStreamIN[7:2]; //Grey 
 
 //HSV Conversion
 wire [8:0]   hue;
-wire [7:0]   saturation, value_b;
+wire [7:0]   saturation, value;
 
 //Colour Detection Thresholds
 wire 	     red_detect, green_detect, blue_detect, grey_detect, yellow_detect;
@@ -344,17 +344,17 @@ rgb_to_hsv rgb_hsv(
 	.rgb_b(blueStreamIN),	
 	.hsv_h(hue),//  0 - 360
 	.hsv_s(saturation),// 0- 255
-	.hsv_v(value_b) // 0- 255
+	.hsv_v(value) // 0- 255
 );
 
 
 
 ///////////////////////////////////////////////////////////////////////
 // Color Threshold
-colour_threshold c_th (
+colour_threshold ColourDetect (
 	.hue(hue),//  0 - 360
-	.saturation(saturation),// 0- 255
-	.value_b(value_b), // 0- 255
+	.sat(saturation),// 0- 255
+	.val(value), // 0- 255
 	.red_detect(red_detect),
 	.green_detect(green_detect),
 	.blue_detect(blue_detect),
