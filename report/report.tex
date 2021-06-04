@@ -1,9 +1,11 @@
-\documentclass[a4paper, table]{article}
+\documentclass[a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{float}
 \usepackage{pdfpages}
 \usepackage{textcomp}
+\usepackage{indentfirst}
 
+\setlength{\parskip}{1em}
 
 % Colour Management
 \usepackage{color}
@@ -23,6 +25,11 @@
 
 
 % Bibliography
+\usepackage[nottoc]{tocbibind}
+\usepackage[style=ieee]{biblatex}
+
+
+\addbibresource{report_citations.bib} %Imports bibliography file
 
 
 
@@ -43,6 +50,7 @@
 % Allowing lower levels of Contents Page
 \setcounter{tocdepth}{4}
 \setcounter{secnumdepth}{5}
+
 
 
 
@@ -100,30 +108,55 @@
 \label{fig:image1}
 \end{figure}
 
-Sample Reference\cite{sample}
+Sample Reference\cite{einstein}
 
-\subsection{Vision}
 \subsection{Control}
 \subsection{Comms}
-
-
 \subsection{Energy}
 Hello
 
 \includegraphics[scale=0.3]{Series(S)}
+\subsection{Vision}
+\begin{abstract}
+    The purpose of the Vision module is threefold:
+    1. Capture data from camera module;
+    2. Detect objects of interest within the current view and send their location to the Control module; and
+    3. Send image data to Control for streaming to Command. 
+\end{abstract}
+
+\subsubsection{Hardware Organisation}
+
+The Vision module comprises of two main hardware elements: 
+    the Terasic DE10-Lite, a cost-effective Altera MAX 10 based FPGA board \cite{TerasicDE10Web} 
+    and the Terasic D8M-GPIO camera package \cite{TerasicD8MWeb}
+that interfaces with the FPGA through the onboard GPIO connectors. 
+
+These hardware choices were made by the project organisers, 
+but are also sufficient and capable of carrying out the tasks at hand. 
+As the FPGA's hardware is configurable, 
+it is more flexible than other embedded systems that are limited to a general purpose processor,
+and is also able to handle both streaming and processing of high resolution images
+without significant compromises on framerate or data speed 
+through the use of concurrent operations and dedicated blocks for signal processing applications like multiplication.
+This particular FPGA is also equipped with a 4-bit VGA output which is useful for debugging object detection live, 
+and also has a connector for an Arduino Uno R3 shield, \cite{TerasicDE10Web} 
+which can be used to interface with the ESP32 used for control.  
+
+In order to perform general purpose operations like
+    to configure camera settings
+    and to provide a debugging interface,
+a Nios II soft core was instantiated on the FPGA. 
+Alternatively, to implement a more advanced image processing algorithm
+or to reduce hardware components, 
+a FPGA with a hard core, known as a FPGA System-On-Chip (FPGA SoC) \cite{FPGASoC}
+
+
 
 
 \section{Evaluation and Conclusion}
 
 \newpage
 
-\nocite{*}
-\begin{thebibliography}{9}
-    \bibitem{sample} 
-    John Doe. 
-    \textit{The Book}. 
-    Publisher, Location, 1993.
-\end{thebibliography}
-\listoffigures
+\printbibliography
 
 \end{document}
