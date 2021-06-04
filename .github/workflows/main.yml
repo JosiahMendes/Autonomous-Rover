@@ -11,21 +11,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - uses: actions/cache@v2
-        name: Tectonic Cache
-        with:
-          path: ~/.cache/Tectonic
-          key: ${{ runner.os }}-tectonic-${{ hashFiles('**/*.tex') }}
-          restore-keys: |
-            ${{ runner.os }}-tectonic-
-      - uses: wtfjoke/setup-tectonic@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Run Tectonic
-        run: |
-          cd report
-          tectonic report.tex
+      - name: Compile
+        run: docker run --mount src=$GITHUB_WORKSPACE/report,target=/usr/report/tex,type=bind dxjoke/tectonic-docker:latest /bin/sh -c "tectonic main.tex"
       - name: Upload pdf
         uses: actions/upload-artifact@v2
         with:
-          name: report
+          name: report.zip
           path: report/report.pdf
