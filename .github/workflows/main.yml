@@ -1,0 +1,19 @@
+name: reportCI-action
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Compile
+        run: docker run --mount src=$GITHUB_WORKSPACE/report,target=/usr/src/tex,type=bind dxjoke/tectonic-docker:latest /bin/sh -c "tectonic report.tex"
+      - name: Upload pdf
+        uses: actions/upload-artifact@v2
+        with:
+          name: report
+          path: report/report.pdf
