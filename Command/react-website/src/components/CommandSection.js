@@ -1,18 +1,31 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import '../App.css';
 import {Button} from './Button';
 import {Textbox} from './Textbox';
 import './CommandSection.css';
-import {OnlineStatus} from './OnlineStatus';
 import {Battery} from './Battery';
+import Socket from './Socket';
 
-const BatteryValue = '59';
+function CommandSection({BatLevel}) {
+    const [angle, setAngle] = useState(0);
+    const [distance, setDistance] = useState(0);
 
-function CommandSection() {
+    function setAngleBox() {
+        setAngle(document.getElementById('angle').value);
+    }
+
+    function setDistanceBox() {
+        setDistance(document.getElementById('distance').value);
+    }
+
+    function sendData() {
+        Socket.emit("AngleDistance", [angle, distance]);
+        alert('Data sent');
+    }
+
     return (
         <div className='command-container'>
             <h1>Welcome to the Command page</h1>
-            <OnlineStatus file='../onlinestatus.txt'>status</OnlineStatus>
             <div className='command-btns'>
                 <form method="post" className="form">
                     <Button type="submit" name="button" value="1" className='btns' buttonStyle='btn-outline' buttonSize='btn--medium'>
@@ -26,14 +39,14 @@ function CommandSection() {
                     </Button>
                 </form>
                 <form method='post' className='form'>
-                    <Textbox id='angle' name='angle' className='angle'>Angle (in degrees): </Textbox>
-                    <Textbox id='distance' name='distance' className='distance'>Distance (in centimeters): </Textbox>
-                    <input type='submit' value='send' className='submitbutton'></input>
+                    <Textbox id='angle' name='angle' className='angle' onChange={setAngleBox}>Angle (in degrees): </Textbox>
+                    <Textbox id='distance' name='distance' className='distance' onChange={setDistanceBox}>Distance (in centimeters): </Textbox>
+                    <input id='driveData' type='button' value='send' className='submitbutton' onClick={sendData}></input>
                 </form>
             </div>
             <div className='command-battery'>
-                <Battery value={BatteryValue}>
-                    {BatteryValue}
+                <Battery value={BatLevel}>
+                    {BatLevel}
                 </Battery>
             </div>
         </div>

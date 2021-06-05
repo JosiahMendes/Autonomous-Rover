@@ -2,6 +2,7 @@ const express = require('express'); // express js
 const bodyParser = require('body-parser');
 const fs = require('fs').promises; // contains readFile() function to load a HTML file
 const app = express();
+const socketIO = require('socket.io');
 
 // TCP server communicates with the ESP32    
 var net = require('net');
@@ -14,11 +15,7 @@ tcpserver.listen(tcpport, tcphost, function() {
     console.log('Server is listening to %j', tcpserver.address());
 });
 function handleConnection(socket) {
-    client = socket; // storing client so it can be accessed by the web server
-    fs.writeFile('onlinestatus.txt', 'Connected', function (err) {
-        if (err) return console.log(err);
-        console.log('Connected > onlinestatus.txt');
-    });
+  client = socket; // storing client so it can be accessed by the web server
   console.log('client saved');
   var remoteAddress = socket.remoteAddress + ':' + socket.remotePort;  
   console.log('new client connection from %s', remoteAddress);
@@ -45,35 +42,37 @@ function handleConnection(socket) {
     }); 
   }  
 }
-/*
-let indexFile;
-fs.readFile(__dirname + "/index.html")
-    .then(contents => {
-        indexFile = contents;
-    })
-    .catch(err => {
-        console.error(`Could not read index.html file: ${err}`);
-        process.exit(1);
-    });
-*/
 
-app.listen(8000, () => {
+const server = app.listen(8000, () => {
     console.log("Application started and listening on port 8000");
 });
 
-app.use(bodyParser.urlencoded({ extended: true}));
+const io = require('socket.io')(server);
+io.on('connection', (socket) => {
+    console.log('website client connected: %s', socket);
+    socket.once('disconnect', () => {
+        console.log('website client disconnected');
+    });
+    socket.emit('BatteryLevel', '100');
+    socket.on('AngleDistance', data => {
+        console.log('AngleDistance received on server: %s, %s', data[0], data[1]);
+        socket.emit('AngleDistance', data);
+    })
+});
 
+app.use(bodyParser.urlencoded({ extended: true}));
 
 app.post("/commands", (req,res) => { // post from /commands page
     if(typeof(req.body.button) != 'undefined') {
         switch(req.body.button) {
             case "1":
+                website.emit('BatteryLevel', '80');
                 if(client !== "undefined") {
                     console.log("angle: %s", req.body);
                     client.write("1");
                     console.log("sent 1 to client");
                 } else {
-                    console.log("client undefined");
+                    console.log("tcp client undefined");
                 }
                 console.log('button 1 pressed');
                 break
@@ -90,12 +89,21 @@ app.post("/commands", (req,res) => { // post from /commands page
     } else if(typeof(req.body.angle) != 'undefined') {
         console.log('angle, distance pair: [%s, %s]', req.body.angle, req.body.distance);
         const message = "[" + req.body.angle + ", " + req.body.distance + "]";
-        client.write(message);
+        if(client !== 'undefined') {
+            client.write(message);
+        }
+        //website.emit('BatteryLevel', "70");
+        angletoweb = req.body.angle;
+        distancetoweb = req.body.distance;
+        res.redirect("/commands");
     }
     //res.redirect("/");
 });
 
+var exportTest = "3";
+
 const {MongoClient} = require('mongodb');
+const { Console } = require('console');
 
 async function main() {
     const uri = "mongodb+srv://marsrover:marsrover123@cluster0.odoqq.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
@@ -105,7 +113,13 @@ async function main() {
     try {
         await client.connect();
         console.log('mongodb connected');
-        await findOneListingByName(client, "hamburger");
+        /*
+        await findingListings(client, {
+            minimumBedroom: 4, 
+            minimumBathroom: 2, 
+            maximumResults: 5
+        });
+        */
         
     } catch (e) {
         console.error(e);
@@ -143,4 +157,33 @@ async function findOneListingByName(client, nameOfListing) {
     } else {
         console.log(`No listings found with the name '${nameOfListing}`);
     }
+}
+
+async function findingListings(client, {
+    minimumBedroom = 0, 
+    minimumBathroom = 0, 
+    maximumResults = Number.MAX_SAFE_INTEGER
+} = {}) {
+    const cursor = client.db("sample_airbnb").collection("listingsAndReviews").find({
+        bedrooms: { $gte: minimumBedroom },
+        bathrooms: { $gte: minimumBathroom }
+    }).sort( { last_review: -1 })
+    .limit(maximumResults);
+
+    const result = await cursor.toArray();
+
+    if(result.length > 0) {
+        result.forEach(db => {
+            console.log(db.name);
+            console.log(db._id);
+            console.log(db.bedrooms);
+            console.log(db.bathrooms);
+            exportTest = (db.bedrooms).toString();
+        })
+    }
+}
+
+async function updateListingByName(client, nameOfListing, updatedListing) {
+    const result = await client.db("sample_airbnb").collection("listingsAndReviews").updateOne(
+        { name: nameOfListing }, { $set: updatedListing });
 }

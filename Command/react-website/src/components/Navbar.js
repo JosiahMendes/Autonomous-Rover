@@ -2,13 +2,17 @@ import React, {useState, useEffect} from 'react';
 import { Link } from 'react-router-dom';
 import './Navbar.css';
 import {Button} from './Button';
+import Socket from './Socket';
 
 function Navbar() {
     const [click, setClick] = useState(false);
     const [button, setButton] = useState(true);
 
     const handleClick = () => setClick(!click);
-    const closeMobileMenu = () => setClick(false);
+    const closeMobileMenu = () => {
+        setClick(false);
+        Socket.emit("test-message", "from navbar");
+    };
 
     const showButton = () => {
         if(window.innerWidth <= 960) {
@@ -46,8 +50,8 @@ function Navbar() {
                             </Link>
                         </li>
                         <li className='nav-item'>
-                            <Link to='/services' className='nav-links' onClick={closeMobileMenu}>
-                                Services
+                            <Link to='/view' className='nav-links' onClick={closeMobileMenu}>
+                                View
                             </Link>
                         </li>
                         <li className='nav-item'>
