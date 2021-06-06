@@ -1,0 +1,12 @@
+
+p1 = readtable('CSV-files/round5/ENERGYLU.CSV','ReadVariableNames',false);
+p2 = readtable('CSV-files/round6/ENERGYLU.CSV','ReadVariableNames',false);
+
+
+A1 = table2array(p1);
+A2 = table2array(p2);
+
+A1 = cellfun(@str2num,A(1:e);
+
+
+%A_sum = A1(1:end-1) + A2(1:end-1);
