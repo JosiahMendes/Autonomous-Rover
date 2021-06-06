@@ -52,6 +52,12 @@
 \setcounter{tocdepth}{4}
 \setcounter{secnumdepth}{5}
 
+% Make margins smaller, feel free to change
+\usepackage{geometry}
+\geometry{
+ \textwidth = 426pt
+}
+
 
 
 
@@ -78,7 +84,7 @@
         \vspace{1.5cm}
         {\huge\bfseries The MARS Rover\par}
         \vspace{2cm}
-        {\Large\itshape Gorup 1\par}
+        {\Large\itshape Group 1\par}
         \vfill
         \begin{flushright}
             \textsl{ \large
@@ -102,21 +108,34 @@
 
 \section{Systems}
 
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.18]{logo.png}
-\caption{Sample Figure}
-\label{fig:image1}
-\end{figure}
-
-Sample Reference\cite{einstein}
-
 \subsection{Control}
 \subsection{Comms}
 \subsection{Energy}
-Hello
+\begin{abstract}
+    
+\end{abstract}
 
-\includegraphics[scale=0.3]{Series(S)}
+\subsubsection{Characterising Components}
+
+\subsubsection{PV Array Configuration}
+    \includegraphics[scale=0.3]{Series(S)}
+\subsubsection{Battery Configuration}
+
+\subsubsection{SMPS Configuration}
+
+\subsubsection{Charging Algorithm}
+
+\subsubsection{Discharging Algorithm}
+
+\subsubsection{Safety Mechanisms}
+
+\subsubsection{State of Charge}
+
+\subsubsection{State of Health}
+
+\subsubsection{Integrating with Other Modules}
+Send information about the estimated amount of joules left in the system. Command takes power usage and speed from drive and estimates range. 
+
 \subsection{Vision}
 \begin{abstract}
     The purpose of the Vision module is threefold:
@@ -162,5 +181,15 @@ a FPGA with a hard core, known as a FPGA System-On-Chip (FPGA SoC) \cite{FPGASoC
 heading=bibintoc,
 title={References}
 ]
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.18]{logo.png}
+\caption{Sample Figure}
+\label{fig:image1}
+\end{figure}
+
+Sample Reference\cite{einstein}
 
 \end{document}
