@@ -1,11 +1,10 @@
 import React from 'react';
 import './Battery.css';
-import { Link } from 'react-router-dom';
 
 export const Battery = ({children, value}) => {
     const battery_number = parseInt(value, 10);
     var batteryLevel = 'unknown';
-    switch(Math.floor(battery_number/10)*10) {
+    switch(Math.ceil(battery_number/10)*10) {
         case 0:
             batteryLevel = 'zero';
             break

@@ -2,13 +2,12 @@ import React from 'react';
 import '../../App.css';
 import HeroSection from '../HeroSection';
 import Cards from '../Cards';
-import Socket from '../Socket';
 
-function Home() {
+function Home({batteryLevel}) {
     return (
         <>
             <HeroSection />
-            <Cards />
+            <Cards batteryLevel={batteryLevel}/>
         </>
     );
 };

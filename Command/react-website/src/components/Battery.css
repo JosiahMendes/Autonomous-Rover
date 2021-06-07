@@ -4,7 +4,7 @@
     background: transparent;
     transform: rotate(0.5turn) perspective(10px) rotateX(1deg);
     margin: 50px;
-    border: 2px solid black;
+    border: 4px solid black;
     margin-left: 200px;
     margin-top: 100px;
 }
@@ -15,31 +15,31 @@
 }
 
 .zero {
-    background: linear-gradient(to bottom, rgb(30, 255, 0) 0%, transparent 0%);
+    background: linear-gradient(to bottom, rgb(255, 0, 0) 0%, transparent 0%);
 }
 
 .ten {
-    background: linear-gradient(to bottom, rgb(30, 255, 0) 10%, transparent 10%);
+    background: linear-gradient(to bottom, rgb(255, 0, 0) 10%, transparent 10%);
 }
 
 .twenty {
-    background: linear-gradient(to bottom, rgb(30, 255, 0) 20%, transparent 20%);
+    background: linear-gradient(to bottom, rgb(255, 0, 0) 20%, transparent 20%);
 }
 
 .thirty {
-    background: linear-gradient(to bottom, rgb(30, 255, 0) 30%, transparent 30%);
+    background: linear-gradient(to bottom, rgb(251, 255, 0) 30%, transparent 30%);
 }
 
 .fourty {
-    background: linear-gradient(to bottom, rgb(30, 255, 0) 40%, transparent 40%);
+    background: linear-gradient(to bottom, rgb(251, 255, 0) 40%, transparent 40%);
 }
 
 .fifty {
-    background: linear-gradient(to bottom, rgb(30, 255, 0) 50%, transparent 50%);
+    background: linear-gradient(to bottom, rgb(251, 255, 0) 50%, transparent 50%);
 }
 
 .sixty {
-    background: linear-gradient(to bottom, rgb(30, 255, 0) 60%, transparent 60%);
+    background: linear-gradient(to bottom, rgb(251, 255, 0) 60%, transparent 60%);
 }
 
 .seventy {

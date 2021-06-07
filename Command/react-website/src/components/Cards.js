@@ -1,24 +1,26 @@
 import React from 'react';
 import CardItem from './CardItem';
 import './Cards.css';
+import {Battery} from './Battery';
 
-function Cards() {
+function Cards({batteryLevel}) {
     return (
         <div className='cards'>
-            <h1>Check out these EPIC drinks!</h1>
+            <h1>Check out what's happening!</h1>
             <div className='cards__container'>
                 <ul className='cards__items'>
-                    <CardItem 
-                    src='taro-milk-tea.jpeg'
-                    text='Rich, creamy and undeniably delicious Taro Milk Tea with tapioca pearls'
-                    label='Milk tea'
-                    path='/services'
+                    <CardItem
+                    item={<Battery children={batteryLevel} value={batteryLevel}/>}
+                    src='noImage'
+                    text='Current power status of the rover'
+                    label='Power'
+                    path='/power'
                     />
                     <CardItem 
-                    src='sakura-frappuccino.jpeg'
-                    text='A sakura strawberry sauce into the classic milk base'
-                    label='Frappuccino'
-                    path='/services'
+                    src='mars_nasa_map.jpeg'
+                    text="A real-time map constructed through communication with the rover"
+                    label='Map'
+                    path='/view'
                     />
                 </ul>
             </div>
