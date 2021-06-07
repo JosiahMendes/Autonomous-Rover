@@ -1,8 +1,8 @@
 /*
- * Code used to charge 4 battery cells in series
+ * Code used to discharge 4 battery cells in series
  * 
  * Code written by Edvard J. S. Holen (edvard.holen19@imperial.ac.uk)
- * Start date: 27th May 2021
+ * Start date: 1st June 2021
  */
 
 //Include relevant libraries

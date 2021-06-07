@@ -2,6 +2,8 @@
  * Code used to charge 4 battery cells in series
  * 
  * Code written by Edvard J. S. Holen (edvard.holen19@imperial.ac.uk)
+ * Inspired by "Battery_Charge_Cycle_Logged_V1.1" by Phil Clemow
+ * 
  * Start date: 27th May 2021
  */
 
@@ -52,11 +54,8 @@ float max_cell; //Maximum cell voltage
 int dig_order[4] = {20, 21, 3, 9}; //Gives the digital output number for each of the rly input
 int dis_order[4] = {4, 5, 8, 7}; //Gives the digital output number for each of the dis inputs
 
-float u0v, u1v, delta_uv, e0v, e1v, e2v; // Internal values for the voltage controller
-float uv_max = 1, uv_min = 0; //anti-windup limitation
 float u0i, u1i, delta_ui, e0i, e1i, e2i; // Internal values for the current controller
 float ui_max = 1, ui_min = 0; //anti-windup limitation
-float kpv=0.01206,kiv=15.78,kdv=0; // voltage pid gains
 float kpi = 0.0506, kii = 20.4, kdi = 0; // current pid gains
 //float kpi = 0.02512, kii = 45, kdi = 0; // current pid gains
 
@@ -360,7 +359,7 @@ void loop() {
               }else if (max_cell < 3600) { // if not charged, stay put
                 next_state = 1;      
               } else { //Once one of the cells reaches 3600 mV we go into the balancing state
-                I_setpoint = 0.8*ref_sum*485/500; //current setpoint during balancing
+                I_setpoint = 0.9*ref_sum*485/500; //current setpoint during balancing
                 next_state = 2;
               }
               
@@ -525,32 +524,6 @@ float saturation( float sat_input, float uplim, float lowlim) { // Saturation fu
 
 //----------- PID CONTROLLERS --------------//
 
-//PID controller for voltage
-float pidv( float pid_input){
-  float e_integration;
-  e0v = pid_input;
-  e_integration = e0v;
- 
-  //anti-windup, if last-time pid output reaches the limitation, this time there won't be any intergrations.
-  if(u1v >= uv_max) {
-    e_integration = 0;
-  } else if (u1v <= uv_min) {
-    e_integration = 0;
-  }
-
-  delta_uv = kpv*(e0v-e1v) + kiv*Ts*e_integration + kdv/Ts*(e0v-2*e1v+e2v); //incremental PID programming avoids integrations.there is another PID program called positional PID.
-  u0v = u1v + delta_uv;  //this time's control output
-
-  //output limitation
-  saturation(u0v,uv_max,uv_min);
-  
-  u1v = u0v; //update last time's control output
-  e2v = e1v; //update last last time's error
-  e1v = e0v; // update last time's error
-  return u0v;
-}
-
-
 //PID controller for current
 float pidi(float pid_input) { // discrete PID function
   float e_integration;
@@ -577,11 +550,7 @@ float pidi(float pid_input) { // discrete PID function
 }
 
 
-void reset_pid(){
-  u1v = 0; //reset last time's control output
-  e2v = 0; //reset last last time's error
-  e1v = 0; //reset last time's error
-  
+void reset_pid(){  
   u1i = 0; //reset last time's control output
   e2i = 0; //reset last last time's error
   e1i = 0; //reset last time's error
@@ -590,13 +559,13 @@ void reset_pid(){
 
 void power_point(bool up_down){ //up_down == false, means we were not able to operate at given power, true means we will try to find higher power point, run with true if we are not working at full power
 
-  if(up_down and max_power *1000 * 1000 < 4.6){ //Power is limited at 4.6 W, which is the maximum rated power of the solar panels and more power than one will ever need to draw
+  if(up_down and max_power < 4.6 * 1000 * 1000){ //Power is limited at 4.6 W, which is the maximum rated power of the solar panels and more power than one will ever need to draw
     max_power += 0.1*1000*1000;  //If power point is too low, increase it by 100 mW. 
   }else if(!up_down and max_power > 0){
     max_power -= 0.1*1000*1000; //If power point is too high, decrease it by 100 mW
   }
 
-  if(max_power == 0){ // If the maximum power reaches 0, then we are not able to charge under the current conditions and we go to the error state
+  if(max_power <= 0){ // If the maximum power reaches 0, then we are not able to charge under the current conditions and we go to the error state
     state_num = 4;
     next_state = 4;
   }
