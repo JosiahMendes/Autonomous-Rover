@@ -5,75 +5,38 @@ import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
 import Home from './components/pages/Home';
 import View from './components/pages/View';
 import Commands from './components/pages/Commands';
-import SignUp from './components/pages/SignUp';
+import Power from './components/pages/Power';
 import Socket from './components/Socket';
+import {Rect} from 'react-konva';
 
-function pixelCal(angle, distance) {
-  if(distance === 0) {
-      return [];
-  }
-  let scale = 5; // distance of 5 is 1 pixel
-  var relativepixel = [];
-  const distanceinscale = Math.ceil(distance / scale);
-  if(angle === 0) { // up
-      for(let i = 1; i <= distanceinscale; i++) {
-          relativepixel.push([-i, 0]);
-      }
-  } else if(angle === 45) {
-      for(let i = 1; i <= distanceinscale; i++) {
-          relativepixel.push([-i, i]);
-      }
-  } else if(angle === 90) { // right
-      for(let i = 1; i <= distanceinscale; i++) {
-          relativepixel.push([0, i]);
-      }
-  } else if(angle === 135) {
-      for(let i = 1; i <= distanceinscale; i++) {
-          relativepixel.push([i, i]);
-      }
-  } else if(angle === 180) { // down
-      for(let i = 1; i <= distanceinscale; i++) {
-          relativepixel.push([i, 0]);
-      }
-  } else if(angle === 225) {
-      for(let i = 1; i <= distanceinscale; i++) {
-          relativepixel.push([i, -i]);
-      }
-  } else if(angle === 270) { // left
-      for(let i = 1; i <= distanceinscale; i++) {
-          relativepixel.push([0, -i]);
-      }
-  } else if(angle === 315) {
-      for(let i = 1; i <= distanceinscale; i++) {
-          relativepixel.push([-i, -i]);
-      }
-  }
-  return relativepixel;
-}
-
-function passedsetCalc(currSet, angle, newAngle, newDistance, currPos) {
-  var finalAngle = (Number(angle) + Number(newAngle))%360;
-  var relativeset = pixelCal(finalAngle, newDistance);
-  if(relativeset.length !== 0) {
-      relativeset.forEach(element => {
-          let temp = [0,0];
-          temp[0] = element[0]+currPos[0];
-          temp[1] = element[1]+currPos[1];
-          currSet.push(temp);
-      });
-  }
-  let finalPos = currSet.length === 0 ? currPos : currSet[currSet.length-1];
-  return [currSet, finalAngle, finalPos];
-}
+const roverWidth = 30;
 var global_angle = 0;
-var passedSet = [];
-var currPos = [15, 15]; // starting point on the map
+var currPos = [window.innerWidth/2 - roverWidth/2, window.innerHeight/2];
+var roverPath = [];
+
+function paths(roverPath, totalAngle, angleDistance, pos, color) {
+  //var scale = 5;
+  //var height = angleDistance[1]/scale;
+  var height = Number(roverWidth) + Number(angleDistance[1]);
+  var finalAngle = Number((Number(totalAngle)+Number(angleDistance[0]))%360);
+  if(angleDistance[1] !== 0) {
+    roverPath.push(<Rect x={pos[0]} y={pos[1]} width={roverWidth} height={height} fill={color} rotation={finalAngle} offsetX={roverWidth/2} offsetY={roverWidth/2}/>);
+  }
+  var sine = Math.sin(Math.PI/180*finalAngle);
+  var cosine = Math.cos(Math.PI/180*finalAngle);
+  var newPos = [Number(pos[0]) - Number(angleDistance[1])*sine, 
+              Number(pos[1]) + Number(angleDistance[1])*cosine];
+  return [roverPath, finalAngle, newPos];
+}
 
 function App() {
   
-  const [batteryLevel, setBattery] = useState("unknown");
+  const [batteryLevel, setBattery] = useState(["unknown","unknown","unknown","unknown"]);
   useEffect(() => {
     Socket.on('BatteryLevel', data => {
+      for(let i = 0; i < data.length; i++) {
+        data[i] = Number(data[i]);
+      }
       setBattery(data);
     });
   }, []);
@@ -84,24 +47,24 @@ function App() {
     })
   }, []);
 
-  const calculated = passedsetCalc(passedSet, global_angle, angleDistanceSet[0], angleDistanceSet[1], currPos);
-  passedSet = calculated[0];
-  global_angle = calculated[1];
-  currPos = calculated[2];
-
+  [roverPath, global_angle, currPos] = paths(roverPath, global_angle, angleDistanceSet, currPos, "grey");
   return (
     <>
     <Router>
       <Navbar />
       <Switch>
-        <Route path='/' exact component={Home} />
+        <Route path='/' exact render={(props) => (
+          <Home {...props} batteryLevel={(batteryLevel[0]+batteryLevel[1]+batteryLevel[2]+batteryLevel[3])/4}/>
+        )} />
         <Route path='/view' render={(props) => (
-          <View {...props} pixels={passedSet}/>
+          <View {...props} path={roverPath}/>
         )} />
         <Route path='/commands' render={(props) => (
-          <Commands {...props} batteryLevel={batteryLevel}/>
+          <Commands {...props} />
         )} />
-        <Route path='/sign-up' component={SignUp} />
+        <Route path='/power' render={(props) => (
+          <Power {...props} batteryLevel={batteryLevel}/>
+        )} />
       </Switch>
     </Router>
     </>

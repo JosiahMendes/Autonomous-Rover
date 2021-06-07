@@ -84,9 +84,10 @@
     object-fit: cover;
     transition: all 0.2s linear;
   }
-  
-  .cards__item__img:hover {
-    transform: scale(1.1);
+
+  .homebattery {
+    margin-left: -30px;
+    margin-top: -50px;
   }
   
   .cards__item__info {

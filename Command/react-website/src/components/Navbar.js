@@ -2,7 +2,6 @@ import React, {useState, useEffect} from 'react';
 import { Link } from 'react-router-dom';
 import './Navbar.css';
 import {Button} from './Button';
-import Socket from './Socket';
 
 function Navbar() {
     const [click, setClick] = useState(false);
@@ -11,7 +10,6 @@ function Navbar() {
     const handleClick = () => setClick(!click);
     const closeMobileMenu = () => {
         setClick(false);
-        Socket.emit("test-message", "from navbar");
     };
 
     const showButton = () => {
@@ -45,8 +43,8 @@ function Navbar() {
                             </Link>
                         </li>
                         <li className='nav-item'>
-                            <Link to='/commands' className='nav-links' onClick={closeMobileMenu}>
-                                Commands
+                            <Link to='/power' className='nav-links' onClick={closeMobileMenu}>
+                                Power
                             </Link>
                         </li>
                         <li className='nav-item'>
@@ -55,12 +53,17 @@ function Navbar() {
                             </Link>
                         </li>
                         <li className='nav-item'>
-                            <Link to='/sign-up' className='nav-links-mobile' onClick={closeMobileMenu}>
-                                Sign up
+                            <Link to='/commands' className='nav-links-mobile' onClick={closeMobileMenu}>
+                                Commands
                             </Link>
                         </li>
                     </ul>
-                    {button && <Button buttonStyle='btn--outline'>SIGN UP</Button>}
+                    {button && 
+                    <Button buttonStyle='btn--outline'>
+                        <Link to='/commands' className='nav-links' onClick={closeMobileMenu}>
+                            Commands
+                        </Link>
+                    </Button>}
                 </div>
             </nav>
         </>

@@ -4,6 +4,8 @@ const fs = require('fs').promises; // contains readFile() function to load a HTM
 const app = express();
 const socketIO = require('socket.io');
 
+var website;
+
 // TCP server communicates with the ESP32    
 var net = require('net');
 var tcpserver = net.createServer();
@@ -25,6 +27,7 @@ function handleConnection(socket) {
   socket.on('error', onConnError);
   function onDataReceived(data) {  
     console.log('connection data from %s: %j', remoteAddress, data.toString());  
+    website.emit("BatteryLevel", [data.toString(),100,100,100]);
     //conn.write(d); send back to client  
   }
   function onConnClose() {  
@@ -50,10 +53,11 @@ const server = app.listen(8000, () => {
 const io = require('socket.io')(server);
 io.on('connection', (socket) => {
     console.log('website client connected: %s', socket);
+    website = socket;
     socket.once('disconnect', () => {
         console.log('website client disconnected');
     });
-    socket.emit('BatteryLevel', '100');
+    socket.emit('BatteryLevel', [100,100,100,100]);
     socket.on('AngleDistance', data => {
         console.log('AngleDistance received on server: %s, %s', data[0], data[1]);
         socket.emit('AngleDistance', data);

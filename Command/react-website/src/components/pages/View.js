@@ -1,12 +1,11 @@
 import React from 'react';
 import '../../App.css';
 import ViewSection from '../ViewSection';
-import Socket from '../Socket';
 
-export default function View({pixels}) {
+export default function View({path}) {
     return (
         <>
-            <ViewSection pixels={pixels}/>
+            <ViewSection path={path}/>
         </>
     )
 }

@@ -1,13 +1,101 @@
-.angle {
-    margin-left: 100px;
-    margin-top: 100px;
+.angleLabel {
+    position: absolute;
+    left: 450px;
+    top: 220px;
+}
+.angleBox {
+    position: absolute;
+    left: 580px;
+    top: 220px;
 }
 
-.distance {
-    margin-left: 100px;
-    margin-bottom: 100px;
+.distanceLabel {
+    position: absolute;
+    left: 460px;
+    top: 280px;
+}
+.distanceBox {
+    position: absolute;
+    left: 580px;
+    top: 280px;
 }
 
-.submitbutton {
-    margin-left: 30px;
+.send {
+    position: absolute;
+    left: 530px;
+    top: 340px;
+}
+
+.header {
+    text-decoration: underline;
+    color: grey;
+    font-size: 30px;
+}
+
+.automated {
+    position: absolute;
+    left: 50px;
+    top: 150px;
+}
+
+.manual {
+    position: absolute;
+    left: 450px; /*370*/
+    top: 150px;
+}
+
+.speed {
+    position: absolute;
+    left: 950px; /*750*/
+    top: 150px;
+}
+
+.investigate {
+    position: absolute;
+    left: 90px;
+    top: 220px;
+}
+
+.backtothebase {
+    position: absolute;
+    left: 70px;
+    top: 280px;
+}
+
+.stop {
+    position: absolute;
+    left: 120px;
+    top: 340px;
+}
+
+.veryfast {
+    position: absolute;
+    left: 970px;
+    top: 220px;
+}
+.fast {
+    position: absolute;
+    left: 990px;
+    top: 280px;
+}
+.regular {
+    position: absolute;
+    left: 977px;
+    top: 340px;
+}
+.slow {
+    position: absolute;
+    left: 990px;
+    top: 400px;
+}
+.veryslow {
+    position: absolute;
+    left: 970px;
+    top: 460px;
+}
+
+.viewmap {
+    position: absolute;
+    left: 490px;
+    top: 460px;
 }
