@@ -55,7 +55,7 @@
 % Make margins smaller, feel free to change
 \usepackage{geometry}
 \geometry{
-textwidth = 426 pt
+textwidth=426pt
 }
 
 
@@ -63,8 +63,12 @@ textwidth = 426 pt
 
 
 \title{Engineering Design Project}
-\author{Georgio Chaimali \and Dimitrios Georgakopoulos \and Edvard J. Skaarberg Holen 
-        \and Hyunjoon Jeon \and Josiah Mendes \and Raghav Viswakumar}
+\author{Georgio Chaimali \and 
+        Dimitrios Georgakopoulos \and 
+        Edvard J. Skaarberg Holen \and 
+        Hyunjoon Jeon \and 
+        Josiah Mendes \and 
+        Raghav Viswakumar}
 \begin{document} 
 \begin{titlepage}
     \setlength{\headheight}{66.89pt}
@@ -87,8 +91,12 @@ textwidth = 426 pt
         \vfill
         \begin{flushright}
             \textsl{ \large
-            Georgio Chaimali \\ Dimitrios Georgakopoulos \\ Edvard J. Skaarberg Holen 
-            \\ Hyunjoon Jeon \\ Josiah Mendes \\ Raghav Viswakumar
+            Georgio Chaimali \\ 
+            Dimitrios Georgakopoulos \\ 
+            Edvard J. Skaarberg Holen \\ 
+            Hyunjoon Jeon \\ 
+            Josiah Mendes \\ 
+            Raghav Viswakumar
             }
         \end{flushright}
         \vfill
@@ -114,25 +122,30 @@ textwidth = 426 pt
 \begin{abstract}
     The purpose of the Vision module is threefold:
     1. Capture data from camera module;
-    2. Detect objects of interest within the current view and send their location to the Control module; and
+    2. Detect objects of interest within the current view and 
+        send their location to the Control module; and
     3. Send image data to Control for streaming to Command. 
 \end{abstract}
 
 \subsubsection{Hardware Organisation}
 
 The Vision module comprises of two main hardware elements: 
-    the Terasic DE10-Lite, a cost-effective Altera MAX 10 based FPGA board \cite{TerasicDE10Web} 
+    the Terasic DE10-Lite, a cost-effective Intel MAX 10 based FPGA board 
+    \cite{TerasicDE10Web} 
     and the Terasic D8M-GPIO camera package \cite{TerasicD8MWeb}
 that interfaces with the FPGA through the onboard GPIO connectors. 
 
 These hardware choices were made by the project organisers, 
 but are also sufficient and capable of carrying out the tasks at hand. 
 As the FPGA's hardware is configurable, 
-it is more flexible than other embedded systems that are limited to a general purpose processor,
-and is also able to handle both streaming and processing of high resolution images
+it is more flexible than other embedded systems 
+that are limited to a general purpose processor,and 
+is also able to handle both streaming and processing of high resolution images
 without significant compromises on framerate or data speed 
-through the use of concurrent operations and dedicated blocks for signal processing applications like multiplication.
-This particular FPGA is also equipped with a 4-bit VGA output which is useful for debugging object detection live, 
+through the use of concurrent operations and dedicated blocks 
+for signal processing applications like multiplication.
+This particular FPGA is also equipped with a 4-bit VGA output 
+which is useful for debugging object detection live, 
 and also has a connector for an Arduino Uno R3 shield, \cite{TerasicDE10Web} 
 which can be used to interface with the ESP32 used for control.  
 
@@ -141,8 +154,18 @@ In order to perform general purpose operations like
     and to provide a debugging interface,
 a Nios II soft core was instantiated on the FPGA. 
 Alternatively, to implement a more advanced image processing algorithm
-or to reduce hardware components, 
-a FPGA with a hard core, known as a FPGA System-On-Chip (FPGA SoC) \cite{FPGASoC}
+or to reduce other hardware components in the system like the multiple Arduinos, 
+a FPGA with a hard core, 
+known as a FPGA System-On-Chip (FPGA SoC) \cite{FPGASoC} could be used, 
+which would provide both the advantages of having reconfigurable hardware 
+and a more capable general purpose processor. 
+
+\subsubsection{Image Capture Processing Stream}
+
+The image capture and buffering is based on a starter project provided
+by Terasic Inc for the D8M Camera module that was modified by Ed Stott 
+\cite{EEE2Rover}. 
+
 
 
 \subsection{Drive}
