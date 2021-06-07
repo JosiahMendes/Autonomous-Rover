@@ -55,16 +55,15 @@
 % Make margins smaller, feel free to change
 \usepackage{geometry}
 \geometry{
- \textwidth = 426pt
+textwidth = 426 pt
 }
 
 
 
 
 
-
 \title{Engineering Design Project}
-\author{Georgio Chaimali \and Dimitrios Georgakopoulos \and Edvard J.S. Holen 
+\author{Georgio Chaimali \and Dimitrios Georgakopoulos \and Edvard J. Skaarberg Holen 
         \and Hyunjoon Jeon \and Josiah Mendes \and Raghav Viswakumar}
 \begin{document} 
 \begin{titlepage}
@@ -88,7 +87,7 @@
         \vfill
         \begin{flushright}
             \textsl{ \large
-            Georgio Chaimali \\ Dimitrios Georgakopoulos \\ Edvard J.S. Holen 
+            Georgio Chaimali \\ Dimitrios Georgakopoulos \\ Edvard J. Skaarberg Holen 
             \\ Hyunjoon Jeon \\ Josiah Mendes \\ Raghav Viswakumar
             }
         \end{flushright}
@@ -110,31 +109,6 @@
 
 \subsection{Control}
 \subsection{Comms}
-\subsection{Energy}
-\begin{abstract}
-    
-\end{abstract}
-
-\subsubsection{Characterising Components}
-
-\subsubsection{PV Array Configuration}
-    \includegraphics[scale=0.3]{Series(S)}
-\subsubsection{Battery Configuration}
-
-\subsubsection{SMPS Configuration}
-
-\subsubsection{Charging Algorithm}
-
-\subsubsection{Discharging Algorithm}
-
-\subsubsection{Safety Mechanisms}
-
-\subsubsection{State of Charge}
-
-\subsubsection{State of Health}
-
-\subsubsection{Integrating with Other Modules}
-Send information about the estimated amount of joules left in the system. Command takes power usage and speed from drive and estimates range. 
 
 \subsection{Vision}
 \begin{abstract}
@@ -171,9 +145,47 @@ or to reduce hardware components,
 a FPGA with a hard core, known as a FPGA System-On-Chip (FPGA SoC) \cite{FPGASoC}
 
 
+\subsection{Drive}
 
+% Start of energy subsection
+\subsection{Energy}
+\begin{abstract}
+    
+\end{abstract}
+
+\subsubsection{Characterising Components}
+
+\subsubsection{PV Array Configuration}
+    \includegraphics[scale=0.3]{Series(S)}
+\subsubsection{Battery Configuration}
+
+\subsubsection{SMPS Configuration}
+
+\subsubsection{Maximum Power Point Tracking}
+
+\subsubsection{Charging Algorithm}
+
+\subsubsection{Discharging Algorithm}
+
+\subsubsection{Safety Mechanisms}
+
+\subsubsection{State of Charge}
+
+\subsubsection{State of Health}
+
+\subsubsection{Communicating with Other Modules}
+Though it is not necessary to fully integrate the energy module with the rest of the rover, other submodules, specifically command, needs access data such as the battery SOH and SOC. For communicating with other modules the Arduino shield has a set of UART ports. However, as group members were not in the same location it was not possible to physically connect the energy module to the rover, which is necessary to use UART. As such, an alternative approach was employed. First the Arduino was connected to a computer via USB. On the computer a Python script was run [8]. At the start the Python script establishes a connection to a server created by running a similar script on the command module [9]. After a connection has been established the Python script starts reading the serial data coming from the Arduino and transmits it using TCP to the command module. Each message coming from the Arduino is in CSV form where the first entry is the message ID, which allows the command script to decode what type of data is being sent. 
+
+% End of energy subsection
+
+\subsection{Integration}
+
+% Do not worry George I will take charge in writing this subsubsection -Edvard
+\subsubsection{Integrating the Energy Module}
 
 \section{Evaluation and Conclusion}
+
+\section{Intellectual Property}
 
 \newpage
 
@@ -191,5 +203,11 @@ title={References}
 \end{figure}
 
 Sample Reference\cite{einstein}
+
+
+\begin{appendices}
+\chapter{Some Appendix}
+The contents...
+\end{appendices}
 
 \end{document}
