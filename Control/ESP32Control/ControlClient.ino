@@ -1,6 +1,12 @@
 #include "WiFi.h"
-#define RXP2 3
-#define TXP2 1
+#include <SPI.h>
+#define RXP2 16 //Defining UART With Drive (Pins 8 and 9 on Arduino Adaptor)
+#define TXP2 17
+#define VSPI_MISO 15 //Defining SPI with Camera on Vision (Pins 10, 11, 12 and 13 on Arduino Adaptor)
+#define VSPI_MOSI 4
+#define VSPI_SCLK 2
+#define VSPI_SS 14
+SPIClass * vspi = NULL; //Container for VSPI connection
 
 const char* ssid = "ENTER_NAME_HERE"; //Wifi Name
 const char* password = "ENTER_PASSWORD_HERE"; //Wifi password
@@ -8,6 +14,12 @@ const char* password = "ENTER_PASSWORD_HERE"; //Wifi password
 const uint16_t port = 1800; //port number to connect to
 const char * host = "ENTER_IP_HERE"; //IP to connect to (can be private or public)
 
+char Command[32]; //storage for the actual command
+char DriveMsg[32]; //storage for drive's message
+
+bool driveready = false; //bool which checks whether drive is ready for receiving command
+bool drivemsgready = false; //bool which checks whether drive's message is ready for sending
+bool commandready = false; //bool which checks whether command is ready for sending command
 bool alreadyconnected = false; //bool which checks whether the ESP32 has already connected with the server
 
 //Event for when the ESP32 successfully connects as a Wifi Station
@@ -50,8 +62,13 @@ void initWiFi() {
 }
 
 void setup() {
-  Serial.begin(115200);
-  Serial2.begin(115200, SERIAL_8N1, RXP2, TXP2);
+  Serial.begin(115200); //Debugging Line
+  Serial2.begin(115200, SERIAL_8N1, RXP2, TXP2); //Uart with Drive
+  vspi = new SPIClass(VSPI); //Initialising VSPI connection
+  vspi->begin(VSPI_SCLK, VSPI_MISO, VSPI_MOSI, VSPI_SS);
+  pinMode(VSPI_SS, OUTPUT);
+  vspi->setClockDivider(SPI_CLOCK_DIV8);
+
   WiFi.disconnect(true);
   delay(1000);
   //Initialising events so that they run when the corresponding events occur
@@ -77,15 +94,77 @@ void loop() {
       client.print("Hello from ESP32!");
       alreadyconnected = true;
     }
+
+    //Checks if there is any data on the UART datastream
+    if(Serial2.available()) {
+      // read the bytes incoming from the UART Port:
+      char Driveinit = Serial2.read();
+      if(Driveinit == '@' && !driveready){ // so that it constantly checks for terminal input when receives ready signal from driving
+        Serial.println("Drive is ready to receive a command");
+        driveready = true;
+      }else if(Driveinit == 'D'){
+        int i = 0;
+        while(Serial2.available()){
+          char Drivechar = Serial2.read();
+          if(Drivechar != '@'){
+            DriveMsg[i] = Drivechar;
+            i++;
+          }else{
+            Serial.println("The message from Drive has been recorded");
+            drivemsgready = true;
+            break;
+          }
+        }
+      }
+    }
+
     //Checks if there is any data on the TCP datastream and if so, reads it and echoes it back to the server
-    if(client.available()){
+    if(client.available() && !commandready){
       // read the bytes incoming from the server:
-      char thisChar = client.read();
-      // echo the bytes back to the server:
-      client.write(thisChar);
-      // write the bytes to all serial devices as well:
-      Serial.write(thisChar);
-      Serial2.write(thisChar);
+      char Commandinit = client.read();
+      if(Commandinit == '['){
+        Command[0] = Commandinit;
+        int i = 1;
+        while(client.available()){
+          char Commandchar = client.read();
+          if(Commandchar != ']'){
+            Command[i] = Commandchar;
+            i++;
+          }else{
+            Command[i] = ']';
+            Serial.println("The Command has been recorded");
+            commandready = true;
+            break;
+          }
+        }
+      }
+    }
+
+    //Checks if drive and command are ready for moving the rover
+    if(driveready && commandready){
+      Serial.print("Sending command to drive: ");
+      for(int i = 0; i < 32; i++){
+        Serial.write(Command[i]);
+        Serial2.write(Command[i]);
+        Command[i] = ' ';
+      }
+      Serial.println();
+      Serial2.write('\n');
+      driveready = false;
+      commandready = false;
+    }
+
+    //Checks if drive has a message for command
+    if(drivemsgready){
+      Serial.print("Sending message to command: ");
+      for(int i = 0; i < 32; i++){
+        Serial.write(DriveMsg[i]);
+        client.write(DriveMsg[i]);
+        DriveMsg[i] = ' ';
+      }
+      Serial.println();
+      client.write('\n');
+      drivemsgready = false;
     }
   }
 }
