@@ -155,12 +155,12 @@ In order to perform general purpose operations like
     to configure camera settings
     and to provide a debugging interface,
 a Nios II soft core was instantiated on the FPGA. 
-Alternatively, to implement a more advanced image processing algorithm
+Alternatively, to implement more advanced image processing algorithms
 or to reduce other hardware components in the system like the multiple Arduinos, 
-a FPGA with a hard core, 
+a FPGA with a hard core connected via PCIe, 
 known as a FPGA System-On-Chip (FPGA SoC) \cite{FPGASoC} could be used, 
-which would provide both the advantages of having reconfigurable hardware 
-and a more capable general purpose processor. 
+which would provide both the advantages of having reconfigurable hardware,
+a more capable general purpose processor and a higher bandwidth limit. 
 
 \subsubsection{Image Capture \& Processing Stream}
 
@@ -177,7 +177,31 @@ corresponding documentation is openly available, the implementation outside of
 the image processor will not be described in more depth, interested readers can 
 consult the provided repository and starter project for reference. 
 
-\subsection{Design of Image Processing Module}
+\subsubsection{Design \& Implementation of Image Processing Module}
+
+The challenge for this rover was to detect different coloured ping-pong balls as
+obstacles and relay the information about these obstacles to the control module. 
+The provided ping-pong balls came in 5 different colours - pink, orange, light 
+blue, grey and green. As these colours cover a wide range of the colour spectrum
+and even overlap with each other (orange and pink, blue and grey), it was 
+necessary to implement an algorithm that could take into account the location 
+and shape of the ball, as a purely colour based algorithm would be unable to 
+differentiate other objects in view of the camera and confuse them with the ball, 
+for example, the sky and the light blue ball would be seen as one object. 
+ 
+%Maybe add Image of all the balls here. 
+
+The initial design and implementation of this image processing algorithm involved
+a transform from the RGB (Red, Green, Blue) colour space to the HSV (Hue, 
+Saturation, Value) colour space, and pixel based classification to detect large
+areas of the necessary colours. HSV has been shown to be a better colour space
+for image processing tasks like colour segmentation in road sign detection for 
+autonomous driving as it is invariant to illumination changes unlike the RGB 
+space.\cite{ali2013performance} As the task at hand here is similar, a transformation
+from the RGB space to the HSV space is applied. 
+
+
+
 
 
 
@@ -199,7 +223,7 @@ When designing a system it is necessary to know the behaviour and limitations of
 To determine the behaviour of the battery cells they were all tracked through a full charge/discharge 
 cycle using the provided “Battery\_Charge\_Cycle\_Logged\_V1.1.ino” code\cite{clemow}. 
 Every cell behaved similarly in terms of the cell voltage compared to time. 
-The cell voltage of cell 1 over a full discharge/charge cycle is shown in figure~\ref{fig:charge_cycle}:
+The cell voltage of cell 1 over a full discharge/charge cycle is shown in Figure~\ref{fig:charge_cycle}:
 
 \begin{figure}[H]
     \centering
@@ -242,7 +266,7 @@ the panels can be determined from their I-V curves. To find the I-V curves each
 panel was connected to the B-inputs of the SMPS operating in non-synchronous boost.
 They were then lit by the lamp and the duty cycle of the SMPS was varied while measurements 
 of panel current and voltage were taken. After processing the resulting data
-is plotted in figure~\ref{fig:IV_curve}.
+is plotted in Figure~\ref{fig:IV_curve}.
 
  \begin{figure}[H]
     \centering
@@ -276,7 +300,7 @@ than needed and neither is expected to impose limitations on the design of the e
 The many characteristics of the SMPS have been thoroughly examined in 
 2nd year labs. However, for the energy submodule the most important characteristics 
 will be the SMPS efficiency during non-synchronous boost operation. A graph of 
-efficiency versus output current is shown in figure~\ref{fig:efficiency}.
+efficiency versus output current is shown in Figure~\ref{fig:efficiency}.
 
 
 \subsubsection{Battery Configuration}
