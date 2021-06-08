@@ -162,11 +162,22 @@ known as a FPGA System-On-Chip (FPGA SoC) \cite{FPGASoC} could be used,
 which would provide both the advantages of having reconfigurable hardware 
 and a more capable general purpose processor. 
 
-\subsubsection{Image Capture Processing Stream}
+\subsubsection{Image Capture \& Processing Stream}
 
 The image capture and buffering is based on a starter project provided
-by Terasic Inc for the D8M Camera module that was modified by Ed Stott 
-\cite{EEE2Rover}. 
+by Terasic Inc for the D8M Camera module that was modified by Dr Edward Stott 
+\cite{EEE2Rover} and provided to us for this project. The system makes use of 
+several IP components from the Intel Video and Image Processing Suite,
+namely the Clocked Video Output and Frame Buffer Core. The system is compromised
+of several modules, that take the raw data from the camera in Bayer filter form\cite{TerasicD8MWeb},
+transform it into RGB video packets, buffer the frames to allow camera and output
+to run at different frame rates, process the image data and convert the video 
+data to serial data for output over VGA.\cite{EEE2Rover} As this system and its 
+corresponding documentation is openly available, the implementation outside of 
+the image processor will not be described in more depth, interested readers can 
+consult the provided repository and starter project for reference. 
+
+\subsection{Design of Image Processing Module}
 
 
 
@@ -329,6 +340,13 @@ available for viewing under the maintained GitHub repository linked in the Appen
 
 %TODO #7!
 \section{Intellectual Property}
+\begin{comment}
+Could link stuff about how we are using Intel IP in the FPGA, as well as things
+like licencing and how some companies make their entire business based on it,
+like Arm, hence ethically it is important to maintain standards and rules for IP
+through the use of legislation and governmental regulatory authorities.  
+\end{comment}
+
 
 \newpage
 
