@@ -54,7 +54,10 @@
 % Make margins smaller, feel free to change
 \usepackage{geometry}
 \geometry{
-textwidth=426pt
+    a4paper,
+    top = 20mm,
+    bottom = 20mm,
+    textwidth=426pt
 }
 
 
@@ -182,30 +185,88 @@ When designing a system it is necessary to know the behaviour and limitations of
 \textbf{\chapter{Battery Cells}}
 \newline
 \newline
-To determine the behaviour of the battery cells they were all tracked through a full charge/discharge cycle using the provided “Battery\_Charge\_Cycle\_Logged\_V1.1.ino” code\cite{clemow}. Every cell behaved similarly in terms of the cell voltage compared to time. The cell voltage of cell 1 over a full charge cycle is shown below:
+To determine the behaviour of the battery cells they were all tracked through a full charge/discharge 
+cycle using the provided “Battery\_Charge\_Cycle\_Logged\_V1.1.ino” code\cite{clemow}. 
+Every cell behaved similarly in terms of the cell voltage compared to time. 
+The cell voltage of cell 1 over a full discharge/charge cycle is shown in figure~\ref{fig:charge_cycle}:
 
-Note the following important points on the graph. At 3190 s the cell is done charging and enters an idle state for 30 s after which it starts discharging. At 11000 s the cell is done discharging and enters an idle state for 30 s after which it starts charging. Finally, at 18800 s the cell is once again fully charged and the charge cycle is completed. The specific behaviour in each region of the graph will be discussed in later sections. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.18]{charge_cycle.png}
+    \caption{The voltage evolution of cell 1 through a full discharge/charge cycle.}
+    \label{fig:charge_cycle}
+    \end{figure}
 
-The provided charging algorithm also logs the current into the cell. By integrating said current for a full charge or discharge section it is then possible to determine the cell capacity in terms of mAh. The results of this analysis is presented in the table below:
+Note the following important points on the graph. At 200 s the cell is done charging and
+enters an idle state for 30 s after which it starts discharging. At ~8000 s the cell is fully
+discharges and enters an idle state for 30s after which it starts charging. Finally, at 18800 s the cell is once 
+again fully charged and the charge cycle is completed.
+
+The provided charging algorithm also logs the current into the cell.
+By integrating said current for a full charge or discharge section
+we can determine the cell capacity in mAh. The results of this analysis is 
+presented in the table below:
 
 \begin{center}
- \begin{tabular}{||c c c c c||} 
- \hline
- Cell 1 & Cell 2 & Cell 3 & Cell 4 & Cell 5 \\ [0.5ex] 
- \hline
- 542.7	& 526.1	& 519.5	& 530.1	& 543.7\\ [1ex] 
- \hline
-\end{tabular}
-\end{center}
+    \begin{tabular}{||c| c c c c c||} 
+    \hline
+   Cell Number& 1 & 2 & 3 & 4 & 5 \\ [0.5ex] 
+    \hline
+    Capacity (mAh) & 542.7	& 526.1	& 519.5	& 530.1	& 543.7\\ [1ex] 
+    \hline
+   \end{tabular}
+   \end{center}
 
-Cell number	1	2	3	4	5
-Capacity (mAh)	542.7	526.1	519.5	530.1	543.7
 
-What is important to notice is that the cells all have different capacities.
+As expected all cells have a capacity somewhere around 500 mAh. However, some cells
+are have a higher capacity than others which may have implications for the performance
+of certain battery cell configurations.
 
 \textbf{\chapter{PV panels}} 
+\newline
+\newline
+The provided PV panels are rated for a maximum power of 1.15 W at a voltage 
+of 5.0 V and current 230 mA. Away from the maximum power point the performance of 
+the panels can be determined from their I-V curves. To find the I-V curves each 
+panel was connected to the B-inputs of the SMPS operating in non-synchronous boost.
+They were then lit by the lamp and the duty cycle of the SMPS was varied while measurements 
+of panel current and voltage were taken. After processing the resulting data
+is plotted in figure~\ref{fig:IV_curve}.
+
+ \begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.18]{Panel1.png}
+    \includegraphics[scale=0.18]{Panel2.png}
+    \includegraphics[scale=0.18]{Panel3.png}
+    \includegraphics[scale=0.18]{Panel4.png}
+    \caption{I-V curves for the PV panels.}
+    \label{fig:IV_curve}
+    \end{figure}
+
+Though the data is noisy, it is clear that all panels exhibit the standard 
+I-V characteristics of a PV cell. That is, they behave as non-ideal current 
+sources with a nearly constant current at low voltages and a rapid current 
+reduction at high voltages\cite{green}. Moreover, we see that the provided lamp activates 
+the panels poorly as the peak power for each of the panels is only ~0.5 W.
 
 \textbf{\chapter{SMPS}} 
+\newline
+\begin{wrapfigure}{r}{0.5\textwidth}
+    \begin{center}
+      \includegraphics[width=0.48\textwidth]{Boost_efficiency_wduty.png}
+    \end{center}
+    \caption{SMPS efficiency versus output current with input voltage 5V}
+    \label{fig:efficiency}
+  \end{wrapfigure}
+The provided SMPS is rated for 10 W throughput with a maximum boost output voltage of 35 V 
+and maximum output current of 10 A\cite{SMPS_lab}. All these ratings are far higher 
+than needed and neither is expected to impose limitations on the design of the energy module. 
+
+The many characteristics of the SMPS have been thoroughly examined in 
+2nd year labs. However, for the energy submodule the most important characteristics 
+will be the SMPS efficiency during non-synchronous boost operation. A graph of 
+efficiency versus output current is shown in figure~\ref{fig:efficiency}.
+
 
 \subsubsection{Battery Configuration}
 

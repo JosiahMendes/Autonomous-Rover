@@ -8,11 +8,11 @@ x1 = 1:size(cell1.Var1);
 
 figure('Position', [10 10 900 400]);
 hold on;
-plot(x1, cell1.Var2)
-title('Charge cycle of cell1', 'fontSize', 16);
+plot(x1 - 3000, cell1.Var2)
+title('Charge cycle of cell 1', 'fontSize', 16);
 xlabel('Time [s]','fontSize', 14);
 ylabel('Cell voltage [mV]',  'fontSize', 14);
-xlim([3000,18876]);
+xlim([0,15876]);
 grid
 
 
