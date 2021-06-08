@@ -118,6 +118,56 @@
 \section{Systems}
 
 \subsection{Control}
+
+\subsubsection{Overview of Module and Goals}
+The Control module within the context of the rover has one main goal: 
+to act as the communication hub between all the subsystems, delivering
+the relevant data where it is required to allow for the rover to integrate
+as a whole \cite{MarsRoverSpec}. There are a couple of core objectives which must be 
+achieved in order to fulfill this role and they are as follows:
+
+\begin{enumerate}
+    \item Act as a Wifi Access Point sitting under a router to receive
+    commands from the Command subsystem and send data through socket-level communication.
+    \item Use a relevant hardware-level data transmission protocol to
+    send movement commands to the Drive subsystem and receive data for Command. 
+    \item Use a relevant hardware-level data transmission protocol to receive
+    the Vision subsystem data.
+    \item Connect the Energy subsystem with the rover, sending the relevant data
+    to the Command subsystem.
+\end{enumerate}
+
+Although the hardware is fixed, the solutions to the outlined problems
+above are mostly up to design. It is for this reason that the main challenge
+stems from understanding what works best for communication to each subsystem
+and more importantly, how to integrate it such that the transmission of data
+can be smoothly facilitated through the ESP32.
+
+\subsubsection{Hardware Organisation}
+
+The Control module comprises of two hardware components \cite{BoxContent}: 
+the ESP32, a system on chip microcontroller \cite{ESP32Datasheet}, as well as an Arduino adapter
+board designed to map some of the available GPIO pins on the ESP32 to an Arduino-like
+board \cite{ESP32ArduinoAdapter}.
+
+This hardware was provided by the project organisers and it immediately limits
+the tools which can be used, however the wide array of functionality which
+this microcontroller can provide through programming the chip allows
+for sufficient freedom and capabilities to complete the required tasks. The
+GPIO pins are highly configurable when compared to an Arduino-Uno \cite{MicrocontrollerComparison}, as they
+are capable of using more data communication through almost any of the pins
+via software configuration \cite{ESP32PinOut}. It is low-cost and low-power, 
+capable of using Wifi capabilities at 2.4GHz and Bluetooth \cite{ESP32Datasheet} to interface wirelessly
+with other devices. Using the Arduino Adapter board \cite{ESP32ArduinoAdapter}, it can sit directly on top of
+an Arduino or device with similar pins to directly interface through physical connections. 
+
+
+\subsubsection{Drive and Control}
+
+\subsubsection{Vision and Control}
+
+\subsubsection{Command and Control}
+
 \subsection{Comms}
 
 \subsection{Vision}
