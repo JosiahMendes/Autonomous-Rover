@@ -33,6 +33,7 @@
 \addbibresource{report_citations.bib} %Imports bibliography file
 
 
+
 % Tables
 \usepackage{xcolor}
 \usepackage{array}
@@ -50,6 +51,8 @@
 \usepackage{gensymb} %sudo tlmgr install was
 \usepackage{multicol}
 
+%Command for adding units to equations
+\newcommand{\unit}[1]{\ensuremath{\, \mathrm{#1}}}
 
 
 % Allowing lower levels of Contents Page
@@ -411,7 +414,7 @@ draw of the rover was found to be about 2 W. Each battery cell has a
 nominal voltage of 3.2 V and a maximum peak discharge current of 1 A 
 [battery datasheet], giving a maximum power draw of 3.2 W per cell. 
 Thus, to meet the power requirements of the rover it is enough to use only 
-one cell. However, each cell can only store about 3.2 V * 0.5 A * 3600 s = 5760 J, 
+one cell. However, each cell can only store about \(3.2 \unit{V} * 0.5 \unit{A} * 3600 \unit{s} \approx 5760 \unit{J} \), 
 which would only power the rover for 48 minutes. It is desirable to have 
 the rover be operational for as many hours as possible each day. 
 Assuming that 12 hours a day are completely without sunlight it is clear 
@@ -423,13 +426,13 @@ leaving only one pin for all other purposes. As such it might be wise to use
 less cells. To accommodate other circuit functions, only 4 cells will therefore be used.
 
 Now consider the PV array. Each PV panel is rated for 1.15 W, meaning 
-that the array as a whole should produce 4.6 W. As shown in figure ? the 
+that the array as a whole should produce 4.6 W. As shown in Figure~\ref{fig:efficiency} the 
 peak efficiency of the SMPS in boost mode is about 80\% giving a maximum 
-usable power of 0.80*4.6 W = 3.7 W. Assuming 12 hours of sunlight in a day, 
-this means that the PV array will produce less energy each day than the rover 
+usable power of \(0.8 * 4.6 \unit{W} \approx 3.7 \unit{W} \). Assuming 12 hours of sunlight in a day, 
+this means that the PV arra y will produce less energy each day than the rover 
 uses in 24 hours. It is therefore of high priority to capture as much of the 
 solar power as possible. The battery cells have a standard charging current of 
-250 mA [battery datasheet]. The power needed to charge the at this current is 
+250 mA \cite{batteryDatasheet}. The power needed to charge the at this current is 
 shown in the table below:
 
 \begin{center}
@@ -454,7 +457,7 @@ highest capacity.
 
 There are several ways to connect the 4 cells into a power pack, 
 however the design brief advised against mixing parallel and series 
-connections [phils video]. As such only fully series and parallel 
+connections\cite{energyBrief}. As such only fully series and parallel 
 battery packs will be considered. 
 
 A series battery pack has some obvious disadvantages compared to 
@@ -475,7 +478,7 @@ taking voltage measurements. Being able to switch single cells out of
 circuit can also enables switching faulty cells out of circuit, meaning 
 that one cell failing would not mean that the battery pack as a whole fails. 
 Finally, a parallel battery pack is self-balancing and energy automatically
-flows between cells when necessary [needs reference]. Series cells on the 
+flows between cells when necessary\cite{batteryBalancing}. Series cells on the 
 other hand need to be balanced by switching on and off balancing resistor. 
 This not only is more complex, but leads to power being lost in the balancing
 resistors.
@@ -485,19 +488,54 @@ it is very hard to track the current going into individual cells. For
 safe operation it is necessary to prevent over-current into each individual 
 cell. However, the current sensor on the SMPS can only measure the current 
 flowing into the battery pack as a whole. Each battery cell is only rated 
-for a rapid charging current of 500 mA [battery cell datasheet],  and seeing 
+for a rapid charging current of 500 mA\cite{batteryDatasheet},  and seeing 
 as there is no way to know how the current splits into each of the cells 
 one must operate one must operate with the assumption that all the current 
 can flow into a single cell. As such, no more than 500 mA can be allowed 
 to flow into the battery pack as a whole. At this current the nominal 
-charge power is only 3.2V*0.5W = 1.6 W meaning charging will be slow and 
-it is only possible to use less than half of the available solar power. 
+charge power is only \(3.2 \unit{V} * 0.5 \unit{A} = 1.6 \unit{W} \)
+ meaning charging will be slow and it is only possible to use less than half of the available solar power. 
 This is such a large drawback of using a parallel battery pack, that 
 despite all the previously stated disadvantages of a series battery pack, 
 a series battery pack has been deemed the best option.
 
 \subsubsection{PV Array Configuration}
-    \includegraphics[scale=0.3]{Series(S)}
+
+To facilitate the highest power output all the four provided PV panels will be used.
+ There are four different ways in which the four panels can feasibly be connected. 
+ The different arrangements are shown in figure~\ref{fig:arrayConfigurations}.
+
+ \begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.10]{Series(S)}
+    \includegraphics[scale=0.10]{Series-parallel(SP)}
+    \includegraphics[scale=0.10]{Total-cross-tied(TCT)}
+    \includegraphics[scale=0.10]{Parallel(P)}
+    \caption{From left to right: Series (S), Series-Parallel (SP), Total-Cross-Tied (TCT), Parallel (P)}
+    \vspace{-10pt}
+    \label{fig:arrayConfigurations}
+    \end{figure}
+
+However, considering the array voltages it is clear that the only viable arrangement 
+is the purely parallel connection. Consider first a pure series connection. In 
+section 2.5.1 each PV panel was found to have a max voltage of around 5.5 V. 
+The series connection will therefore have a total voltage of about 20+ V. 
+The nominal voltage of the series battery pack is \(4 * 3.2 \unit{V} = 12.8 \unit{V} \). As the array voltage is higher than the battery voltage, the SMPS must 
+be used in the buck configuration. However, the maximum buck input voltage 
+is only 7 V\cite{PMOS} and therefore a series connected PV array 
+cannot be used. Similarly for the Series-Parallel and Total-Cross-Tied 
+arrangements the maximum array voltage will be about 11 V. However, 
+as will be discussed in section 2.5.6 the battery pack voltage will 
+swing between 10 V and 14.4 V in a charge cycle. The problem is that 
+the 11 V array voltage is lower than the highest battery voltage, but
+ higher than the lowest battery pack voltage. For the array configuration
+to charge the battery pack it would then be necessary to have a power
+converter which can both step up and down voltage. Depending on how the 
+SMPS is configured it can either function in buck or boost mode, both not 
+both at the same time. Thus it is not possible to use either the Series-Parallel
+or Total-Cross-Tied configuration. This leaves a purely parallel battery 
+pack as the only viable option, which is why it has been chosen. 
+
 
 \subsubsection{SMPS Configuration}
 
