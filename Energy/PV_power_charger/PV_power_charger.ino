@@ -85,12 +85,12 @@ void setup() {
 
   
   //Check for the SD Card
-  Serial.println("\nInitializing SD card...");
+  Serial.println("0,\nInitializing SD card...");
   if (!SD.begin(chipSelect)) {
-    Serial.println("* is a card inserted?");
+    Serial.println("0,* is a card inserted?");
     while (true) {} //It will stick here FOREVER if no SD is in on boot
   } else {
-    Serial.println("Wiring is correct and a card is present.");
+    Serial.println("0,Wiring is correct and a card is present.");
   }
   
   // Wipe the datalog when starting
@@ -107,10 +107,10 @@ void setup() {
   for (int i = 0; i < 5; i++){
     String entry = SOHFile.readStringUntil(',');
     SOH[i] = entry.toFloat();
-    Serial.print(entry + " , ");
+    //Serial.print(entry + " , ");
   }
     
-  Serial.print('\n');
+  //Serial.print('\n');
 
   //Get energy look-up table
   File EnergyFile = SD.open("EnergyLU.csv",FILE_READ); //Open the energy look-up data
@@ -124,14 +124,14 @@ void setup() {
       }else{
         EnergyFile.read();
         energy_lookup[i] = strtoul(dataString.c_str(), NULL, 10);
-        Serial.print(String(energy_lookup[i]) + " , ");
+        //Serial.print(String(energy_lookup[i]) + " , ");
         dataString = "";
         break;
       }
     }
   }
 
-  Serial.print('\n');
+  //Serial.print('\n');
 
 
 
@@ -263,9 +263,9 @@ void loop() {
             Serial.println(dataString); // send it to serial as well in case a computer is connected
             File dataFile = SD.open("BatCharg.csv", FILE_WRITE); // open our CSV file
             if (dataFile){ //If we succeeded (usually this fails if the SD card is out)
-              dataFile.println(dataString); // print the data
+              dataFile.println("1," + dataString); // print the data
             } else {
-              Serial.println("File not open"); //otherwise print an error
+              Serial.println("0,File not open"); //otherwise print an error
             }
             dataFile.close(); // close the file
           }
@@ -291,7 +291,7 @@ void loop() {
             }
   
             SOHFile.println(dataString); //Write new SOH data to file 
-            Serial.println(dataString); //For ease, serial print the data as well
+            Serial.println("2," + dataString); //For ease, serial print the data as well
   
             SOHFile.close(); //Close the file
           }
@@ -304,7 +304,7 @@ void loop() {
         case 500:{
 
           //Data logging
-          dataString = String(state_num) +  "," + String(ref_sum) + "," + String(current_sum) + "," +String(I_out) + "," + String(I_in) + "," + String(V_out) + "," + String(V_cell[0]) + "," + String(V_cell[1]) + "," + String(V_cell[2]) + "," + String(V_cell[3]) + "," + String(max_power) + "," + String(duty_cycle); //build a datastring for the CSV file
+          dataString = String(state_num) +  "," + String(ref_sum) + "," + String(current_sum) + "," +String(I_out) + "," + String(I_in) + "," + String(V_out) + "," + String(V_cell[0]) + "," + String(V_cell[1]) + "," + String(V_cell[2]) + "," + String(V_cell[3]) + "," + String(max_power) + "," + String(duty_cycle) + "," + String(energy_lookup[int(-SOH[0] / 3600)] + "," + String(energy_lookup[0])); //build a datastring for the CSV file
           //Calculate new SOH and SOC data
           SOH[0] += current_sum; //How much capacity we have used so far
           //SOH[1] = SOH[1] //If we need to change number of cycles, it is not done here, so don't change it
@@ -404,7 +404,7 @@ void loop() {
             }
       
             default :{ // Should not end up here ....
-              Serial.println("Boop");
+              Serial.println("0,Boop");
               next_state = 4; // So if we are here, we go to error
               break;
             }
@@ -500,7 +500,7 @@ void check_for_errors(){ //Check whether we should enter an error state
 
   //Checking for excessive output voltage and current
   if (I_out > 650 || V_out > 18000 || I_in < -2000){
-    Serial.print(String(I_out) + " , " + String(V_out) + " , " + String(I_in));
+    Serial.print("0," +String(I_out) + " , " + String(V_out) + " , " + String(I_in));
     state_num = 4; //go directly to jail
     next_state = 4; // stay in jail
   }
