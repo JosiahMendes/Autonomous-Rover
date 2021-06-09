@@ -313,7 +313,7 @@ When designing a system it is necessary to know the behaviour and limitations of
 \newline
 \newline
 To determine the behaviour of the battery cells they were all tracked through a full charge/discharge 
-cycle using the provided “Battery\_Charge\_Cycle\_Logged\_V1.1.ino” code\cite{clemow}. 
+cycle using the provided “Battery\_Charge\_Cycle\_Logged\_V1.1.ino” code\cite{chargeCode}. 
 Every cell behaved similarly in terms of the cell voltage compared to time. 
 The cell voltage of cell 1 over a full discharge/charge cycle is shown in Figure~\ref{fig:charge_cycle}:
 
@@ -396,6 +396,104 @@ efficiency versus output current is shown in Figure~\ref{fig:efficiency}.
 
 
 \subsubsection{Battery Configuration}
+
+
+
+
+When designing the battery pack there are two principal choices that need to be made. 
+Firstly, how many battery cells should the battery pack consist of and, secondly, 
+in what manner should these cells be connected? 
+
+The optimal number of cells is in large part set by the energy 
+and power needs of other submodules. During testing the total power 
+draw of the rover was found to be about 2 W. Each battery cell has a 
+nominal voltage of 3.2 V and a maximum peak discharge current of 1 A 
+[battery datasheet], giving a maximum power draw of 3.2 W per cell. 
+Thus, to meet the power requirements of the rover it is enough to use only 
+one cell. However, each cell can only store about 3.2 V * 0.5 A * 3600 s = 5760 J, 
+which would only power the rover for 48 minutes. It is desirable to have 
+the rover be operational for as many hours as possible each day. 
+Assuming that 12 hours a day are completely without sunlight it is clear 
+that the rover cannot work through the night even if all 5 available 
+battery cells were used. To give the rover the most operational hours we 
+would then want to use all 5 battery cells. However, connecting 5 battery 
+boards to the Arduino would use at least 11 of the 12 free Arduino pins, 
+leaving only one pin for all other purposes. As such it might be wise to use 
+less cells. To accommodate other circuit functions, only 4 cells will therefore be used.
+
+Now consider the PV array. Each PV panel is rated for 1.15 W, meaning 
+that the array as a whole should produce 4.6 W. As shown in figure ? the 
+peak efficiency of the SMPS in boost mode is about 80\% giving a maximum 
+usable power of 0.80*4.6 W = 3.7 W. Assuming 12 hours of sunlight in a day, 
+this means that the PV array will produce less energy each day than the rover 
+uses in 24 hours. It is therefore of high priority to capture as much of the 
+solar power as possible. The battery cells have a standard charging current of 
+250 mA [battery datasheet]. The power needed to charge the at this current is 
+shown in the table below:
+
+\begin{center}
+    \begin{tabular}{||c| c c c c c||} 
+    \hline
+    Number of cells& 1 & 2 & 3 & 4 & 5 \\ [0.5ex] 
+    \hline
+    Nominal charging power (W) & 0.8 & 1.6 & 2.4 & 3.2 & 4.0\\ [1ex] 
+    \hline
+    Peak charging power (W) & 0.9 & 1.8 & 2.7 & 3.6 & 4.5 \\ [1ex] 
+    \hline
+   \end{tabular}
+   \end{center}
+
+
+A 4 cell battery pack is the largest battery pack which has a power 
+requirement of less than 3.7 W at standard charging current and little 
+power goes unused. Adding to this that the rover has most operational 
+hours with 4 cells, using 4 cells is the clear choice. Note that the 
+cells used are number 1, 2, 4 and 5 as these were found to have the 
+highest capacity.
+
+There are several ways to connect the 4 cells into a power pack, 
+however the design brief advised against mixing parallel and series 
+connections [phils video]. As such only fully series and parallel 
+battery packs will be considered. 
+
+A series battery pack has some obvious disadvantages compared to 
+a parallel battery pack. In section 2.5.1 it was shown that all the 
+battery cells have different capacities. In a parallel battery pack 
+this is not a big problem, as it is possible to draw different currents 
+from each cell and thereby use the full capacity of each cell. For a 
+series battery pack however, the total battery capacity will be limited 
+by the cell with the lowest capacity. As such, a series battery pack 
+is able to store less usable energy than an equivalent parallel battery 
+pack. Moreover, to check the OCV of each cell they need to be switched 
+out of circuit using the battery board relay. For a series battery pack 
+this leads to an open circuit and any charging/discharging of the battery 
+must halt while the voltage is measured. For a parallel battery pack on the 
+other hand, switching the relay of a cell only takes that one cell out of 
+circuit and it is possible to charge/discharge the battery pack while 
+taking voltage measurements. Being able to switch single cells out of 
+circuit can also enables switching faulty cells out of circuit, meaning 
+that one cell failing would not mean that the battery pack as a whole fails. 
+Finally, a parallel battery pack is self-balancing and energy automatically
+ flows between cells when necessary [needs reference]. Series cells on the 
+ other hand need to be balanced by switching on and off balancing resistor. 
+ This not only is more complex, but leads to power being lost in the balancing
+  resistors.
+
+There is however one major weakness to a parallel battery pack: 
+it is very hard to track the current going into individual cells. For 
+safe operation it is necessary to prevent over-current into each individual 
+cell. However, the current sensor on the SMPS can only measure the current 
+flowing into the battery pack as a whole. Each battery cell is only rated 
+for a rapid charging current of 500 mA [battery cell datasheet],  and seeing 
+as there is no way to know how the current splits into each of the cells 
+one must operate one must operate with the assumption that all the current 
+can flow into a single cell. As such, no more than 500 mA can be allowed 
+to flow into the battery pack as a whole. At this current the nominal 
+charge power is only 3.2V*0.5W = 1.6 W meaning charging will be slow and 
+it is only possible to use less than half of the available solar power. 
+This is such a large drawback of using a parallel battery pack, that 
+despite all the previously stated disadvantages of a series battery pack, 
+a series battery pack has been deemed the best option.
 
 \subsubsection{PV Array Configuration}
     \includegraphics[scale=0.3]{Series(S)}
