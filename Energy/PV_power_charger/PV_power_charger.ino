@@ -198,7 +198,7 @@ void loop() {
       I_in =  (ina219.getCurrent_mA()); //Measure input current [mA]
       V_out = analogRead(A0)*(4096/1023.0)*5/1.08; //Calculate output voltage [mV]
       I_out = -I_in * (1 - duty_cycle); //Calculate output current [mA]
-      I_bat = I_out - float(V_out/(300*4)); //Calculate current through batteries [mA], the factor of 4 was to make observation fit with measurements
+      I_bat = I_out - float(V_out/990); //Calculate current through batteries [mA]
       
       
       //Check whether we should enter an error state

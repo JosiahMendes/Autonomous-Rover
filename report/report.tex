@@ -386,7 +386,7 @@ the panels poorly as the peak power for each of the panels is only ~0.5 W.
       \includegraphics[width=0.48\textwidth]{Boost_efficiency_wduty.png}
     \vspace{0pt}
     \end{center}
-    \caption{SMPS efficiency versus output current with input voltage 5V}
+    \caption{SMPS efficiency versus output current with input voltage 5V [reference to logbook]}
     \label{fig:efficiency}
   \end{wrapfigure}
 The provided SMPS is rated for 10 W throughput with a maximum boost output voltage of 35 V 
@@ -400,10 +400,6 @@ efficiency versus output current is shown in Figure~\ref{fig:efficiency}.
 
 
 \subsubsection{Battery Configuration}
-
-
-
-
 When designing the battery pack there are two principal choices that need to be made. 
 Firstly, how many battery cells should the battery pack consist of and, secondly, 
 in what manner should these cells be connected? 
@@ -514,7 +510,8 @@ To facilitate the highest power output all the four provided PV panels will be u
     \caption{From left to right: Series (S), Series-Parallel (SP), Total-Cross-Tied (TCT), Parallel (P)}
     \vspace{-10pt}
     \label{fig:arrayConfigurations}
-    \end{figure}
+\end{figure}
+
 
 However, considering the array voltages it is clear that the only viable arrangement 
 is the purely parallel connection. Consider first a pure series connection. In 
@@ -538,24 +535,86 @@ pack as the only viable option, which is why it has been chosen.
 
 
 \subsubsection{SMPS Configuration}
+As the voltage of the battery pack is higher than the voltage of the series 
+connected battery cells, the voltage of the solar panels must be stepped up 
+when used for charging. This means that the SMPS must be operated in boost 
+mode with the solar panels on port B and battery on port A. Moreover, as the 
+SMPS has a max output voltage of 7 V in synchronous boost operation\cite{powerLogbook}, 
+it must be operated in non-synchronous mode.
 
 \subsubsection{Maximum Power Point Tracking}
+Power provided by PV panels often has to be condition before use. Commonly this 
+is done through the use of a two-stage power converter. The first stage of the power
+converter does maximum power point tracking to ensure the panels provide as 
+much power as possible. The second stage ensures that the power is exported at the
+required voltage or current\cite{green}. As the energy submodule only has
+access to a single SMPS device it is not possible to implement such a two stage
+power converter. Meaning that at any time it will only be possible to either operate 
+at the maximum power point or have the power be outputted at the correct current/voltage.
+This is however not a problem as the goal of the PV panels is not to output the 
+maximum amount of power, but simply to provide the power demanded by the charging algorithm. 
+As will be shown in later sections, during charging it is desirable to draw a set
+current from the SMPS output. Even if the PV panels could produce more power i.e.
+provide a higher current than what is being drawn, it is not desireable to increase 
+the output current. As such, the system does not need conventional MPPT. However,
+as is discussed below, if the PV panels cannot provide the demanded power some sort 
+of power tracking must be implemented. 
 
-\subsubsection{Charging Algorithm}
+\begin{wrapfigure}[18]{r}[0pt]{0.5\textwidth}
+    \begin{center}
+      \includegraphics[width=0.48\textwidth]{Combined.png}
+    \vspace{-15pt}
+    \end{center}
+    \caption{IV-curve (blue) and power curve (red) of the parallel configured PV array lit by lamp}
+    \label{fig:parallelArray}
+\end{wrapfigure}
 
-\subsubsection{Discharging Algorithm}
+Consider an SMPS being used to charge a battery pack at a set current. 
+If the actual current on the output is lower than the setpoint, one would attempt
+to increase the output current by increasing the output voltage. For an SMPS this
+is achieved by increasing the duty cycle. Similarly, if the output current is too
+high one would attempt to lower the output current by lowering the duty cycle. From 
+these considerations we see that increasing and decreasing the duty cycle is 
+associated with higher and lower output power respectively. Now compare this with
+the IV and power characteristics of the parallel PV array shown in 
+Figure ~\ref{fig:parallelArray}. For an SMPS, increasing the duty cycle 
+will lower the input resistance, causing the input current to increase. As increasing
+the duty cycle increases the output power so too must increased input current lead to
+increased input power for an equilibrium to exist. However, increased input current
+only gives increased output current if the PV panels are operating in the region to the right of the
+maximum power point. Thus this is the region one would want the panels to operate in.
 
-\subsubsection{Safety Mechanisms}
+To ensure that the PV panels are operating in the correct region, start with a duty
+cycle of 0 and increase it until the output current/voltage is at the desired value.
+If the desired operating point requires less power than what the PV array can provide,
+then an equilibrium should be found as the duty cycle is increased. If however the 
+desired operating point requires more power than the PV panels can provide, then no 
+equilibrium can exist and the duty cycle will increase to 1 without ever reaching the
+desired operating point. Thus, if the duty cycle ever reaches 1 during operation
+the charging algorithm must be trying to draw more power from the SMPS than is 
+possible. If so, the charging algorithm must be told to operate a lower power point. How this
+is implemented is covered in section ....
 
 \subsubsection{State of Charge}
+Current through the dissipation resistors will be so small that it is not necessary to
+take into account.
 
 \subsubsection{State of Health}
-maintenance
+maintenance/balancing
 
 \subsubsection{Communicating with Other Modules}
 Though it is not necessary to fully integrate the energy module with the rest of the rover, other submodules, specifically command, needs access data such as the battery SOH and SOC. For communicating with other modules the Arduino shield has a set of UART ports. However, as group members were not in the same location it was not possible to physically connect the energy module to the rover, which is necessary to use UART. As such, an alternative approach was employed. First the Arduino was connected to a computer via USB. On the computer a Python script was run [8]. At the start the Python script establishes a connection to a server created by running a similar script on the command module [9]. After a connection has been established the Python script starts reading the serial data coming from the Arduino and transmits it using TCP to the command module. Each message coming from the Arduino is in CSV form where the first entry is the message ID, which allows the command script to decode what type of data is being sent. 
 
 \subsubsection{Physical Integration of the Energy Module}
+
+\subsubsection{Implementation}
+Added mosfet as voltage divider by itself gave unreliable results, arduino can draw
+
+\subsubsection{Tracking SOH and SOC during discharging}
+
+\subsubsection{Safety Mechanisms}
+
+\subsubsection{Charging Algorithm}
 
 % End of energy subsection
 
