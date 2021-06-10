@@ -235,17 +235,15 @@ corresponding documentation is openly available, the implementation outside of
 the image processor will not be described in more depth, interested readers can 
 consult the provided repository and starter project for reference. 
 
-\subsubsection{Design \& Implementation of Image Processing Module}
+\subsubsection{Image Pre-Processing Module}
 
 The challenge for this rover was to detect different coloured ping-pong balls as
 obstacles and relay the information about these obstacles to the control module. 
 The provided ping-pong balls came in 5 different colours - pink, orange, light 
 blue, grey and green. As these colours cover a wide range of the colour spectrum
-and even overlap with each other (orange and pink, blue and grey), it was 
-necessary to implement an algorithm that could take into account the location 
-and shape of the ball, as a purely colour based algorithm would be unable to 
-differentiate other objects in view of the camera and confuse them with the ball, 
-for example, the sky and the light blue ball would be seen as one object. 
+and even overlap with each other (orange and pink, blue and grey), it was thought 
+to be necessary to do some preprocessing on the incoming image from the camera 
+to ensure optimal colour detection for object detection.  
  
 %Maybe add Image of all the balls here. 
 
@@ -264,7 +262,7 @@ for hue, and two values between 0 and 1 for saturation and value.\cite{10.1145/9
 As floating point calculations in SystemVerilog are computationally expensive, 
 and also introduce a layer of unnecessary complexity, the conversion was adjusted
 to express all three values in terms of an 8 bit integer ranging from 0-255. The
-algorithm for conversion is presented mathematically:
+algorithm for conversion from 8-bit RGB integers is presented mathematically:
 
 \begin{multicols}{3}
     \noindent
@@ -298,6 +296,43 @@ obtained by dividing the difference of two components by the chroma value. This
 module was then implemented using two pipelined 3 cycle divider from the Intel IP
 megafunction library for the hue and saturation value calculations.  
 
+The YUV colour space was also considered as a option for conversion as it also
+separates colour into 3 components - one for luma and two chrominance components.
+This would also make it invariant to illumination changes. The transform from RGB
+to HSV is also more suited to hardware as it is a linear transform requiring only
+multiplication. However, as it cannot represent the full RGB spectrum and is 
+limited in what colours it can represent, the decision was made not to use it.    
+
+
+\subsubsection{Image Object Detection Algorithm}
+
+There are several common approaches to object detection, with the two most 
+prominent being the use of classic Computer Vision algorithms like the Canny edge-
+detection technique and Hough transforms or the more recent use of convolutional
+neural networks (CNN) and deep learning to perform object detection through a 
+combination of layers that perform convolution, pooling and fully connected layers. 
+According to \cite{DBLP:journals/corr/abs-1806-01683}, CNNs have in recent years 
+become the de-facto standard for machine vision applications such as object 
+classification, object detection and object segmentation; but as there is a desire 
+for more performant and power- efficient systems, there has been a shift to 
+using dedicated hardware tailored to the operations used for CNNs. There was a 
+deep interest from the technical lead for the Vision module for this and he spent 
+a bit too much time researching this field, and was left with less time for the 
+project. There were far too many challenges for implementing a CNN within the 
+current project with key issues being the system is a real-time system that 
+processes video data pixel-by-pixel in a fixed order with most CNNs for object 
+detection working with multiple pixels in different locations Simultaneously and
+a lot of previous work on the subject is on FPGAs being used as accelerators for 
+CNNs running on hard cores rather than standalone embedded systems. This was also 
+a challenge for implementing traditional computer vision algorithms on the FPGA,  
+the same problem of not being able to access random pixels exists. 
+
+
+
+the best implement an algorithm that could take into account the location 
+and shape of the ball, as a purely colour based algorithm would be unable to 
+differentiate other objects in view of the camera and confuse them with the ball, 
+for example, the sky and the light blue ball would be seen as one object.
 
 
 \subsection{Drive}
@@ -517,7 +552,8 @@ However, considering the array voltages it is clear that the only viable arrange
 is the purely parallel connection. Consider first a pure series connection. In 
 section 2.5.1 each PV panel was found to have a max voltage of around 5.5 V. 
 The series connection will therefore have a total voltage of about 20+ V. 
-The nominal voltage of the series battery pack is \(4 * 3.2 \unit{V} = 12.8 \unit{V} \). As the array voltage is higher than the battery voltage, the SMPS must 
+The nominal voltage of the series battery pack is \(4 * 3.2 \unit{V} = 12.8 \unit{V} \). 
+As the array voltage is higher than the battery voltage, the SMPS must 
 be used in the buck configuration. However, the maximum buck input voltage 
 is only 7 V\cite{PMOS} and therefore a series connected PV array 
 cannot be used. Similarly for the Series-Parallel and Total-Cross-Tied 
@@ -695,7 +731,20 @@ an initial voltage difference of 200 mV, balancing only takes about
 \end{figure}
 
 \subsubsection{Communicating with Other Modules}
-Though it is not necessary to fully integrate the energy module with the rest of the rover, other submodules, specifically command, needs access data such as the battery SOH and SOC. For communicating with other modules the Arduino shield has a set of UART ports. However, as group members were not in the same location it was not possible to physically connect the energy module to the rover, which is necessary to use UART. As such, an alternative approach was employed. First the Arduino was connected to a computer via USB. On the computer a Python script was run [8]. At the start the Python script establishes a connection to a server created by running a similar script on the command module [9]. After a connection has been established the Python script starts reading the serial data coming from the Arduino and transmits it using TCP to the command module. Each message coming from the Arduino is in CSV form where the first entry is the message ID, which allows the command script to decode what type of data is being sent. 
+Though it is not necessary to fully integrate the energy module with the rest of 
+the rover, other submodules, specifically command, needs access data such as the 
+battery SOH and SOC. For communicating with other modules the Arduino shield has 
+a set of UART ports. However, as group members were not in the same location it 
+was not possible to physically connect the energy module to the rover, which is 
+necessary to use UART. As such, an alternative approach was employed. First the 
+Arduino was connected to a computer via USB. On the computer a Python script was 
+run [8]. At the start the Python script establishes a connection to a server 
+created by running a similar script on the command module [9]. After a 
+connection has been established the Python script starts reading the serial data 
+coming from the Arduino and transmits it using TCP to the command module. Each 
+message coming from the Arduino is in CSV form where the first entry is the 
+message ID, which allows the command script to decode what type of data is being 
+sent. 
 
 What data do we send?
 \subsubsection{Physical Integration of the Energy Module}
@@ -739,6 +788,11 @@ by adding comments and voicing their thoughts. GitHub Issues were also linked
 directly to commits in the codebase to allow for a more in-depth explanation and
 reasoning with context for a commit than what is allowed in the commit message 
 area. 
+
+By way of using GitHub, the team also made use of GitHub's Actions, which allow 
+for automated workflows to be run on certain events like a commit or a push for 
+continuous integration. An Action was designed for the writing of this report
+that compiled the \LaTeX document and produced a PDF. 
 
 Simultaneously, a Gantt chart was maintained to keep track of progress and is 
 available for viewing under the maintained GitHub repository linked in the Appendix.
