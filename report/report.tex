@@ -596,15 +596,108 @@ possible. If so, the charging algorithm must be told to operate a lower power po
 is implemented is covered in section ....
 
 \subsubsection{State of Charge}
-Current through the dissipation resistors will be so small that it is not necessary to
-take into account.
+The state of charge (SOC) of a battery is defined as the remaining usable charge 
+given as a percentage of the battery’s total charge capacity\cite{DICKINSON2009452}. There are many 
+methods for  estimating the SOC of a battery, the most common of which rely on 
+measurements of the voltage and/or current of the battery\cite{DANKO2019186}. The perhaps 
+simplest SOC estimation method is to measure the open circuit voltage (OCV) 
+of the battery and then calculate the SOC using a formula or a lookup table. 
+For many types of battery this is a good estimation method. An example is 
+lead-acid batteries, for which the OCV varies approximately linearly with the 
+SOC. However, as was shown figure ~\ref{fig:efficiency}, this is not the case 
+for LiFePO4 batteries. For LiFePO4 cells the voltage is nearly constant for 
+a majority of each charge/discharge cycle. Any measurement error or change in 
+OCV due to current recently flowing through the battery, would therefore produce large 
+SOC estimation errors. This holds true for all SOC methods relying purely on 
+voltage measurements and they are therefore not good alternatives. 
+
+An alternative SOC estimation method is Coulomb counting, where the current 
+flowing through the battery is integrated to find the net charge that has 
+left or entered the battery. Seeing as charge is a conserved quantity nearly 
+all charge put into the battery will be available during discharge. As such, 
+the SOC will vary nearly perfectly linearly with the integrated current. 
+The sources of error for Coulomb counting are mainly the Coulombic efficiency 
+of the batteries and current measurement errors. However, using correction 
+methods the error can be kept small, on the order of 1-2\%\cite{NG20091506}. Given the 
+simplicity of the estimation method, this is a very small error. Other 
+estimation methods, such as Kalman filters and neural networks, are claimed 
+to give higher estimation accuracies\cite{DANKO2019186}. However given the already high 
+accuracy of Coulomb counting the improvement is marginal. Moreover, they 
+are far more complex both computationally and in implementation. As such, 
+Coulomb counting was deemed the best option for SOC estimation.
+
+SOC is a measure of charge and not energy. It is necessary to estimate 
+the range of the rover. The obvious way of doing this is to track the 
+power consumption and speed of the rover. Dividing the energy left in 
+the batteries by the power and multiplying by the speed gives an estimate 
+of the range under the current operating conditions. The problem however, 
+is that the SOC only gives the usable current and not the usable energy 
+left in the battery. As the SOC of the battery decreases, so too does it 
+voltage, meaning that at lower states of charge each mAh will provide less 
+energy than at higher states of charge. To account for this, during discharging 
+the BMS logs the energy output of the battery alongside the SOC. From this data 
+it is possible to create a lookup table which relates the current SOC to how 
+much energy it is still possible to draw from the battery. This is the method 
+which will be used to find the energy left in the battery. 
 
 \subsubsection{State of Health}
-maintenance/balancing
+The state of health of a battery is a measure of its current condition and 
+performance compared to when it was new\cite{mpower}. Indicators of a battery’s state 
+of health include battery charge capacity, energy capacity, cell voltage 
+balance, and the number of completed charge/discharge cycles\cite{https://doi.org/10.1002/er.3598}. All these 
+indicators are tracked during operation and stored on the SD-card as to 
+retain data when the Arduino is not being powered. Over the course of its 
+lifetime the SOH of a battery will naturally degrade. However, through SOH 
+maintenance the degradation can be slowed significantly. Most importantly 
+for a series battery pack is to keep the battery cells balanced, as 
+unbalanced battery cells lead to lower capacity and faster cell degradation\cite{texas}. 
+
+To facilitate balancing, each of the provided battery boards have mounted 
+resistors which through a MOSFET can be connected to the battery cell. 
+Connecting a cell to the resistors on the battery board will lead to a 
+small extra current flowing out of the cell, slowly discharging it. 
+During operation one must decide when to switch said resistors on and 
+off to keep the cells balanced. Usually, balancing is only done towards 
+the end of a charge cycle\cite{texas}. There are several reasons for this. Firstly, 
+passive balancing requires energy to be expended and will therefore reduce 
+the total amount of usable energy in a battery if done during discharging. 
+Secondly, differences in impedance and charge curves between cells might 
+make it look as though a cell is charged more than others, but the voltage 
+difference might disappear naturally as the battery is charged more or as 
+charge current is reduced towards the end of a charge cycle. As such, the 
+implemented charging algorithm only does balancing during the constant 
+voltage part of charging. The balancing is done using the code shown in 
+Figure~\ref{fig:balancingCode}. During CV charging it is desirable that all cells have a voltage 
+of 3600 mV. If any cell has a voltage which is higher than 3600 mV its 
+voltage is too high and the dissipative resistors are switched on to lower 
+the voltage to the voltage set point. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width = \textwidth]{Balancing_code.png}
+    \caption{Function called while charging at high SOC to balance out the voltage of the cells.}
+    \vspace{-10pt}
+    \label{fig:balancingCode}
+\end{figure}
+
+Alongside the constant voltage charging algorithm this code was extremely 
+successful at balancing the cells. The balancing is shown in action in Figure~\ref{fig:balancing}. 
+One by one, the cell voltages are brought up to and kept at 3600 mV. Even with 
+an initial voltage difference of 200 mV, balancing only takes about 
+1000 seconds = 17 minutes. 
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.48\textwidth]{balancing.png}
+    \caption{Cell voltages as they are being balanced, ignore voltage spikes at end as they are not related to the balancing.}
+    \label{fig:balancing}
+\end{figure}
 
 \subsubsection{Communicating with Other Modules}
 Though it is not necessary to fully integrate the energy module with the rest of the rover, other submodules, specifically command, needs access data such as the battery SOH and SOC. For communicating with other modules the Arduino shield has a set of UART ports. However, as group members were not in the same location it was not possible to physically connect the energy module to the rover, which is necessary to use UART. As such, an alternative approach was employed. First the Arduino was connected to a computer via USB. On the computer a Python script was run [8]. At the start the Python script establishes a connection to a server created by running a similar script on the command module [9]. After a connection has been established the Python script starts reading the serial data coming from the Arduino and transmits it using TCP to the command module. Each message coming from the Arduino is in CSV form where the first entry is the message ID, which allows the command script to decode what type of data is being sent. 
 
+What data do we send?
 \subsubsection{Physical Integration of the Energy Module}
 
 \subsubsection{Implementation}
@@ -625,7 +718,7 @@ Added mosfet as voltage divider by itself gave unreliable results, arduino can d
 \section{Evaluation and Conclusion}
 
 \section{Project Management and Organisation}
-
+%Also had frequent teams meetings and used WhatsApp
 As this project was carried out remotely
 with contributors located in different countries, 
 it was important to have a good framework for communication and management. 
@@ -656,7 +749,11 @@ available for viewing under the maintained GitHub repository linked in the Appen
 Could link stuff about how we are using Intel IP in the FPGA, as well as things
 like licencing and how some companies make their entire business based on it,
 like Arm, hence ethically it is important to maintain standards and rules for IP
-through the use of legislation and governmental regulatory authorities.  
+through the use of legislation and governmental regulatory authorities. 
+\end{comment}
+\begin{comment}
+A lot of the technologies that we have used in this project is probably covered
+by a patent.
 \end{comment}
 
 

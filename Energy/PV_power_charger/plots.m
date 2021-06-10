@@ -1,20 +1,24 @@
 clear
 close all
 
-T = readtable('../CSV-files/round8/BATCHARG.CSV');
+T = readtable('CSV-files/round4/BATCHARG.CSV');
 
 figure
 hold on
-plot(1:2619,T.Var7);
-plot(1:2619,T.Var8);
-plot(1:2619,T.Var9);
-plot(1:2619,T.Var10);
-ylim([2500,3700]);
-xlim([1800,2619]);
+title("Balancing of cell voltages", "FontSize", 16)
+plot((1:size(T.Var6)) - 1900 ,T.Var7);
+plot((1:size(T.Var6)) - 1900,T.Var8);
+plot((1:size(T.Var6)) - 1900,T.Var9);
+plot((1:size(T.Var6)) - 1900,T.Var10);
+xlabel("Time [s]","FontSize", 16)
+ylabel("Cell Voltage [mV]","FontSize", 16)
+legend("Cell 1" , "Cell 2", "Cell 3", "Cell 4")
+ylim([3300,3700]);
+xlim([0,1100]);
 
 figure
 hold on
-plot(1:2619,T.Var6);
+plot(1:size(T.Var6),T.Var6);
 
 
 %%
