@@ -28,6 +28,7 @@
 \usepackage[nottoc]{tocbibind}
 \usepackage[
     backend=biber,
+    sorting = nty, 
     style=ieee]{biblatex}
 
 \addbibresource{report_citations.bib} %Imports bibliography file
@@ -73,7 +74,7 @@
 
 
 \title{Engineering Design Project}
-\author{Georgio Chaimali \and 
+\author{Georgios Chaimali \and 
         Dimitrios Georgakopoulos \and 
         Edvard J. Skaarberg Holen \and 
         Hyunjoon Jeon \and 
@@ -101,7 +102,7 @@
         \vfill
         \begin{flushright}
             \textsl{ \large
-            Georgio Chaimali \\ 
+            Georgios Chaimali \\ 
             Dimitrios Georgakopoulos \\ 
             Edvard J. Skaarberg Holen \\ 
             Hyunjoon Jeon \\ 
@@ -113,6 +114,7 @@
 
         % Bottom of the page
         {\large Word Count: XXXX Words \\ \today\par}
+        \vfill
     \end{center}
 \end{titlepage}
  
@@ -212,7 +214,7 @@ which can be used to interface with the ESP32 used for control.
 In order to perform general purpose operations like
     to configure camera settings
     and to provide a debugging interface,
-a Nios II soft core was instantiated on the FPGA. 
+a Nios\textsuperscript{\textregistered} II/f "Fast" soft core was instantiated on the FPGA. 
 Alternatively, to implement more advanced image processing algorithms
 or to reduce other hardware components in the system like the multiple Arduinos, 
 a FPGA with a hard core connected via PCIe, 
@@ -379,7 +381,9 @@ coefficients can be found by solving the matrix equation: $$
 $$ where the pixel locations are represented by \((m,n)\) and the physical locations on
 the plane are represented by \((x,y)\). Initially 6 samples were taken to calculate 
 the coefficients, but as more measurements were taken to verify the method, they
-were also added to the list of samples to improve the accuracy of the algorithm. 
+were also added to the list of samples to improve the accuracy of the algorithm.
+These calculations for the coefficients were carried out in MATLAB, and then 
+implemented in C on the Nios\textsuperscript{\textregistered} II processor. 
 
 This method is satisfactory in its performance, with a worst case error of \(\pm5\unit{cm}\)
 in difference between calculated position and actual position. For the rover's 
@@ -388,17 +392,21 @@ multiple measurements of the ball are taken, the actual position can be refined
 and accurately determined by taking the average of multiple readings in the 
 Command module in the server. 
 
-The Nios II processor does not include floating point hardware by default, but as 
+The Nios\textsuperscript{\textregistered} II processor does not include floating point hardware by default, but as 
 this algorithm requires floating point calculations as some of the coefficients 
 tend to be very small, and this algorithm is run for each set of colours, it was
-prudent to include hardware support for floating point adds and multiplications. 
-This was done by adding a module from Intel's IP catalogue for custom floating 
-point instructions, this reduces the amount of cycles necessary to carry out a
-floating point multiplication from  to   TODO!!!! Check qsys for info, offering 
-a speedup factor of .  
+prudent to include hardware support for single precision floating point adds 
+and multiplications. This was done by adding a module from Intel's IP catalogue 
+for custom floating point instructions, this reduces the amount of cycles 
+necessary to carry out a floating point multiplication to 4 cycles using a single
+instruction and a floating point add to 5 cycles\cite{NiosIICustomInstruction}.
+If this hardware was not used, it would be implemented using software, and hence
+would take multiple instructions and more hence more cycles. 
 
 This algorithm's performance is satisfactory in the current testing environment, 
-but if 
+but if tested on a surface with changing gradients or elevated objects, this algorithm
+would be inaccurate due to it's inability to take into account objects on the real
+world z-axis (i.e. the height of an object relative to the plane).  
 
 
 
