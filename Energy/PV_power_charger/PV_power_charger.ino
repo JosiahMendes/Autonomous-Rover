@@ -85,7 +85,7 @@ void setup() {
 
   
   //Check for the SD Card
-  Serial.println("0,\nInitializing SD card...");
+  Serial.println("0,Initializing SD card...");
   if (!SD.begin(chipSelect)) {
     Serial.println("0,* is a card inserted?");
     while (true) {} //It will stick here FOREVER if no SD is in on boot
@@ -263,7 +263,7 @@ void loop() {
             Serial.println(dataString); // send it to serial as well in case a computer is connected
             File dataFile = SD.open("BatCharg.csv", FILE_WRITE); // open our CSV file
             if (dataFile){ //If we succeeded (usually this fails if the SD card is out)
-              dataFile.println("1," + dataString); // print the data
+              dataFile.println(dataString); // print the data
             } else {
               Serial.println("0,File not open"); //otherwise print an error
             }
@@ -304,7 +304,7 @@ void loop() {
         case 500:{
 
           //Data logging
-          dataString = String(state_num) +  "," + String(ref_sum) + "," + String(current_sum) + "," +String(I_out) + "," + String(I_in) + "," + String(V_out) + "," + String(V_cell[0]) + "," + String(V_cell[1]) + "," + String(V_cell[2]) + "," + String(V_cell[3]) + "," + String(max_power) + "," + String(duty_cycle) + "," + String(energy_lookup[int(-SOH[0] / 3600)] + "," + String(energy_lookup[0])); //build a datastring for the CSV file
+          dataString = "1," + String(state_num) +  "," + String(ref_sum) + "," + String(current_sum) + "," +String(I_out) + "," + String(I_in) + "," + String(V_out) + "," + String(V_cell[0]) + "," + String(V_cell[1]) + "," + String(V_cell[2]) + "," + String(V_cell[3]) + "," + String(max_power) + "," + String(duty_cycle); //+ "," + //String(energy_lookup[int(-SOH[0] / 3600)] + "," + String(energy_lookup[0])); //build a datastring for the CSV file
           //Calculate new SOH and SOC data
           SOH[0] += current_sum; //How much capacity we have used so far
           //SOH[1] = SOH[1] //If we need to change number of cycles, it is not done here, so don't change it

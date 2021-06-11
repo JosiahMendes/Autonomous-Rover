@@ -6,6 +6,7 @@ class EnergyClientConsole():
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #begin TCP connection
         self.addressport = ("90.231.137.184", 9000) #define server host and port
+        #self.addressport = ("192.168.86.233", 9000) #define server host and port
         try:
             self.arduino = serial.Serial( port = '/dev/cu.usbmodem14401', baudrate = 38400) #connecting serially to arduino
         except:
