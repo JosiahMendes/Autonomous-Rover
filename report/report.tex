@@ -28,6 +28,7 @@
 \usepackage[nottoc]{tocbibind}
 \usepackage[
     backend=biber,
+    sorting = nty, 
     style=ieee]{biblatex}
 
 \addbibresource{report_citations.bib} %Imports bibliography file
@@ -73,7 +74,7 @@
 
 
 \title{Engineering Design Project}
-\author{Georgio Chaimali \and 
+\author{Georgios Chaimali \and 
         Dimitrios Georgakopoulos \and 
         Edvard J. Skaarberg Holen \and 
         Hyunjoon Jeon \and 
@@ -101,7 +102,7 @@
         \vfill
         \begin{flushright}
             \textsl{ \large
-            Georgio Chaimali \\ 
+            Georgios Chaimali \\ 
             Dimitrios Georgakopoulos \\ 
             Edvard J. Skaarberg Holen \\ 
             Hyunjoon Jeon \\ 
@@ -113,6 +114,7 @@
 
         % Bottom of the page
         {\large Word Count: XXXX Words \\ \today\par}
+        \vfill
     \end{center}
 \end{titlepage}
  
@@ -132,10 +134,10 @@ The Control module within the context of the rover has one main goal:
 to act as the communication hub between all the subsystems, delivering
 the relevant data where it is required to allow for the rover to integrate
 as a whole \cite{MarsRoverSpec}. There are a couple of core objectives which must be 
-achieved in order to fulfill this role and they are as follows:
+achieved in order to fulfil this role and they are as follows:
 
 \begin{enumerate}
-    \item Act as a Wifi Access Point sitting under a router to receive
+    \item Act as a WiFi Access Point sitting under a router to receive
     commands from the Command subsystem and send data through socket-level communication.
     \item Use a relevant hardware-level data transmission protocol to
     send movement commands to the Drive subsystem and receive data for Command. 
@@ -165,7 +167,7 @@ for sufficient freedom and capabilities to complete the required tasks. The
 GPIO pins are highly configurable when compared to an Arduino-Uno \cite{MicrocontrollerComparison}, as they
 are capable of using more data communication through almost any of the pins
 via software configuration \cite{ESP32PinOut}. It is low-cost and low-power, 
-capable of using Wifi capabilities at 2.4GHz and Bluetooth \cite{ESP32Datasheet} to interface wirelessly
+capable of using WiFi capabilities at 2.4GHz and Bluetooth \cite{ESP32Datasheet} to interface wirelessly
 with other devices. Using the Arduino Adapter board \cite{ESP32ArduinoAdapter}, it can sit directly on top of
 an Arduino or device with similar pins to directly interface through physical connections. 
 
@@ -212,7 +214,7 @@ which can be used to interface with the ESP32 used for control.
 In order to perform general purpose operations like
     to configure camera settings
     and to provide a debugging interface,
-a Nios II soft core was instantiated on the FPGA. 
+a Nios\textsuperscript{\textregistered} II/f "Fast" soft core was instantiated on the FPGA. 
 Alternatively, to implement more advanced image processing algorithms
 or to reduce other hardware components in the system like the multiple Arduinos, 
 a FPGA with a hard core connected via PCIe, 
@@ -323,9 +325,88 @@ current project with key issues being the system is a real-time system that
 processes video data pixel-by-pixel in a fixed order with most CNNs for object 
 detection working with multiple pixels in different locations Simultaneously and
 a lot of previous work on the subject is on FPGAs being used as accelerators for 
-CNNs running on hard cores rather than standalone embedded systems. This was also 
-a challenge for implementing traditional computer vision algorithms on the FPGA,  
-the same problem of not being able to access random pixels exists. 
+CNNs running on hard cores rather than standalone embedded systems as seen in \cite{DBLP:journals/corr/abs-1806-01683}
+. This was also a challenge for implementing traditional computer vision 
+algorithms on the FPGA,  the same problem of not being able to access random 
+pixels exists. 
+
+
+\subsubsection{Object Location Calculations}
+
+With the bounding boxes obtained from the Verilog module, the coordinates of the
+bounding box for each colour is sent to the NIOS II processor using a FIFO buffer.
+The calculations for how far away the object is and it's relative position in 
+comparison to the camera module was are done on the NIOS II processor. 
+
+There are multiple ways to calculate the location of a 3D object in space on a plane
+with some ways being more precise than others. 
+
+%TODO!! Add survey of other potential algorithms and why this one was chosen. 
+
+As the testing environment for the rover was ideal with the camera in a fixed 
+position and the testing surface being completely level, the initial algorithm 
+for the mapping between pixel coordinates and real world x-y coordinates relative
+to the camera was based on the following form: \begin{align*}
+    x & = A_x m^2 + B_x n^2 + C_x mn + D_x m + E_x n + F_x \\
+    y & = A_y m^2 + B_y n^2 + C_y mn + D_y m + E_y n + F_y  
+\end{align*} By taking a picture of multiple balls in different locations and 
+measuring the actual corresponding mapping distance and the pixel locations, the
+coefficients can be found by solving the matrix equation: $$
+    \begin{bmatrix}
+        m^2_1 & n^2_1 & m_1n_1 & m_1 & n_1 & 1 \\
+        m^2_2 & n^2_2 & m_2n_2 & m_2 & n_2 & 1 \\
+        .     & .     &    .   &  .  & .   & . \\
+        m^2_i & n^2_i & m_in_i & m_i & n_i & 1 \\  
+        .     & .     &    .   &  .  & .   & . \\
+        m^2_N & n^2_N & m_Nn_N & m_N & n_N & 1  
+    \end{bmatrix}
+    \cdot
+    \begin{bmatrix}
+        A_x & A_y \\
+        B_x & B_y \\
+        C_x & C_y \\
+        D_x & D_y \\
+        E_x & E_y \\
+        F_x & F_y
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        x_1 & y_1 \\
+        x_2 & x_2 \\
+        . & . \\
+        x_i & y_i \\
+        . & . \\
+        x_N & y_N
+    \end{bmatrix}
+$$ where the pixel locations are represented by \((m,n)\) and the physical locations on
+the plane are represented by \((x,y)\). Initially 6 samples were taken to calculate 
+the coefficients, but as more measurements were taken to verify the method, they
+were also added to the list of samples to improve the accuracy of the algorithm.
+These calculations for the coefficients were carried out in MATLAB, and then 
+implemented in C on the Nios\textsuperscript{\textregistered} II processor. 
+
+This method is satisfactory in its performance, with a worst case error of \(\pm5\unit{cm}\)
+in difference between calculated position and actual position. For the rover's 
+path finding algorithm, this is a value that is easily taken into account and as
+multiple measurements of the ball are taken, the actual position can be refined 
+and accurately determined by taking the average of multiple readings in the 
+Command module in the server. 
+
+The Nios\textsuperscript{\textregistered} II processor does not include floating point hardware by default, but as 
+this algorithm requires floating point calculations as some of the coefficients 
+tend to be very small, and this algorithm is run for each set of colours, it was
+prudent to include hardware support for single precision floating point adds 
+and multiplications. This was done by adding a module from Intel's IP catalogue 
+for custom floating point instructions, this reduces the amount of cycles 
+necessary to carry out a floating point multiplication to 4 cycles using a single
+instruction and a floating point add to 5 cycles\cite{NiosIICustomInstruction}.
+If this hardware was not used, it would be implemented using software, and hence
+would take multiple instructions and more hence more cycles. 
+
+This algorithm's performance is satisfactory in the current testing environment, 
+but if tested on a surface with changing gradients or elevated objects, this algorithm
+would be inaccurate due to it's inability to take into account objects on the real
+world z-axis (i.e. the height of an object relative to the plane).  
 
 
 
@@ -460,7 +541,7 @@ Now consider the PV array. Each PV panel is rated for 1.15 W, meaning
 that the array as a whole should produce 4.6 W. As shown in Figure~\ref{fig:efficiency} the 
 peak efficiency of the SMPS in boost mode is about 80\% giving a maximum 
 usable power of \(0.8 * 4.6 \unit{W} \approx 3.7 \unit{W} \). Assuming 12 hours of sunlight in a day, 
-this means that the PV arra y will produce less energy each day than the rover 
+this means that the PV array will produce less energy each day than the rover 
 uses in 24 hours. It is therefore of high priority to capture as much of the 
 solar power as possible. The battery cells have a standard charging current of 
 250 mA \cite{batteryDatasheet}. The power needed to charge the at this current is 
@@ -591,7 +672,7 @@ This is however not a problem as the goal of the PV panels is not to output the
 maximum amount of power, but simply to provide the power demanded by the charging algorithm. 
 As will be shown in later sections, during charging it is desirable to draw a set
 current from the SMPS output. Even if the PV panels could produce more power i.e.
-provide a higher current than what is being drawn, it is not desireable to increase 
+provide a higher current than what is being drawn, it is not desirable to increase 
 the output current. As such, the system does not need conventional MPPT. However,
 as is discussed below, if the PV panels cannot provide the demanded power some sort 
 of power tracking must be implemented. 
@@ -771,8 +852,11 @@ Added mosfet as voltage divider by itself gave unreliable results, arduino can d
 As this project was carried out remotely
 with contributors located in different countries, 
 it was important to have a good framework for communication and management. 
+For direct communications between the team, WhatsApp was used for short texts, 
+and Microsoft Teams was utilised for calls as its screen-sharing functionality 
+was useful for helping to debug errors. 
 
-The main tool used for communications and management was Git + GitHub.
+The main tool used for written communications and management was Git + GitHub.
 As the codebase was incredibly complex, 
 involving many different libraries and with each submodule being capable as a
 standalone project, it was vital to have a version control system in place. 
@@ -808,6 +892,11 @@ through the use of legislation and governmental regulatory authorities.
 \begin{comment}
 A lot of the technologies that we have used in this project is probably covered
 by a patent.
+\end{comment}
+\begin{comment}
+Could also talk about how some of the Libraries for the Arduino are open source
+and the benefits that those bring to development in projects like these which
+are not funded and the benefits of open source in general maybe?
 \end{comment}
 
 
