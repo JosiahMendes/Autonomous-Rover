@@ -245,8 +245,12 @@ void Rover::VoltageRegulationStep() {
 
 
 void Rover:: move_forward(float rover_speed, int distance) {
+   digitalWrite(pwmr, HIGH);       //setting right motor speed at maximum
+  digitalWrite(pwml, HIGH);       //setting left motor speed at maximum
   total_x = 0;
   total_y = 0;
+  total_x1 = 0;
+  total_y1 = 0;
   float d = (fabs(sqrt(total_x * total_x + total_y * total_y) - distance)) * 100;
   Serial.println(d);
   int total_y_int = total_y * 100;
@@ -303,7 +307,8 @@ void Rover:: move_forward(float rover_speed, int distance) {
 
     delay(50);
   }
-  vref = 0.5;
+   digitalWrite(pwmr, LOW);       //stop motors
+   digitalWrite(pwml, LOW);       //stop motors
 
 
 
@@ -311,16 +316,87 @@ void Rover:: move_forward(float rover_speed, int distance) {
 }
 
 void Rover:: move_backward(float rover_speed, int distance) {
-  this->SetState(LOW, HIGH);
+   digitalWrite(pwmr, HIGH);       //setting right motor speed at maximum
+  digitalWrite(pwml, HIGH);       //setting left motor speed at maximum
+  total_x = 0;
+  total_y = 0;
+  total_x1 = 0;
+  total_y1 = 0;
+  float d = (fabs(sqrt(total_x * total_x + total_y * total_y) - distance)) * 100;
+  Serial.println(d);
+  int total_y_int = total_y * 100;
+  while (abs(total_y_int) < distance * 100) {
+
+    vref = rover_speed;
+    this->VoltageRegulationStep();
+    Serial.println(vref);
+    Serial.println(vb);
+
+    this->SetState(LOW, HIGH);
+    int val = optical.mousecam_read_reg(ADNS3080_PIXEL_SUM);
+    MD md;
+    optical.mousecam_read_motion(&md);
+
+    //if(md.dx!=0 || md.dy !=0 ){
+    for (int i = 0; i < md.squal / 4; i++)
+      Serial.print('*');
+    Serial.print(' ');
+    Serial.print((val * 100) / 351);
+    Serial.print(' ');
+    Serial.print(md.shutter); Serial.print(" (");
+    Serial.print((int)md.dx); Serial.print(',');
+    Serial.print((int)md.dy); Serial.println(')');
+
+    //}
+
+    // Serial.println(md.max_pix);
+
+
+
+    distance_x = md.dx; //convTwosComp(md.dx);
+    distance_y = md.dy; //convTwosComp(md.dy);
+
+    total_x1 = (total_x1 + distance_x);
+    total_y1 = (total_y1 + distance_y);
+
+    float total_x1_float = float(total_x1 / 157);
+    Serial.print("Inches x are "); Serial.println(total_x1_float);
+    float total_y1_float = float(total_y1 / 157);
+    Serial.print("Inches y are "); Serial.println(total_y1_float);
+    total_x = 10 * total_x1_float; //Conversion from counts per inch to mm (400 counts per inch)
+    total_y = 10 * total_y1_float; //Conversion from counts per inch to mm (400 counts per inch)
+    total_y_int = total_y * 100;
+
+
+    Serial.print('\n');
+
+
+    Serial.println("Distance_x = " + String(total_x));
+    //
+    Serial.println("Distance_y = " + String(total_y));
+    Serial.print('\n');
+
+    delay(50);
+  }
+   digitalWrite(pwmr, LOW);       //stop motors
+   digitalWrite(pwml, LOW);       //stop motors
+
+
+
+
 }
 void Rover:: rotate_clockwise(int deg) {
+   digitalWrite(pwmr, HIGH);       //setting right motor speed at maximum
+  digitalWrite(pwml, HIGH);       //setting left motor speed at maximum
   this->SetState(LOW, LOW);
   float radian = float((deg * 71) / 4068.0);
   Serial.print("This is "); Serial.println(radian);
   Serial.print("The sine is "); Serial.println(sin(radian / 2));
   total_x = 0;
   total_y = 0;
-  float r = 167 ;
+  total_x1 = 0;
+  total_y1 = 0;
+  float r = 172 ;
   float chord = radian * r;
   float d = 0;
   float fabs_chord = float(fabs(chord - d));
@@ -385,12 +461,93 @@ void Rover:: rotate_clockwise(int deg) {
     delay(50);
   }
   Serial.println("Finished turning");
-  vref=0.5;
+  digitalWrite(pwmr, LOW);       //stop motors
+  digitalWrite(pwml, LOW);       //stop motors
+
 
 
 }
-void Rover:: rotate_anticlockwise(int deg) {
+void Rover:: rotate_anticlockwise(int deg)  {
+   digitalWrite(pwmr, HIGH);       //setting right motor speed at maximum
+  digitalWrite(pwml, HIGH);       //setting left motor speed at maximum
   this->SetState(HIGH, HIGH);
+  float radian = float((deg * 71) / 4068.0);
+  Serial.print("This is "); Serial.println(radian);
+  Serial.print("The sine is "); Serial.println(sin(radian / 2));
+  total_x = 0;
+  total_y = 0;
+  total_x1 = 0;
+  total_y1 = 0;
+  float r = 172 ;
+  float chord = radian * r;
+  float d = 0;
+  float fabs_chord = float(fabs(chord - d));
+  vref = 2;
+  float p = 2;
+  int l = fabs_chord * 100;
+  while (l > 200) {
+    float d = abs(total_x);
+    float fabs_chord = fabs(chord - d);
+    l = fabs_chord * 100;
+    Serial.print("While loop is "); Serial.println(fabs(fabs_chord));
+    vref = 1.6;
+    this->VoltageRegulationStep();
+    Serial.println(vref);
+    Serial.println(vb);
+
+
+
+
+    int val = optical.mousecam_read_reg(ADNS3080_PIXEL_SUM);
+    MD md;
+    optical.mousecam_read_motion(&md);
+
+    //if(md.dx!=0 || md.dy !=0 ){
+    for (int i = 0; i < md.squal / 4; i++)
+      Serial.print('*');
+    //    Serial.print(' ');
+    //    Serial.print((val*100)/351);
+    //    Serial.print(' ');
+    Serial.print(md.shutter); Serial.print(" (");
+    Serial.print((int)md.dx); Serial.print(',');
+    Serial.print((int)md.dy); Serial.println(')');
+
+    //}
+
+    // Serial.println(md.max_pix);
+
+
+
+    distance_x = md.dx; //convTwosComp(md.dx);
+    distance_y = md.dy; //convTwosComp(md.dy);
+    total_x1 = (total_x1 + distance_x);
+    total_y1 = (total_y1 + distance_y);
+
+    float total_x1_float = float(total_x1 / 157);
+    Serial.print("Inches x are "); Serial.println(total_x1_float);
+    float total_y1_float = float(total_y1 / 157);
+    Serial.print("Inches y are "); Serial.println(total_y1_float);
+    total_x = 10 * total_x1_float; //Conversion from counts per inch to mm (400 counts per inch)
+    total_y = 10 * total_y1_float; //Conversion from counts per inch to mm (400 counts per inch)
+
+
+
+    Serial.print('\n');
+
+
+    Serial.println("Distance_x = " + String(total_x));
+    //
+    Serial.println("Distance_y = " + String(total_y));
+    Serial.print('\n');
+
+    delay(50);
+  }
+  Serial.println("Finished turning");
+  digitalWrite(pwmr, LOW);       //stop motors
+  digitalWrite(pwml, LOW);       //stop motors
+
+
+
 }
 void Rover:: SetState(int Rstate, int Lstate) {
   digitalWrite(DIRR, Rstate);

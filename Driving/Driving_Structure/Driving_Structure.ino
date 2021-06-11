@@ -20,7 +20,11 @@ void loop() {
     if(c)
     {
       rover.rotate_clockwise(90);
-      rover.move_forward(2.5,200);
+      rover.move_forward(1.7,200);
+      rover.rotate_clockwise(90);
+      rover.move_backward(4,200);
+      rover.rotate_anticlockwise(90);
+     
     }
     
     c=false;
