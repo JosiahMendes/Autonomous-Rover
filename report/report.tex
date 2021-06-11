@@ -129,20 +129,483 @@
 
 \section{Functional Design}
 
-\subsection{TEMP Each component gets one}
+\subsection{Vision}
 \subsubsection{Requirements}
 \subsubsection{Initial Design Choices}
 
-\subsection{Energy}
+\subsection{Control}
 \subsubsection{Requirements}
 \subsubsection{Initial Design Choices}
-\subsubsection{Physcial Integration of the Energy Submodule}
+
+\subsection{Command}
+\subsubsection{Requirements}
+\subsubsection{Initial Design Choices}
+
+\subsection{Drive}
+\subsubsection{Requirements}
+\subsubsection{Initial Design Choices}
+
+
+\subsection{Integration}
+\subsubsection{Requirements}
+\subsubsection{Initial Design Choices}
+
+
+%Start of functional energy section
+\subsection{Energy}
+\subsubsection{Requirements}
+\begin{abstract}
+    The main goal of the energy sub-module is to design a battery pack for the rover and charge it using solar power. With this goal in mind, the energy sub-module must develop a battery management system which allows the tracking of battery SOC and SOH, and if necessary perform SOH maintenance.         
+\end{abstract}
+
+
+\subsubsection{Initial Design Choices}
+
+\subsubsection{Characterising Components}
+When designing a system it is necessary to know the behaviour and limitations of its constituent components. There are three main components that make up the energy subsystem: the battery cells, the PV panels and the SMPS.
+
+\textbf{\chapter{Battery Cells}} 
+\newline
+\newline
+To determine the behaviour of the battery cells they were all tracked through a full charge/discharge 
+cycle using the provided “Battery\_Charge\_Cycle\_Logged\_V1.1.ino” code\cite{chargeCode}. 
+Every cell behaved similarly in terms of the cell voltage compared to time. 
+The cell voltage of cell 1 over a full discharge/charge cycle is shown in Figure~\ref{fig:charge_cycle}:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.18]{charge_cycle.png}
+    \caption{The voltage evolution of cell 1 through a full discharge/charge cycle.}
+    \label{fig:charge_cycle}
+    \end{figure}
+
+Note the following important points on the graph. At 200 s the cell is done charging and
+enters an idle state for 30 s after which it starts discharging. At ~8000 s the cell is fully
+discharges and enters an idle state for 30s after which it starts charging. Finally, at 18800 s the cell is once 
+again fully charged and the charge cycle is completed.
+
+The provided charging algorithm also logs the current into the cell.
+By integrating said current for a full charge or discharge section
+we can determine the cell capacity in mAh. The results of this analysis is 
+presented in the table below:
+
+\begin{center}
+    \begin{tabular}{||c| c c c c c||} 
+    \hline
+    Cell Number& 1 & 2 & 3 & 4 & 5 \\ [0.5ex] 
+    \hline
+    Capacity (mAh) & 542.7	& 526.1	& 519.5	& 530.1	& 543.7\\ [1ex] 
+    \hline
+    \end{tabular}
+    \end{center}
+
+
+As expected all cells have a capacity somewhere around 500 mAh. However, some cells
+are have a higher capacity than others which may have implications for the performance
+of certain battery cell configurations.
+
+\textbf{\chapter{PV panels}} 
+\newline
+\newline
+The provided PV panels are rated for a maximum power of 1.15 W at a voltage 
+of 5.0 V and current 230 mA. Away from the maximum power point the performance of 
+the panels can be determined from their I-V curves. To find the I-V curves each 
+panel was connected to the B-inputs of the SMPS operating in non-synchronous boost.
+They were then lit by the lamp and the duty cycle of the SMPS was varied while measurements 
+of panel current and voltage were taken. After processing the resulting data
+is plotted in Figure~\ref{fig:IV_curve}.
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.18]{Panel1.png}
+    \includegraphics[scale=0.18]{Panel2.png}
+    \includegraphics[scale=0.18]{Panel3.png}
+    \includegraphics[scale=0.18]{Panel4.png}
+    \caption{I-V curves for the PV panels.}
+    \label{fig:IV_curve}
+    \end{figure}
+
+Though the data is noisy, it is clear that all panels exhibit the standard 
+I-V characteristics of a PV cell. That is, they behave as non-ideal current 
+sources with a nearly constant current at low voltages and a rapid current 
+reduction at high voltages\cite{green}. Moreover, we see that the provided lamp activates 
+the panels poorly as the peak power for each of the panels is only ~0.5 W.
+
+\textbf{\chapter{SMPS}} 
+\newline
+\begin{wrapfigure}[16]{r}[0pt]{0.5\textwidth}
+    \begin{center}
+        \includegraphics[width=0.48\textwidth]{Boost_efficiency_wduty.png}
+    \vspace{0pt}
+    \end{center}
+    \caption{SMPS efficiency versus output current with input voltage 5V [reference to logbook]}
+    \label{fig:efficiency}
+    \end{wrapfigure}
+The provided SMPS is rated for 10 W throughput with a maximum boost output voltage of 35 V 
+and maximum output current of 10 A\cite{SMPS_lab}. All these ratings are far higher 
+than needed and neither is expected to impose limitations on the design of the energy module. 
+
+The many characteristics of the SMPS have been thoroughly examined in 
+2nd year labs. However, for the energy submodule the most important characteristics 
+will be the SMPS efficiency during non-synchronous boost operation. A graph of 
+efficiency versus output current is shown in Figure~\ref{fig:efficiency}.
+
+
+\subsubsection{Battery Configuration}
+When designing the battery pack there are two principal choices that need to be made. 
+Firstly, how many battery cells should the battery pack consist of and, secondly, 
+in what manner should these cells be connected? 
+
+The optimal number of cells is in large part set by the energy 
+and power needs of other submodules. During testing the total power 
+draw of the rover was found to be about 2 W. Each battery cell has a 
+nominal voltage of 3.2 V and a maximum peak discharge current of 1 A 
+[battery datasheet], giving a maximum power draw of 3.2 W per cell. 
+Thus, to meet the power requirements of the rover it is enough to use only 
+one cell. However, each cell can only store about \(3.2 \unit{V} * 0.5 \unit{A} * 3600 \unit{s} \approx 5760 \unit{J} \), 
+which would only power the rover for 48 minutes. It is desirable to have 
+the rover be operational for as many hours as possible each day. 
+Assuming that 12 hours a day are completely without sunlight it is clear 
+that the rover cannot work through the night even if all 5 available 
+battery cells were used. To give the rover the most operational hours we 
+would then want to use all 5 battery cells. However, connecting 5 battery 
+boards to the Arduino would use at least 11 of the 12 free Arduino pins, 
+leaving only one pin for all other purposes. As such it might be wise to use 
+less cells. To accommodate other circuit functions, only 4 cells will therefore be used.
+
+Now consider the PV array. Each PV panel is rated for 1.15 W, meaning 
+that the array as a whole should produce 4.6 W. As shown in Figure~\ref{fig:efficiency} the 
+peak efficiency of the SMPS in boost mode is about 80\% giving a maximum 
+usable power of \(0.8 * 4.6 \unit{W} \approx 3.7 \unit{W} \). Assuming 12 hours of sunlight in a day, 
+this means that the PV array will produce less energy each day than the rover 
+uses in 24 hours. It is therefore of high priority to capture as much of the 
+solar power as possible. The battery cells have a standard charging current of 
+250 mA \cite{batteryDatasheet}. The power needed to charge the at this current is 
+shown in the table below:
+
+\begin{center}
+    \begin{tabular}{||c| c c c c c||} 
+    \hline
+    Number of cells& 1 & 2 & 3 & 4 & 5 \\ [0.5ex] 
+    \hline
+    Nominal charging power (W) & 0.8 & 1.6 & 2.4 & 3.2 & 4.0\\ [1ex] 
+    \hline
+    Peak charging power (W) & 0.9 & 1.8 & 2.7 & 3.6 & 4.5 \\ [1ex] 
+    \hline
+    \end{tabular}
+    \end{center}
+
+
+A 4 cell battery pack is the largest battery pack which has a power 
+requirement of less than 3.7 W at standard charging current and little 
+power goes unused. Adding to this that the rover has most operational 
+hours with 4 cells, using 4 cells is the clear choice. Note that the 
+cells used are number 1, 2, 4 and 5 as these were found to have the 
+highest capacity.
+
+There are several ways to connect the 4 cells into a power pack, 
+however the design brief advised against mixing parallel and series 
+connections\cite{energyBrief}. As such only fully series and parallel 
+battery packs will be considered. 
+
+A series battery pack has some obvious disadvantages compared to 
+a parallel battery pack. In section 2.5.1 it was shown that all the 
+battery cells have different capacities. In a parallel battery pack 
+this is not a big problem, as it is possible to draw different currents 
+from each cell and thereby use the full capacity of each cell. For a 
+series battery pack however, the total battery capacity will be limited 
+by the cell with the lowest capacity. As such, a series battery pack 
+is able to store less usable energy than an equivalent parallel battery 
+pack. Moreover, to check the OCV of each cell they need to be switched 
+out of circuit using the battery board relay. For a series battery pack 
+this leads to an open circuit and any charging/discharging of the battery 
+must halt while the voltage is measured. For a parallel battery pack on the 
+other hand, switching the relay of a cell only takes that one cell out of 
+circuit and it is possible to charge/discharge the battery pack while 
+taking voltage measurements. Being able to switch single cells out of 
+circuit can also enables switching faulty cells out of circuit, meaning 
+that one cell failing would not mean that the battery pack as a whole fails. 
+Finally, a parallel battery pack is self-balancing and energy automatically
+flows between cells when necessary\cite{batteryBalancing}. Series cells on the 
+other hand need to be balanced by switching on and off balancing resistor. 
+This not only is more complex, but leads to power being lost in the balancing
+resistors.
+
+There is however one major weakness to a parallel battery pack: 
+it is very hard to track the current going into individual cells. For 
+safe operation it is necessary to prevent over-current into each individual 
+cell. However, the current sensor on the SMPS can only measure the current 
+flowing into the battery pack as a whole. Each battery cell is only rated 
+for a rapid charging current of 500 mA\cite{batteryDatasheet},  and seeing 
+as there is no way to know how the current splits into each of the cells 
+one must operate one must operate with the assumption that all the current 
+can flow into a single cell. As such, no more than 500 mA can be allowed 
+to flow into the battery pack as a whole. At this current the nominal 
+charge power is only \(3.2 \unit{V} * 0.5 \unit{A} = 1.6 \unit{W} \)
+    meaning charging will be slow and it is only possible to use less than half of the available solar power. 
+This is such a large drawback of using a parallel battery pack, that 
+despite all the previously stated disadvantages of a series battery pack, 
+a series battery pack has been deemed the best option.
+
+\subsubsection{PV Array Configuration}
+
+To facilitate the highest power output all the four provided PV panels will be used.
+    There are four different ways in which the four panels can feasibly be connected. 
+    The different arrangements are shown in figure~\ref{fig:arrayConfigurations}.
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.10]{Series(S)}
+    \includegraphics[scale=0.10]{Series-parallel(SP)}
+    \includegraphics[scale=0.10]{Total-cross-tied(TCT)}
+    \includegraphics[scale=0.10]{Parallel(P)}
+    \caption{From left to right: Series (S), Series-Parallel (SP), Total-Cross-Tied (TCT), Parallel (P)}
+    \vspace{-10pt}
+    \label{fig:arrayConfigurations}
+\end{figure}
+
+
+However, considering the array voltages it is clear that the only viable arrangement 
+is the purely parallel connection. Consider first a pure series connection. In 
+section 2.5.1 each PV panel was found to have a max voltage of around 5.5 V. 
+The series connection will therefore have a total voltage of about 20+ V. 
+The nominal voltage of the series battery pack is \(4 * 3.2 \unit{V} = 12.8 \unit{V} \). 
+As the array voltage is higher than the battery voltage, the SMPS must 
+be used in the buck configuration. However, the maximum buck input voltage 
+is only 7 V\cite{PMOS} and therefore a series connected PV array 
+cannot be used. Similarly for the Series-Parallel and Total-Cross-Tied 
+arrangements the maximum array voltage will be about 11 V. However, 
+as will be discussed in section 2.5.6 the battery pack voltage will 
+swing between 10 V and 14.4 V in a charge cycle. The problem is that 
+the 11 V array voltage is lower than the highest battery voltage, but
+    higher than the lowest battery pack voltage. For the array configuration
+to charge the battery pack it would then be necessary to have a power
+converter which can both step up and down voltage. Depending on how the 
+SMPS is configured it can either function in buck or boost mode, both not 
+both at the same time. Thus it is not possible to use either the Series-Parallel
+or Total-Cross-Tied configuration. This leaves a purely parallel battery 
+pack as the only viable option, which is why it has been chosen. 
+
+
+\subsubsection{SMPS Configuration}
+As the voltage of the battery pack is higher than the voltage of the series 
+connected battery cells, the voltage of the solar panels must be stepped up 
+when used for charging. This means that the SMPS must be operated in boost 
+mode with the solar panels on port B and battery on port A. Moreover, as the 
+SMPS has a max output voltage of 7 V in synchronous boost operation\cite{powerLogbook}, 
+it must be operated in non-synchronous mode.
+
+\subsubsection{Maximum Power Point Tracking}
+Power provided by PV panels often has to be condition before use. Commonly this 
+is done through the use of a two-stage power converter. The first stage of the power
+converter does maximum power point tracking to ensure the panels provide as 
+much power as possible. The second stage ensures that the power is exported at the
+required voltage or current\cite{green}. As the energy submodule only has
+access to a single SMPS device it is not possible to implement such a two stage
+power converter. Meaning that at any time it will only be possible to either operate 
+at the maximum power point or have the power be outputted at the correct current/voltage.
+This is however not a problem as the goal of the PV panels is not to output the 
+maximum amount of power, but simply to provide the power demanded by the charging algorithm. 
+As will be shown in later sections, during charging it is desirable to draw a set
+current from the SMPS output. Even if the PV panels could produce more power i.e.
+provide a higher current than what is being drawn, it is not desirable to increase 
+the output current. As such, the system does not need conventional MPPT. However,
+as is discussed below, if the PV panels cannot provide the demanded power some sort 
+of power tracking must be implemented. 
+
+\begin{wrapfigure}[18]{r}[0pt]{0.5\textwidth}
+    \begin{center}
+        \includegraphics[width=0.48\textwidth]{Combined.png}
+    \vspace{-15pt}
+    \end{center}
+    \caption{IV-curve (blue) and power curve (red) of the parallel configured PV array lit by lamp}
+    \label{fig:parallelArray}
+\end{wrapfigure}
+
+Consider an SMPS being used to charge a battery pack at a set current. 
+If the actual current on the output is lower than the setpoint, one would attempt
+to increase the output current by increasing the output voltage. For an SMPS this
+is achieved by increasing the duty cycle. Similarly, if the output current is too
+high one would attempt to lower the output current by lowering the duty cycle. From 
+these considerations we see that increasing and decreasing the duty cycle is 
+associated with higher and lower output power respectively. Now compare this with
+the IV and power characteristics of the parallel PV array shown in 
+Figure ~\ref{fig:parallelArray}. For an SMPS, increasing the duty cycle 
+will lower the input resistance, causing the input current to increase. As increasing
+the duty cycle increases the output power so too must increased input current lead to
+increased input power for an equilibrium to exist. However, increased input current
+only gives increased output current if the PV panels are operating in the region to the right of the
+maximum power point. Thus this is the region one would want the panels to operate in.
+
+To ensure that the PV panels are operating in the correct region, start with a duty
+cycle of 0 and increase it until the output current/voltage is at the desired value.
+If the desired operating point requires less power than what the PV array can provide,
+then an equilibrium should be found as the duty cycle is increased. If however the 
+desired operating point requires more power than the PV panels can provide, then no 
+equilibrium can exist and the duty cycle will increase to 1 without ever reaching the
+desired operating point. Thus, if the duty cycle ever reaches 1 during operation
+the charging algorithm must be trying to draw more power from the SMPS than is 
+possible. If so, the charging algorithm must be told to operate a lower power point. How this
+is implemented is covered in section ....
+
+\subsubsection{State of Charge}
+The state of charge (SOC) of a battery is defined as the remaining usable charge 
+given as a percentage of the battery’s total charge capacity\cite{DICKINSON2009452}. There are many 
+methods for  estimating the SOC of a battery, the most common of which rely on 
+measurements of the voltage and/or current of the battery\cite{DANKO2019186}. The perhaps 
+simplest SOC estimation method is to measure the open circuit voltage (OCV) 
+of the battery and then calculate the SOC using a formula or a lookup table. 
+For many types of battery this is a good estimation method. An example is 
+lead-acid batteries, for which the OCV varies approximately linearly with the 
+SOC. However, as was shown figure ~\ref{fig:efficiency}, this is not the case 
+for LiFePO4 batteries. For LiFePO4 cells the voltage is nearly constant for 
+a majority of each charge/discharge cycle. Any measurement error or change in 
+OCV due to current recently flowing through the battery, would therefore produce large 
+SOC estimation errors. This holds true for all SOC methods relying purely on 
+voltage measurements and they are therefore not good alternatives. 
+
+An alternative SOC estimation method is Coulomb counting, where the current 
+flowing through the battery is integrated to find the net charge that has 
+left or entered the battery. Seeing as charge is a conserved quantity nearly 
+all charge put into the battery will be available during discharge. As such, 
+the SOC will vary nearly perfectly linearly with the integrated current. 
+The sources of error for Coulomb counting are mainly the Coulombic efficiency 
+of the batteries and current measurement errors. However, using correction 
+methods the error can be kept small, on the order of 1-2\%\cite{NG20091506}. Given the 
+simplicity of the estimation method, this is a very small error. Other 
+estimation methods, such as Kalman filters and neural networks, are claimed 
+to give higher estimation accuracies\cite{DANKO2019186}. However given the already high 
+accuracy of Coulomb counting the improvement is marginal. Moreover, they 
+are far more complex both computationally and in implementation. As such, 
+Coulomb counting was deemed the best option for SOC estimation.
+
+SOC is a measure of charge and not energy. It is necessary to estimate 
+the range of the rover. The obvious way of doing this is to track the 
+power consumption and speed of the rover. Dividing the energy left in 
+the batteries by the power and multiplying by the speed gives an estimate 
+of the range under the current operating conditions. The problem however, 
+is that the SOC only gives the usable current and not the usable energy 
+left in the battery. As the SOC of the battery decreases, so too does it 
+voltage, meaning that at lower states of charge each mAh will provide less 
+energy than at higher states of charge. To account for this, during discharging 
+the BMS logs the energy output of the battery alongside the SOC. From this data 
+it is possible to create a lookup table which relates the current SOC to how 
+much energy it is still possible to draw from the battery. This is the method 
+which will be used to find the energy left in the battery. 
+
+\subsubsection{State of Health}
+The state of health of a battery is a measure of its current condition and 
+performance compared to when it was new\cite{mpower}. Indicators of a battery’s state 
+of health include battery charge capacity, energy capacity, cell voltage 
+balance, and the number of completed charge/discharge cycles\cite{https://doi.org/10.1002/er.3598}. All these 
+indicators are tracked during operation and stored on the SD-card as to 
+retain data when the Arduino is not being powered. Over the course of its 
+lifetime the SOH of a battery will naturally degrade. However, through SOH 
+maintenance the degradation can be slowed significantly. Most importantly 
+for a series battery pack is to keep the battery cells balanced, as 
+unbalanced battery cells lead to lower capacity and faster cell degradation\cite{texas}. 
+
+To facilitate balancing, each of the provided battery boards have mounted 
+resistors which through a MOSFET can be connected to the battery cell. 
+Connecting a cell to the resistors on the battery board will lead to a 
+small extra current flowing out of the cell, slowly discharging it. 
+During operation one must decide when to switch said resistors on and 
+off to keep the cells balanced. Usually, balancing is only done towards 
+the end of a charge cycle\cite{texas}. There are several reasons for this. Firstly, 
+passive balancing requires energy to be expended and will therefore reduce 
+the total amount of usable energy in a battery if done during discharging. 
+Secondly, differences in impedance and charge curves between cells might 
+make it look as though a cell is charged more than others, but the voltage 
+difference might disappear naturally as the battery is charged more or as 
+charge current is reduced towards the end of a charge cycle. As such, the 
+implemented charging algorithm only does balancing during the constant 
+voltage part of charging. The balancing is done using the code shown in 
+Figure~\ref{fig:balancingCode}. During CV charging it is desirable that all cells have a voltage 
+of 3600 mV. If any cell has a voltage which is higher than 3600 mV its 
+voltage is too high and the dissipative resistors are switched on to lower 
+the voltage to the voltage set point. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width = \textwidth]{Balancing_code.png}
+    \caption{Function called while charging at high SOC to balance out the voltage of the cells.}
+    \vspace{-10pt}
+    \label{fig:balancingCode}
+\end{figure}
+
+Alongside the constant voltage charging algorithm this code was extremely 
+successful at balancing the cells. The balancing is shown in action in Figure~\ref{fig:balancing}. 
+One by one, the cell voltages are brought up to and kept at 3600 mV. Even with 
+an initial voltage difference of 200 mV, balancing only takes about 
+1000 seconds = 17 minutes. 
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.48\textwidth]{balancing.png}
+    \caption{Cell voltages as they are being balanced, ignore voltage spikes at end as they are not related to the balancing.}
+    \label{fig:balancing}
+\end{figure}
+
+\subsubsection{Communicating with Other Modules}
+Though it is not necessary to fully integrate the energy module with the rest of 
+the rover, other submodules, specifically command, needs access data such as the 
+battery SOH and SOC. For communicating with other modules the Arduino shield has 
+a set of UART ports. However, as group members were not in the same location it 
+was not possible to physically connect the energy module to the rover, which is 
+necessary to use UART. As such, an alternative approach was employed. First the 
+Arduino was connected to a computer via USB. On the computer a Python script was 
+run [8]. At the start the Python script establishes a connection to a server 
+created by running a similar script on the command module [9]. After a 
+connection has been established the Python script starts reading the serial data 
+coming from the Arduino and transmits it using TCP to the command module. Each 
+message coming from the Arduino is in CSV form where the first entry is the 
+message ID, which allows the command script to decode what type of data is being 
+sent. 
+
+What data do we send? UART
+\subsubsection{Physical Integration of the Energy Module}
+%End of energy functional section
+
+%End of funtional section
 
 \section{Implementation}
 
-\subsection{TEMP Each component gets one}
+\subsection{Vision}
 
+\subsection{Control}
+
+\subsection{Command}
+
+\subsection{Drive}
+
+\subsection{Integration}
+
+
+%Start of energy implementation
 \subsection{Energy}
+
+\subsubsection{Implementation}
+Added mosfet as voltage divider by itself gave unreliable results, arduino can draw
+
+\subsubsection{Tracking SOH and SOC during discharging}
+
+\subsubsection{Safety Mechanisms}
+
+\subsubsection{Charging Algorithm}
+
+
+%End of energy implementation
+
+%End of implementation section
+
+
+
+
+
+
+
+
 
 \section{Systems}
 
@@ -432,435 +895,6 @@ the best implement an algorithm that could take into account the location
 and shape of the ball, as a purely colour based algorithm would be unable to 
 differentiate other objects in view of the camera and confuse them with the ball, 
 for example, the sky and the light blue ball would be seen as one object.
-
-
-\subsection{Drive}
-
-% Start of energy subsection
-\subsection{Energy}
-\begin{abstract}
-The main goal of the energy sub-module is to design a battery pack for the rover and charge it using solar power. With this goal in mind, the energy sub-module must develop a battery management system which allows the tracking of battery SOC and SOH, and if necessary perform SOH maintenance. 
-    
-\end{abstract}
-
-\subsubsection{Characterising Components}
-When designing a system it is necessary to know the behaviour and limitations of its constituent components. There are three main components that make up the energy subsystem: the battery cells, the PV panels and the SMPS.
-
-\textbf{\chapter{Battery Cells}} 
-\newline
-\newline
-To determine the behaviour of the battery cells they were all tracked through a full charge/discharge 
-cycle using the provided “Battery\_Charge\_Cycle\_Logged\_V1.1.ino” code\cite{chargeCode}. 
-Every cell behaved similarly in terms of the cell voltage compared to time. 
-The cell voltage of cell 1 over a full discharge/charge cycle is shown in Figure~\ref{fig:charge_cycle}:
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[scale=0.18]{charge_cycle.png}
-    \caption{The voltage evolution of cell 1 through a full discharge/charge cycle.}
-    \label{fig:charge_cycle}
-    \end{figure}
-
-Note the following important points on the graph. At 200 s the cell is done charging and
-enters an idle state for 30 s after which it starts discharging. At ~8000 s the cell is fully
-discharges and enters an idle state for 30s after which it starts charging. Finally, at 18800 s the cell is once 
-again fully charged and the charge cycle is completed.
-
-The provided charging algorithm also logs the current into the cell.
-By integrating said current for a full charge or discharge section
-we can determine the cell capacity in mAh. The results of this analysis is 
-presented in the table below:
-
-\begin{center}
-    \begin{tabular}{||c| c c c c c||} 
-    \hline
-   Cell Number& 1 & 2 & 3 & 4 & 5 \\ [0.5ex] 
-    \hline
-    Capacity (mAh) & 542.7	& 526.1	& 519.5	& 530.1	& 543.7\\ [1ex] 
-    \hline
-   \end{tabular}
-   \end{center}
-
-
-As expected all cells have a capacity somewhere around 500 mAh. However, some cells
-are have a higher capacity than others which may have implications for the performance
-of certain battery cell configurations.
-
-\textbf{\chapter{PV panels}} 
-\newline
-\newline
-The provided PV panels are rated for a maximum power of 1.15 W at a voltage 
-of 5.0 V and current 230 mA. Away from the maximum power point the performance of 
-the panels can be determined from their I-V curves. To find the I-V curves each 
-panel was connected to the B-inputs of the SMPS operating in non-synchronous boost.
-They were then lit by the lamp and the duty cycle of the SMPS was varied while measurements 
-of panel current and voltage were taken. After processing the resulting data
-is plotted in Figure~\ref{fig:IV_curve}.
-
- \begin{figure}[H]
-    \centering
-    \includegraphics[scale=0.18]{Panel1.png}
-    \includegraphics[scale=0.18]{Panel2.png}
-    \includegraphics[scale=0.18]{Panel3.png}
-    \includegraphics[scale=0.18]{Panel4.png}
-    \caption{I-V curves for the PV panels.}
-    \label{fig:IV_curve}
-    \end{figure}
-
-Though the data is noisy, it is clear that all panels exhibit the standard 
-I-V characteristics of a PV cell. That is, they behave as non-ideal current 
-sources with a nearly constant current at low voltages and a rapid current 
-reduction at high voltages\cite{green}. Moreover, we see that the provided lamp activates 
-the panels poorly as the peak power for each of the panels is only ~0.5 W.
-
-\textbf{\chapter{SMPS}} 
-\newline
-\begin{wrapfigure}[16]{r}[0pt]{0.5\textwidth}
-    \begin{center}
-      \includegraphics[width=0.48\textwidth]{Boost_efficiency_wduty.png}
-    \vspace{0pt}
-    \end{center}
-    \caption{SMPS efficiency versus output current with input voltage 5V [reference to logbook]}
-    \label{fig:efficiency}
-  \end{wrapfigure}
-The provided SMPS is rated for 10 W throughput with a maximum boost output voltage of 35 V 
-and maximum output current of 10 A\cite{SMPS_lab}. All these ratings are far higher 
-than needed and neither is expected to impose limitations on the design of the energy module. 
-
-The many characteristics of the SMPS have been thoroughly examined in 
-2nd year labs. However, for the energy submodule the most important characteristics 
-will be the SMPS efficiency during non-synchronous boost operation. A graph of 
-efficiency versus output current is shown in Figure~\ref{fig:efficiency}.
-
-
-\subsubsection{Battery Configuration}
-When designing the battery pack there are two principal choices that need to be made. 
-Firstly, how many battery cells should the battery pack consist of and, secondly, 
-in what manner should these cells be connected? 
-
-The optimal number of cells is in large part set by the energy 
-and power needs of other submodules. During testing the total power 
-draw of the rover was found to be about 2 W. Each battery cell has a 
-nominal voltage of 3.2 V and a maximum peak discharge current of 1 A 
-[battery datasheet], giving a maximum power draw of 3.2 W per cell. 
-Thus, to meet the power requirements of the rover it is enough to use only 
-one cell. However, each cell can only store about \(3.2 \unit{V} * 0.5 \unit{A} * 3600 \unit{s} \approx 5760 \unit{J} \), 
-which would only power the rover for 48 minutes. It is desirable to have 
-the rover be operational for as many hours as possible each day. 
-Assuming that 12 hours a day are completely without sunlight it is clear 
-that the rover cannot work through the night even if all 5 available 
-battery cells were used. To give the rover the most operational hours we 
-would then want to use all 5 battery cells. However, connecting 5 battery 
-boards to the Arduino would use at least 11 of the 12 free Arduino pins, 
-leaving only one pin for all other purposes. As such it might be wise to use 
-less cells. To accommodate other circuit functions, only 4 cells will therefore be used.
-
-Now consider the PV array. Each PV panel is rated for 1.15 W, meaning 
-that the array as a whole should produce 4.6 W. As shown in Figure~\ref{fig:efficiency} the 
-peak efficiency of the SMPS in boost mode is about 80\% giving a maximum 
-usable power of \(0.8 * 4.6 \unit{W} \approx 3.7 \unit{W} \). Assuming 12 hours of sunlight in a day, 
-this means that the PV array will produce less energy each day than the rover 
-uses in 24 hours. It is therefore of high priority to capture as much of the 
-solar power as possible. The battery cells have a standard charging current of 
-250 mA \cite{batteryDatasheet}. The power needed to charge the at this current is 
-shown in the table below:
-
-\begin{center}
-    \begin{tabular}{||c| c c c c c||} 
-    \hline
-    Number of cells& 1 & 2 & 3 & 4 & 5 \\ [0.5ex] 
-    \hline
-    Nominal charging power (W) & 0.8 & 1.6 & 2.4 & 3.2 & 4.0\\ [1ex] 
-    \hline
-    Peak charging power (W) & 0.9 & 1.8 & 2.7 & 3.6 & 4.5 \\ [1ex] 
-    \hline
-   \end{tabular}
-   \end{center}
-
-
-A 4 cell battery pack is the largest battery pack which has a power 
-requirement of less than 3.7 W at standard charging current and little 
-power goes unused. Adding to this that the rover has most operational 
-hours with 4 cells, using 4 cells is the clear choice. Note that the 
-cells used are number 1, 2, 4 and 5 as these were found to have the 
-highest capacity.
-
-There are several ways to connect the 4 cells into a power pack, 
-however the design brief advised against mixing parallel and series 
-connections\cite{energyBrief}. As such only fully series and parallel 
-battery packs will be considered. 
-
-A series battery pack has some obvious disadvantages compared to 
-a parallel battery pack. In section 2.5.1 it was shown that all the 
-battery cells have different capacities. In a parallel battery pack 
-this is not a big problem, as it is possible to draw different currents 
-from each cell and thereby use the full capacity of each cell. For a 
-series battery pack however, the total battery capacity will be limited 
-by the cell with the lowest capacity. As such, a series battery pack 
-is able to store less usable energy than an equivalent parallel battery 
-pack. Moreover, to check the OCV of each cell they need to be switched 
-out of circuit using the battery board relay. For a series battery pack 
-this leads to an open circuit and any charging/discharging of the battery 
-must halt while the voltage is measured. For a parallel battery pack on the 
-other hand, switching the relay of a cell only takes that one cell out of 
-circuit and it is possible to charge/discharge the battery pack while 
-taking voltage measurements. Being able to switch single cells out of 
-circuit can also enables switching faulty cells out of circuit, meaning 
-that one cell failing would not mean that the battery pack as a whole fails. 
-Finally, a parallel battery pack is self-balancing and energy automatically
-flows between cells when necessary\cite{batteryBalancing}. Series cells on the 
-other hand need to be balanced by switching on and off balancing resistor. 
-This not only is more complex, but leads to power being lost in the balancing
-resistors.
-
-There is however one major weakness to a parallel battery pack: 
-it is very hard to track the current going into individual cells. For 
-safe operation it is necessary to prevent over-current into each individual 
-cell. However, the current sensor on the SMPS can only measure the current 
-flowing into the battery pack as a whole. Each battery cell is only rated 
-for a rapid charging current of 500 mA\cite{batteryDatasheet},  and seeing 
-as there is no way to know how the current splits into each of the cells 
-one must operate one must operate with the assumption that all the current 
-can flow into a single cell. As such, no more than 500 mA can be allowed 
-to flow into the battery pack as a whole. At this current the nominal 
-charge power is only \(3.2 \unit{V} * 0.5 \unit{A} = 1.6 \unit{W} \)
- meaning charging will be slow and it is only possible to use less than half of the available solar power. 
-This is such a large drawback of using a parallel battery pack, that 
-despite all the previously stated disadvantages of a series battery pack, 
-a series battery pack has been deemed the best option.
-
-\subsubsection{PV Array Configuration}
-
-To facilitate the highest power output all the four provided PV panels will be used.
- There are four different ways in which the four panels can feasibly be connected. 
- The different arrangements are shown in figure~\ref{fig:arrayConfigurations}.
-
- \begin{figure}[H]
-    \centering
-    \includegraphics[scale=0.10]{Series(S)}
-    \includegraphics[scale=0.10]{Series-parallel(SP)}
-    \includegraphics[scale=0.10]{Total-cross-tied(TCT)}
-    \includegraphics[scale=0.10]{Parallel(P)}
-    \caption{From left to right: Series (S), Series-Parallel (SP), Total-Cross-Tied (TCT), Parallel (P)}
-    \vspace{-10pt}
-    \label{fig:arrayConfigurations}
-\end{figure}
-
-
-However, considering the array voltages it is clear that the only viable arrangement 
-is the purely parallel connection. Consider first a pure series connection. In 
-section 2.5.1 each PV panel was found to have a max voltage of around 5.5 V. 
-The series connection will therefore have a total voltage of about 20+ V. 
-The nominal voltage of the series battery pack is \(4 * 3.2 \unit{V} = 12.8 \unit{V} \). 
-As the array voltage is higher than the battery voltage, the SMPS must 
-be used in the buck configuration. However, the maximum buck input voltage 
-is only 7 V\cite{PMOS} and therefore a series connected PV array 
-cannot be used. Similarly for the Series-Parallel and Total-Cross-Tied 
-arrangements the maximum array voltage will be about 11 V. However, 
-as will be discussed in section 2.5.6 the battery pack voltage will 
-swing between 10 V and 14.4 V in a charge cycle. The problem is that 
-the 11 V array voltage is lower than the highest battery voltage, but
- higher than the lowest battery pack voltage. For the array configuration
-to charge the battery pack it would then be necessary to have a power
-converter which can both step up and down voltage. Depending on how the 
-SMPS is configured it can either function in buck or boost mode, both not 
-both at the same time. Thus it is not possible to use either the Series-Parallel
-or Total-Cross-Tied configuration. This leaves a purely parallel battery 
-pack as the only viable option, which is why it has been chosen. 
-
-
-\subsubsection{SMPS Configuration}
-As the voltage of the battery pack is higher than the voltage of the series 
-connected battery cells, the voltage of the solar panels must be stepped up 
-when used for charging. This means that the SMPS must be operated in boost 
-mode with the solar panels on port B and battery on port A. Moreover, as the 
-SMPS has a max output voltage of 7 V in synchronous boost operation\cite{powerLogbook}, 
-it must be operated in non-synchronous mode.
-
-\subsubsection{Maximum Power Point Tracking}
-Power provided by PV panels often has to be condition before use. Commonly this 
-is done through the use of a two-stage power converter. The first stage of the power
-converter does maximum power point tracking to ensure the panels provide as 
-much power as possible. The second stage ensures that the power is exported at the
-required voltage or current\cite{green}. As the energy submodule only has
-access to a single SMPS device it is not possible to implement such a two stage
-power converter. Meaning that at any time it will only be possible to either operate 
-at the maximum power point or have the power be outputted at the correct current/voltage.
-This is however not a problem as the goal of the PV panels is not to output the 
-maximum amount of power, but simply to provide the power demanded by the charging algorithm. 
-As will be shown in later sections, during charging it is desirable to draw a set
-current from the SMPS output. Even if the PV panels could produce more power i.e.
-provide a higher current than what is being drawn, it is not desirable to increase 
-the output current. As such, the system does not need conventional MPPT. However,
-as is discussed below, if the PV panels cannot provide the demanded power some sort 
-of power tracking must be implemented. 
-
-\begin{wrapfigure}[18]{r}[0pt]{0.5\textwidth}
-    \begin{center}
-      \includegraphics[width=0.48\textwidth]{Combined.png}
-    \vspace{-15pt}
-    \end{center}
-    \caption{IV-curve (blue) and power curve (red) of the parallel configured PV array lit by lamp}
-    \label{fig:parallelArray}
-\end{wrapfigure}
-
-Consider an SMPS being used to charge a battery pack at a set current. 
-If the actual current on the output is lower than the setpoint, one would attempt
-to increase the output current by increasing the output voltage. For an SMPS this
-is achieved by increasing the duty cycle. Similarly, if the output current is too
-high one would attempt to lower the output current by lowering the duty cycle. From 
-these considerations we see that increasing and decreasing the duty cycle is 
-associated with higher and lower output power respectively. Now compare this with
-the IV and power characteristics of the parallel PV array shown in 
-Figure ~\ref{fig:parallelArray}. For an SMPS, increasing the duty cycle 
-will lower the input resistance, causing the input current to increase. As increasing
-the duty cycle increases the output power so too must increased input current lead to
-increased input power for an equilibrium to exist. However, increased input current
-only gives increased output current if the PV panels are operating in the region to the right of the
-maximum power point. Thus this is the region one would want the panels to operate in.
-
-To ensure that the PV panels are operating in the correct region, start with a duty
-cycle of 0 and increase it until the output current/voltage is at the desired value.
-If the desired operating point requires less power than what the PV array can provide,
-then an equilibrium should be found as the duty cycle is increased. If however the 
-desired operating point requires more power than the PV panels can provide, then no 
-equilibrium can exist and the duty cycle will increase to 1 without ever reaching the
-desired operating point. Thus, if the duty cycle ever reaches 1 during operation
-the charging algorithm must be trying to draw more power from the SMPS than is 
-possible. If so, the charging algorithm must be told to operate a lower power point. How this
-is implemented is covered in section ....
-
-\subsubsection{State of Charge}
-The state of charge (SOC) of a battery is defined as the remaining usable charge 
-given as a percentage of the battery’s total charge capacity\cite{DICKINSON2009452}. There are many 
-methods for  estimating the SOC of a battery, the most common of which rely on 
-measurements of the voltage and/or current of the battery\cite{DANKO2019186}. The perhaps 
-simplest SOC estimation method is to measure the open circuit voltage (OCV) 
-of the battery and then calculate the SOC using a formula or a lookup table. 
-For many types of battery this is a good estimation method. An example is 
-lead-acid batteries, for which the OCV varies approximately linearly with the 
-SOC. However, as was shown figure ~\ref{fig:efficiency}, this is not the case 
-for LiFePO4 batteries. For LiFePO4 cells the voltage is nearly constant for 
-a majority of each charge/discharge cycle. Any measurement error or change in 
-OCV due to current recently flowing through the battery, would therefore produce large 
-SOC estimation errors. This holds true for all SOC methods relying purely on 
-voltage measurements and they are therefore not good alternatives. 
-
-An alternative SOC estimation method is Coulomb counting, where the current 
-flowing through the battery is integrated to find the net charge that has 
-left or entered the battery. Seeing as charge is a conserved quantity nearly 
-all charge put into the battery will be available during discharge. As such, 
-the SOC will vary nearly perfectly linearly with the integrated current. 
-The sources of error for Coulomb counting are mainly the Coulombic efficiency 
-of the batteries and current measurement errors. However, using correction 
-methods the error can be kept small, on the order of 1-2\%\cite{NG20091506}. Given the 
-simplicity of the estimation method, this is a very small error. Other 
-estimation methods, such as Kalman filters and neural networks, are claimed 
-to give higher estimation accuracies\cite{DANKO2019186}. However given the already high 
-accuracy of Coulomb counting the improvement is marginal. Moreover, they 
-are far more complex both computationally and in implementation. As such, 
-Coulomb counting was deemed the best option for SOC estimation.
-
-SOC is a measure of charge and not energy. It is necessary to estimate 
-the range of the rover. The obvious way of doing this is to track the 
-power consumption and speed of the rover. Dividing the energy left in 
-the batteries by the power and multiplying by the speed gives an estimate 
-of the range under the current operating conditions. The problem however, 
-is that the SOC only gives the usable current and not the usable energy 
-left in the battery. As the SOC of the battery decreases, so too does it 
-voltage, meaning that at lower states of charge each mAh will provide less 
-energy than at higher states of charge. To account for this, during discharging 
-the BMS logs the energy output of the battery alongside the SOC. From this data 
-it is possible to create a lookup table which relates the current SOC to how 
-much energy it is still possible to draw from the battery. This is the method 
-which will be used to find the energy left in the battery. 
-
-\subsubsection{State of Health}
-The state of health of a battery is a measure of its current condition and 
-performance compared to when it was new\cite{mpower}. Indicators of a battery’s state 
-of health include battery charge capacity, energy capacity, cell voltage 
-balance, and the number of completed charge/discharge cycles\cite{https://doi.org/10.1002/er.3598}. All these 
-indicators are tracked during operation and stored on the SD-card as to 
-retain data when the Arduino is not being powered. Over the course of its 
-lifetime the SOH of a battery will naturally degrade. However, through SOH 
-maintenance the degradation can be slowed significantly. Most importantly 
-for a series battery pack is to keep the battery cells balanced, as 
-unbalanced battery cells lead to lower capacity and faster cell degradation\cite{texas}. 
-
-To facilitate balancing, each of the provided battery boards have mounted 
-resistors which through a MOSFET can be connected to the battery cell. 
-Connecting a cell to the resistors on the battery board will lead to a 
-small extra current flowing out of the cell, slowly discharging it. 
-During operation one must decide when to switch said resistors on and 
-off to keep the cells balanced. Usually, balancing is only done towards 
-the end of a charge cycle\cite{texas}. There are several reasons for this. Firstly, 
-passive balancing requires energy to be expended and will therefore reduce 
-the total amount of usable energy in a battery if done during discharging. 
-Secondly, differences in impedance and charge curves between cells might 
-make it look as though a cell is charged more than others, but the voltage 
-difference might disappear naturally as the battery is charged more or as 
-charge current is reduced towards the end of a charge cycle. As such, the 
-implemented charging algorithm only does balancing during the constant 
-voltage part of charging. The balancing is done using the code shown in 
-Figure~\ref{fig:balancingCode}. During CV charging it is desirable that all cells have a voltage 
-of 3600 mV. If any cell has a voltage which is higher than 3600 mV its 
-voltage is too high and the dissipative resistors are switched on to lower 
-the voltage to the voltage set point. 
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width = \textwidth]{Balancing_code.png}
-    \caption{Function called while charging at high SOC to balance out the voltage of the cells.}
-    \vspace{-10pt}
-    \label{fig:balancingCode}
-\end{figure}
-
-Alongside the constant voltage charging algorithm this code was extremely 
-successful at balancing the cells. The balancing is shown in action in Figure~\ref{fig:balancing}. 
-One by one, the cell voltages are brought up to and kept at 3600 mV. Even with 
-an initial voltage difference of 200 mV, balancing only takes about 
-1000 seconds = 17 minutes. 
-
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.48\textwidth]{balancing.png}
-    \caption{Cell voltages as they are being balanced, ignore voltage spikes at end as they are not related to the balancing.}
-    \label{fig:balancing}
-\end{figure}
-
-\subsubsection{Communicating with Other Modules}
-Though it is not necessary to fully integrate the energy module with the rest of 
-the rover, other submodules, specifically command, needs access data such as the 
-battery SOH and SOC. For communicating with other modules the Arduino shield has 
-a set of UART ports. However, as group members were not in the same location it 
-was not possible to physically connect the energy module to the rover, which is 
-necessary to use UART. As such, an alternative approach was employed. First the 
-Arduino was connected to a computer via USB. On the computer a Python script was 
-run [8]. At the start the Python script establishes a connection to a server 
-created by running a similar script on the command module [9]. After a 
-connection has been established the Python script starts reading the serial data 
-coming from the Arduino and transmits it using TCP to the command module. Each 
-message coming from the Arduino is in CSV form where the first entry is the 
-message ID, which allows the command script to decode what type of data is being 
-sent. 
-
-What data do we send?
-\subsubsection{Physical Integration of the Energy Module}
-
-\subsubsection{Implementation}
-Added mosfet as voltage divider by itself gave unreliable results, arduino can draw
-
-\subsubsection{Tracking SOH and SOC during discharging}
-
-\subsubsection{Safety Mechanisms}
-
-\subsubsection{Charging Algorithm}
-
-% End of energy subsection
-
-\subsection{Integration}
-
 
 
 \section{Evaluation and Conclusion}
