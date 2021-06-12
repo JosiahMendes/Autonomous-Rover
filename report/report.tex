@@ -163,6 +163,46 @@
 \subsection{Integration}
 \subsubsection{Requirements}
 \subsubsection{Initial Design}
+\subsection{Command}
+
+\subsubsection{Purpose of the module}
+
+The Command module has three main purposes within the system of the rover:
+
+\begin{enumerate}
+    \item Visualise data from the other subsystems
+    \item Allow users to command the rover
+    \item Calculate paths for the rover to follow based on the commands given by the users
+\end{enumerate}
+
+In order to achieve the aforementioned goals, it was important to establish connection between the Command 
+module as a server, and other subsystems as clients. The ESP32 of the Control module is the main client 
+that constantly communicates with the server to exchange commands and status of the rover. The energy module 
+is another client and regularly sends data related to the battery of the rover. The received data are presented 
+on a web application where users can check the current status of the rover and command the rover. In order to 
+smoothly handle incoming data and render components that form the web application, the web application was divided 
+into the server-side, backend, and the presentation side, front end, written in Node js and React respectively.
+
+\subsubsection{Communication with Control}
+
+\subsubsection{Communication with Energy}
+Similar to the connection with the Control module, the Command module communicates with the Energy module over 
+the TCP protocol. 
+
+\subsubsection{Communication between Backend and Frontend}
+A reliable connection between the backend and the frontend during the rover's operation is necessary for the web 
+application because users would interact with the frontend only while path calculations and communication with 
+the rover would be done on the backend. For this reason, certain data have to be shared between the server 
+and application side. There are multiple communication protocols available and although the HTTP protocol was used 
+in the beginning of the project, WebSocket was considered to be more suitable and advantageous as the project 
+progressed. 
+
+The HTTP protocol is uni-directional. This means that the connection can be established only from one side between the 
+server and clients. In case of the frontend-backend connection, the backend could send data to the frontend as a response 
+only when it received a request from the frontend. This aspect of the HTTP protocol was not so convenient when the 
+backend 
+
+\subsubsection{A* Algorithm}
 
 \subsection{Vision}
 The purpose of the Vision module is threefold:

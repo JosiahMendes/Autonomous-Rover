@@ -9,25 +9,25 @@ tcpserver.listen(tcpport, tcphost, function() {
     console.log('Server is listening to %j', tcpserver.address());
 });
 function handleConnection(socket) {
-    client = socket; // storing client so it can be accessed by the web server
-    console.log('client saved');
-    var remoteAddress = socket.remoteAddress + ':' + socket.remotePort;  
-    console.log('new client connection from %s', remoteAddress);
-    socket.write("You are connected");
-    socket.on('data', onDataReceived);  
-    socket.once('close', onConnClose);  
-    socket.on('error', onConnError);
-    function onDataReceived(data) {  
-      console.log('connection data from %s: %j', remoteAddress, data.toString());  
-      //conn.write(d); send back to client  
-    }
-    function onConnClose() {  
-      console.log('connection from %s closed', remoteAddress);  
-    }
-    function onConnError(err) {  
-      console.log('Connection %s error: %s', remoteAddress, err.message);  
-    }  
+  client = socket; // storing client so it can be accessed by the web server
+  console.log('client saved');
+  var remoteAddress = socket.remoteAddress + ':' + socket.remotePort;  
+  console.log('new client connection from %s', remoteAddress);
+  socket.write("You are connected");
+  socket.on('data', onDataReceived);  
+  socket.once('close', onConnClose);  
+  socket.on('error', onConnError);
+  function onDataReceived(data) {  
+    console.log('connection data from %s: %j', remoteAddress, data.toString());  
+    //conn.write(d); send back to client  
   }
+  function onConnClose() {  
+    console.log('connection from %s closed', remoteAddress);  
+  }
+  function onConnError(err) {  
+    console.log('Connection %s error: %s', remoteAddress, err.message);  
+  }  
+}
 
 const http = require('http');
 const fs = require('fs').promises; // this module contains a readFile() function: used to load HTML file
@@ -49,16 +49,22 @@ const requestListener = function(req, res) {
         });
         req.on('end', () => {
         	postData = qs.parse(body);
-        	switch(postData.button) {
-        		case "1":
-        			client.write("Button 1 pressed");
-        			break
-        		case "2":
-        			client.write("Button 2 pressed");
-        			break
-        		default:
-        			client.write("Error");
-        	};
+          console.log("Data received: %s", postData);
+          if(typeof postData.Command !== "undefined") {
+            client.write("Command: " + postData.Command);
+          }
+          else {
+            switch(postData.button) {
+              case "1":
+                client.write("Button: 1");
+                break
+              case "2":
+                client.write("Button: 2");
+                break
+              default:
+                client.write("Error");
+            };
+          }
         });
     }
     res.setHeader("Content-Type", "text/html");
