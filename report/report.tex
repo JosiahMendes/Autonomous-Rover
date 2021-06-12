@@ -42,6 +42,22 @@
 \usepackage{array}
 \newcolumntype{L}{>{\raggedright\arraybackslash}m{0.9\linewidth}}
 
+\usepackage{subfig}
+\usepackage{wrapfig}
+\usepackage{wasysym}
+\usepackage{enumitem}
+\usepackage{adjustbox}
+\usepackage{ragged2e}
+\usepackage{longtable}
+\usepackage{changepage}
+\usepackage{setspace}
+\usepackage{hhline}
+\usepackage{multicol}
+\usepackage{tabto}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{makecell}
+
 % Contents Page
 \usepackage{hyperref}
 
@@ -605,6 +621,342 @@ What data do we send? UART
 \subsection{Command}
 
 \subsection{Drive}
+
+\begin{center}
+\textbf{Abstract}
+\end{center}
+The purpose of the driving module is to make an accurate movable rover that can move forward, backward, rotate clockwise and anticlockwise at the desired speed. Also, to process coordinates and send them back to the control module in order the rover to map the area.
+\vspace{\baselineskip}
+
+\textbf{General Specifications}
+
+
+\vspace{\baselineskip}
+Initially, the main goal of the driving subsystem was to make a movable rover. The specifications and the limitations of the SMPS, Arduino and the DC motors, needed to be known.  The first challenge was to find a way to measure the rotations per minute (RPM) of the DC motors, precisely. The solution was to stick a small piece of paper on the rotating axes of the DC motor. Additionally, one screwdriver was placed perpendicularly to the small piece of paper. This was done because each time the DC motor completed one whole rotation the small piece of paper would $``$trigger$"$  the screwdriver and generate a distinctive sound. Finally, the only unsolved part was how to pick up that sound. So, the microphone of one set of earphones was placed close enough to the DC motor in order to pick up that distinctive sound. Then, the whole process was recorded, leading to the following outstanding outcome. The recorded sound was processed with an audio application and every time the DC motor completed a whole period the waveform of the recorded sound had a spike with a recognisable magnitude. Finally, the time difference between one spike to the following one was the period (T) of the DC motor. 
+Then only the conversion from time to rpm was left and in order to find the RPM, the following formula was used: \( RPM=\frac{60}{T} \) 
+
+\vspace{\baselineskip}
+%%%%%%%%%%%%%%%%%%%% Figure/Image No: 1 starts here %%%%%%%%%%%%%%%%%%%%
+
+\begin{figure}[H]
+\begin{Center}
+\advance\leftskip 0.23in		\includegraphics[width=5.06in,height=2.02in]{./media/image2.png}
+	\caption{Shows the spikes that correspond to a period(T)}
+		\label{Shows the spikes that correspond to a period(T)}
+\end{Center}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%% Figure/Image No: 1 Ends here %%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%%%%%%%%%%%%%%%%%%%% Figure/Image No: 2 starts here %%%%%%%%%%%%%%%%%%%%
+
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[width=2.16in,height=3.15in]{./media/image1.jpeg}
+		\caption{During the process of recording}
+		\label{figDuring_the_process_of_recording}
+	\end{Center}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%% Figure/Image No: 2 Ends here %%%%%%%%%%%%%%%%%%%%
+
+\vspace{\baselineskip}
+In the following table some basic specifications have been measured:
+
+
+%%%%%%%%%%%%%%%%%%%% Table No: 1 starts here %%%%%%%%%%%%%%%%%%%%
+
+
+\begin{table}[H]
+ 			\centering
+\begin{tabular}{p{2.93in}p{2.93in}}
+\hline
+%row no:1
+\multicolumn{1}{|p{2.93in}}{\Centering \textbf{\textit{Input}}} & 
+\multicolumn{1}{|p{2.93in}|}{\Centering \textbf{\textit{Output}}} \\
+\hhline{--}
+%row no:2
+\multicolumn{1}{|p{2.93in}}{Voltage $ \approx $ 5V} & 
+\multicolumn{1}{|p{2.93in}|}{Minimum Operating Voltage: 1.384V \par Maximum Arduino's Voltage for accurate conversion: 4.096V \par } \\
+\hhline{--}
+%row no:3
+\multicolumn{1}{|p{2.93in}}{Minimum Current: 0.134A \par Maximum Current: 0.22A \par } & 
+\multicolumn{1}{|p{2.93in}|}{Minimum Operating Current: 0.035A \par Maximum Arduino's Current for accurate conversion: 0.060A \par } \\
+\hhline{--}
+
+\end{tabular}
+ \end{table}
+
+
+%%%%%%%%%%%%%%%%%%%% Table No: 1 ends here %%%%%%%%%%%%%%%%%%%%
+
+\textbf{Speed Levels}
+\vspace{\baselineskip}
+
+One of the main goals was to make the user interface with the rover relatively simple and that is why the idea of introducing 5 speed levels came up. Specifically, the idea behind those 5 speed levels, is to avoid using km/h or mph because the range of km/h is really small (0.17km/h-0.62km/h) and the range for the mph is even smaller (0.11mph-0.38mph) so, it will confuse the user. Thus, one way to simplify the speed range is to set 5 speed levels that can be understood easily and be user friendly as well. Additionally, it is more convenient and straightforward as it does not require further knowledge (voltages, RPM).
+
+\vspace{\baselineskip}
+In order to find the true range of voltages the rover's limits needs to be found. The code that is responsible for the voltage range has a reference voltage of 4.096V. The value 4.096, is the Arduino's upper threshold for accurate conversion. On the other hand, the buck SMPS can generate up to 4.8V ( due to the power losses it cannot generate exactly 5V). If the Arduino's reference voltage is increased then if, for example, a 2.5V reference voltage is sent to the rover, it  would not $``$generate$"$ 2.5V as an input for the DC motors. This happens because the Arduino can handle only up to 4.096V and if this value is exceeded then the conversion will not be accurate. On the other hand, the lower limit is 1.46V because everything beyond that will not have enough power to move the rover. To conclude, the voltage range is from 1.46V to 4.096V in order to have a movable and an accurate rover. So, that is why the speed levels are divided like that. Those 5 speed levels can easily be "corresponded" to a specific voltage, and a specific voltage can easily be "corresponded" to a specific velocity.  After the the RPMs were found then, they were converted to speed values by the following formula:
+ \[  \]  \[ v \left( \frac{km}{h} \right) =r\ast\frac{2 \pi }{60}\astN \left( rpm \right) \ast3.6 \] 
+where r is the radius of the wheel and is equal to 3.4cm and the number 3.6 is used to convert m/s to km/h. 
+
+\vspace{\baselineskip}
+
+
+%%%%%%%%%%%%%%%%%%%% Table No: 2 starts here %%%%%%%%%%%%%%%%%%%%
+
+
+\begin{table}[H]
+ 			\centering
+\begin{tabular}{p{0.67in}p{0.57in}p{0.62in}p{0.58in}p{0.78in}p{0.47in}p{0.47in}p{0.5in}}
+\hline
+%row no:1
+\multicolumn{1}{|p{0.67in}}{Speed Level} & 
+\multicolumn{1}{|p{0.57in}}{RPM} & 
+\multicolumn{1}{|p{0.62in}}{km/h} & 
+\multicolumn{1}{|p{0.58in}}{mph} & 
+\multicolumn{1}{|p{0.78in}}{Output Voltage(v)} & 
+\multicolumn{1}{|p{0.47in}}{Input Voltage (V)} & 
+\multicolumn{1}{|p{0.47in}}{Input Current (A)} & 
+\multicolumn{1}{|p{0.5in}|}{Pin(W)} \\
+\hhline{--------}
+%row no:2
+\multicolumn{1}{|p{0.67in}}{\textbf{Very fast }} & 
+\multicolumn{1}{|p{0.57in}}{48.58 } & 
+\multicolumn{1}{|p{0.62in}}{0.6227 } & 
+\multicolumn{1}{|p{0.58in}}{0.3869 } & 
+\multicolumn{1}{|p{0.78in}}{4.05} & 
+\multicolumn{1}{|p{0.47in}}{4.95} & 
+\multicolumn{1}{|p{0.47in}}{0.216} & 
+\multicolumn{1}{|p{0.5in}|}{1.0692} \\
+\hhline{--------}
+%row no:3
+\multicolumn{1}{|p{0.67in}}{\textbf{Fast}} & 
+\multicolumn{1}{|p{0.57in}}{41.27 } & 
+\multicolumn{1}{|p{0.62in}}{0.5289 } & 
+\multicolumn{1}{|p{0.58in}}{0.3287 } & 
+\multicolumn{1}{|p{0.78in}}{3.4} & 
+\multicolumn{1}{|p{0.47in}}{4.96} & 
+\multicolumn{1}{|p{0.47in}}{0.192} & 
+\multicolumn{1}{|p{0.5in}|}{0.95232} \\
+\hhline{--------}
+%row no:4
+\multicolumn{1}{|p{0.67in}}{\textbf{Regular}} & 
+\multicolumn{1}{|p{0.57in}}{32.38 } & 
+\multicolumn{1}{|p{0.62in}}{0.4150 } & 
+\multicolumn{1}{|p{0.58in}}{0.2579 } & 
+\multicolumn{1}{|p{0.78in}}{2.75} & 
+\multicolumn{1}{|p{0.47in}}{4.97} & 
+\multicolumn{1}{|p{0.47in}}{0.162} & 
+\multicolumn{1}{|p{0.5in}|}{0.80514} \\
+\hhline{--------}
+%row no:5
+\multicolumn{1}{|p{0.67in}}{\textbf{Slow}} & 
+\multicolumn{1}{|p{0.57in}}{\23.92 } & 
+\multicolumn{1}{|p{0.62in}}{0.3066 } & 
+\multicolumn{1}{|p{0.58in}}{0.1905 } & 
+\multicolumn{1}{|p{0.78in}}{2.1} & 
+\multicolumn{1}{|p{0.47in}}{4.98} & 
+\multicolumn{1}{|p{0.47in}}{0.152} & 
+\multicolumn{1}{|p{0.5in}|}{0.75696} \\
+\hhline{--------}
+%row no:6
+\multicolumn{1}{|p{0.67in}}{\textbf{Very Slow}} & 
+\multicolumn{1}{|p{0.57in}}{13.89 } & 
+\multicolumn{1}{|p{0.62in}}{0.1780 } & 
+\multicolumn{1}{|p{0.58in}}{0.1106 } & 
+\multicolumn{1}{|p{0.78in}}{1.46} & 
+\multicolumn{1}{|p{0.47in}}{4.99} & 
+\multicolumn{1}{|p{0.47in}}{0.134} & 
+\multicolumn{1}{|p{0.5in}|}{0.66866} \\
+\hhline{--------}
+
+\end{tabular}
+ \end{table}
+
+
+%%%%%%%%%%%%%%%%%%%% Table No: 2 ends here %%%%%%%%%%%%%%%%%%%%
+
+
+\vspace{\baselineskip}
+One interesting observation is that the relationship between the voltage and the RPM is almost linear. This can be confirmed by the graph below
+
+\vspace{\baselineskip}
+
+ %%%%%%%%%%%%%%%%%%%  %  iGraph 1%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\begin{center}
+   \includegraphics[scale=0.3]{./media/voltagevsrpm.eps}
+\end{center}
+
+
+\vspace{\baselineskip}
+
+%%%%%%%%%%%%%%%%Graph2 ends here%%%%%%%%%%%%%%%%%%%%%%%%
+\vspace{\baselineskip}
+\textbf{Commands}
+
+
+\vspace{\baselineskip}
+After finding the specifications the next step was to make a movable rover. Initially, one crucial task to do was to simplify and $``$connect$"$  the two sample codes. To do that, there was a need for the use of an object oriented approach which would make it feasible to combine functions of the two sample codes into two different objects. In this case classes were used to implement a rover object and an optical flow sensor object. This allows to use the complicated code of the optical flow sensor in a simple way inside the rover functions.After, making the code simple and creating classes that would make the testing straightforward, 2 major changes were made to the code. Firstly, even though the control knob was really helpful to measure some key data, for the project it was needed to be able to set output voltages independently of the control knob and that is why it was not used. Specifically, the voltage of the DC motors is now being controlled by the user with those 5 speed levels. Secondly, the optical flow sensor was connected directly to the code that is responsible for the movement of the rover. In other words, the rover was able to move backward and forward by just setting inside a while loop the desired distance and comparing it with the measurements of the optical flow sensor. For example, the desired distance is 20cm, the rover will be moving forward or backward until the measurements read from the optical flow sensor for the y axes are approximately equal to 20cm.
+
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[scale=0.3]{./media/forward.png}
+		\caption{Forward Command Code}
+	\end{Center}
+\end{figure}
+
+
+\tab Additionally, to make the rover rotate clockwise and anticlockwise the following process was implemented: Assuming that the centre of the rover (the centre of the imaginary axes that connects the two DC motors) is not rotating and it remains in the same position while the main body is rotating, then it can concluded that the rover is tracing an arc. The imaginary arc with the body of the rover is forming a circular sector. The radius of the imaginary circular sector is the length from the centre of the optical flow sensor to the centre of the imaginary axes that connects the DC motors. The mathematical formula is given as follows  \( arc length= \theta r \) . Where $ \theta $  is the angle in radians and r is the radius. So, to implement this, a while loop in the code was implemented to make the rover to rotate as long as the traced path of the optical flow sensor is less than the arc length needed to be traced to cover a specific angle. For example, if the desired angle is 90$ ^{\circ} $  or  \( \frac{ \pi }{2} \)  the rover will be rotating until the measured path of the optical flow sensor (the x value that is being measured from the optical flow sensor) is equal to the angle times the radius. The radius is approximately 168 mm but in the code it has been adjusted in order the rotation command to be accurate.
+
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[scale=0.3]{./media/clockwise.png}
+		\caption{Clockwise Command Code}
+	\end{Center}
+\end{figure}
+
+
+
+%%%%%%%%%%%%%%%%%%%% Figure/Image No: 3 starts here %%%%%%%%%%%%%%%%%%%%
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=3in,height=3in]{./media/image3.pdf}
+\caption{The arc that the optical flow sensor is tracing }
+		\end{center}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%% Figure/Image No: 3 Ends here %%%%%%%%%%%%%%%%%%%%
+
+
+
+\vspace{\baselineskip}
+
+\vspace{\baselineskip}
+\textbf{{Controller}}}
+\vspace{\baselineskip}
+
+The voltage controller had some pre-set values. Using the trial and error method, initially,  only one of the three variables of the PID controller was changed at a time while the others remained set. Regarding the derivative controller, it made the system unstable because it made it oscillating and inaccurate. So, the best choice was to set the Derivative controller equal to 0. Additionally, the combination of changes in the PI controller values decreased the settling time, the rise time, the overshoot and the steady state error. As it can be seen in the graph bellow, the difference between the initial and the final PID values is significant. The overshoot has been eliminated, the rise and the settling time have been improved dramatically and the steady state error has an acceptable value. Furthermore, it is worth mentioning that if the ratio  \( \frac{ki}{kp} \)  is great enough (larger than 8) then the response of the system becomes almost perfect.
+To conclude, by using only a PI controller and by setting P=2.6 and I=27 the rover has a stable driving system that does not take a lot of time to stabilise its reference voltage (in other words, its reference speed), and most importantly, it does not overshoot and oscillate before it takes its reference value. These specifications can be confirmed from the following graphs.
+
+\vspace{\baselineskip}
+%%%%%%%%%%%%%%%%%%%% Figure/Image No: 4 starts here %%%%%%%%%%%%%%%%%%%%
+
+
+\begin{center}
+   \includegraphics[scale=0.3]{./media/initialvsfinal.eps}
+\end{center}
+
+The difference in the system's response is obvious as the system with the final PI values almost instantly reaches its reference value.
+The table below is showing the performance of the two PI controllers:
+
+
+%%%%%%%%%%%%%%%%%%%% Figure/Image No: 4 Ends here %%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%% Table No: 3 starts here %%%%%%%%%%%%%%%%%%%%
+
+
+\begin{table}[H]
+ 			\centering
+\begin{tabular}{p{0.83in}p{0.99in}p{0.84in}p{0.84in}p{0.84in}}
+\hline
+%row no:1
+\multicolumn{1}{|p{0.83in}}{} & 
+\multicolumn{1}{|p{0.99in}}{Overshoot($\%$)} & 
+\multicolumn{1}{|p{0.84in}}{Rise time(s)} & 
+\multicolumn{1}{|p{0.84in}}{Settling time(s)} & 
+\multicolumn{1}{|p{0.84in}|}{Steady State Error($\%$ )} \\
+\hhline{-----}
+%row no:2
+\multicolumn{1}{|p{0.83in}}{Initial} & 
+\multicolumn{1}{|p{0.99}}{48} & 
+\multicolumn{1}{|p{0.84in}}{0.143} & 
+\multicolumn{1}{|p{0.84in}}{1.25} & 
+\multicolumn{1}{|p{0.84in}|}{1.8} \\
+\hhline{-----}
+%row no:3
+\multicolumn{1}{|p{0.83in}}{Final} & 
+\multicolumn{1}{|p{0.99in}}{-} & 
+\multicolumn{1}{|p{0.84in}}{0.0136} & 
+\multicolumn{1}{|p{0.84in}}{0.12} & 
+\multicolumn{1}{|p{0.84in}|}{1.6} \\
+\hhline{-----}
+
+\end{tabular}
+ \end{table}
+
+
+%%%%%%%%%%%%%%%%%%%% Table No: 3 ends here %%%%%%%%%%%%%%%%%%%%
+
+
+
+
+As it can be seen in the graph below, using the previous PI values the system responds perfectly for all the reference voltages. Also, in the table below are given the steady state error for every voltage value. It is really important that the system after it has reached its reference value, it does not fluctuate. 
+
+\vspace{\baselineskip}
+
+
+
+%%%%%%%%%%%%%%%%%%%% Table No: 4 starts here %%%%%%%%%%%%%%%%%%%%
+
+
+\begin{table}[H]
+ 			\centering
+\begin{tabular}{p{0.73in}p{0.68in}p{0.68in}p{0.68in}p{0.68in}p{0.68in}p{0.69in}}
+\hline
+%row no:1
+\multicolumn{1}{|p{0.80in}}{Voltages(V)} & 
+\multicolumn{1}{|p{0.68in}}{1.5} & 
+\multicolumn{1}{|p{0.68in}}{2} & 
+\multicolumn{1}{|p{0.68in}}{2.5} & 
+\multicolumn{1}{|p{0.68in}}{3} & 
+\multicolumn{1}{|p{0.68in}}{3.5} & 
+\multicolumn{1}{|p{0.69in}|}{4} \\
+\hhline{-------}
+%row no:2
+\multicolumn{1}{|p{0.80}}{Steady State Error($\%$)} & 
+\multicolumn{1}{|p{0.68in}}{1.3} & 
+\multicolumn{1}{|p{0.68in}}{2} & 
+\multicolumn{1}{|p{0.68in}}{1.6} & 
+\multicolumn{1}{|p{0.68in}}{1} & 
+\multicolumn{1}{|p{0.68in}}{1} & 
+\multicolumn{1}{|p{0.69in}|}{0.75} \\
+\hhline{-------}
+
+\end{tabular}
+ \end{table}
+
+
+%%%%%%%%%%%%%%%%%%%% Table No: 4 ends here %%%%%%%%%%%%%%%%%%%%
+
+
+\vspace{\baselineskip}
+
+
+%%%%%%%%%%%%%%%%%%%% GRAPH No: 5 starts here %%%%%%%%%%%%%%%%%%%%
+\begin{center}
+   \includegraphics[scale=0.5]{./media/allvoltages.eps}
+\end{center}
+
+
+\vspace{\baselineskip}
+
+
+%%%%%%%%%%%%%%%%%%%% GRAPH No: 5 Ends here %%%%%%%%%%%%%%%%%%%%
+Regarding the Current Controller, it was not tuned because the voltage controller interacts with it. Thus, after further testing, making changes to the PI current controller gains was not necessary. Finally, the current instantly takes the desired value and it does not oscillate. 
+
+
+
+
 
 \subsection{Integration}
 
