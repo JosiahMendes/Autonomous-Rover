@@ -15,6 +15,8 @@
 
 % Customisable Sections
 \usepackage{titlesec}
+\titleformat{\paragraph}[hang]{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}{0pt}{3.25ex plus 1ex minus .2ex}{1em}
 
 % Images and Captions
 \usepackage{graphicx}
@@ -129,10 +131,6 @@
 
 \section{Functional Design}
 
-\subsection{Vision}
-\subsubsection{Requirements}
-\subsubsection{Initial Designs}
-
 \subsection{Control}
 \subsubsection{Requirements}
 \subsubsection{Initial Design Choices} 
@@ -150,6 +148,17 @@
 \subsubsection{Requirements}
 \subsubsection{Initial Design}
 
+\subsection{Vision}
+The purpose of the Vision module is threefold:
+    1. Capture data from camera module;
+    2. Detect objects of interest within the current view, namely 5 different
+    coloured table-tennis balls and 
+    send their location to the Control module; and
+    3. Send image data to Control for streaming to Command. 
+
+
+\subsubsection{Initial Design Choices}
+
 
 %Start of functional energy section
 \subsection{Energy}
@@ -166,9 +175,7 @@ When designing a system it is necessary to know the behaviour and limitations of
 constituent components. There are three main components that make up the energy 
 subsystem: the battery cells, the PV panels and the SMPS.
 
-\textbf{Battery Cells}
-\vspace{10pt} 
-\newline
+\paragraph*{Battery Cells}
 To determine the behaviour of the battery cells they were all tracked through a full charge/discharge 
 cycle using the provided “Battery\_Charge\_Cycle\_Logged\_V1.1.ino” code\cite{chargeCode}. 
 Every cell behaved similarly in terms of the cell voltage compared to time. 
@@ -206,10 +213,7 @@ As expected all cells have a capacity somewhere around 500 mAh. However, some ce
 are have a higher capacity than others which may have implications for the performance
 of certain battery cell configurations.
 
-
-\textbf{PV panels}
-\vspace{10pt} 
-\newline
+\paragraph*{PV panels}
 The provided PV panels are rated for a maximum power of 1.15 W at a voltage 
 of 5.0 V and current 230 mA. Away from the maximum power point the performance of 
 the panels can be determined from their I-V curves. To find the I-V curves each 
@@ -234,17 +238,16 @@ sources with a nearly constant current at low voltages and a rapid current
 reduction at high voltages\cite{green}. Moreover, we see that the provided lamp activates 
 the panels poorly as the peak power for each of the panels is only ~0.5 W.
 
-\textbf{SMPS}
-\vspace{10pt} 
-\newline
+\paragraph*{SMPS}
 \begin{wrapfigure}[16]{r}[0pt]{0.5\textwidth}
-    \begin{center}
+    \centering
+    \raisebox{0pt}[\dimexpr\height-3\baselineskip\relax]{%
         \includegraphics[width=0.48\textwidth]{Boost_efficiency_wduty.png}
+    }%
     \vspace{0pt}
-    \end{center}
     \caption{SMPS efficiency versus output current with input voltage 5V [reference to logbook]}
     \label{fig:efficiency}
-    \end{wrapfigure}
+\end{wrapfigure}
 The provided SMPS is rated for 10 W throughput with a maximum boost output voltage of 35 V 
 and maximum output current of 10 A\cite{SMPS_lab}. All these ratings are far higher 
 than needed and neither is expected to impose limitations on the design of the energy module. 
@@ -687,13 +690,7 @@ an Arduino or device with similar pins to directly interface through physical co
 \subsection{Comms}
 
 \subsection{Vision}
-\begin{abstract}
-    The purpose of the Vision module is threefold:
-    1. Capture data from camera module;
-    2. Detect objects of interest within the current view and 
-        send their location to the Control module; and
-    3. Send image data to Control for streaming to Command. 
-\end{abstract}
+
 
 \subsubsection{Hardware Organisation}
 
