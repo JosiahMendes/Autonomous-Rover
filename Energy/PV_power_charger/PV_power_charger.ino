@@ -498,7 +498,7 @@ void check_for_errors(){ //Check whether we should enter an error state
     }
   }
 
-  //Checking for excessive output voltage and current
+  //Checking for excessive output voltage and currents
   if (I_out > 650 || V_out > 18000 || I_in < -2000){
     Serial.print("0," +String(I_out) + " , " + String(V_out) + " , " + String(I_in));
     state_num = 4; //go directly to jail

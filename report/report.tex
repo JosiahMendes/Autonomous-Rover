@@ -396,17 +396,6 @@ both at the same time. Thus it is not possible to use either the Series-Parallel
 or Total-Cross-Tied configuration. This leaves a purely parallel battery 
 pack as the only viable option, which is why it has been chosen. 
 
-
-\textbf{SMPS Configuration}
-\vspace{10pt} 
-\newline
-As the voltage of the battery pack is higher than the voltage of the series 
-connected battery cells, the voltage of the solar panels must be stepped up 
-when used for charging. This means that the SMPS must be operated in boost 
-mode with the solar panels on port B and battery on port A. Moreover, as the 
-SMPS has a max output voltage of 7 V in synchronous boost operation\cite{powerLogbook}, 
-it must be operated in non-synchronous mode.
-
 \textbf{Maximum Power Point Tracking}
 \vspace{10pt} 
 \newline
@@ -581,13 +570,62 @@ connection has been established the Python script starts reading the serial data
 coming from the Arduino and transmits it using TCP to the command module. Each 
 message coming from the Arduino is in CSV form where the first entry is the 
 message ID, which allows the command script to decode what type of data is being 
-sent. 
+sent. What data do we send? 
 
-What data do we send? UART
 \textbf{Physical Integration of the Energy Module}
 \vspace{10pt} 
 \newline
+Due to students being in different locations the energy module will not be physically 
+integrated with the full rover. However, outlined below is one way the energy module 
+could be physically connected if necessary. 
 
+The energy module can either be integrated as a charging station or, as is more 
+common for mars rovers, be mounted directly on the rover itself. The advantage of 
+implementing it as a charging station is that one would only ever charge or discharge 
+the battery at a given time. This makes it easier to track the current and power 
+in and out of the system and create charging/discharging algorithms. There are 
+two major drawbacks to using charging station. Firstly, the rover would get a 
+severely reduced range as it always needs to be able to make it back to the 
+charging station before its battery is depleted. Secondly, if the rover is detached 
+from the charging station, how will the energy module be able to track the cell 
+voltages and SOC. It might be possible to create a system where different 
+microcontrollers keep track of energy when the rover is connected and when it 
+is not connected to the charging station. However, a likely simpler solution 
+is to mount the energy module on the rover. A mounted system will increase 
+the range, but requires the ability to charge and discharge the battery at the same time.
+
+Assuming that a mounted solution is used there are two main design problems 
+to be solved. Firstly, how will power be supplied to each of the rover components 
+and secondly, how is simultaneous charging and discharging facilitated?
+
+As shown in Figure ? the rover has 4 separate voltage regions. The battery and 
+PV array have already been discussed. The new regions are the 5V node used to power 
+the FPGA and micro-controllers, and the variable voltage node used to power the 
+motors. Currently, the 5V used to power the control circuitry is also used to power 
+the drive SMPS. The most straight forward way to connect the energy sub-module to 
+the rest of the rover would therefore be to step down the battery voltage to 5V 
+using a buck SMPS and connect the SMPS output where the battery pack is currently 
+connected. However, this is very energy inefficient as the power for the motor needs 
+to pass through two SMPS devices before being used, potentially leading to high power 
+losses. A better way of connecting the energy module would involve separating the 
+drive SMPS from the 5V node. Instead the drive SMPS could be directly connected to 
+the battery. Then another SMPS or linear voltage regulator would be connected to the 
+battery to create 5V power for the control circuitry. A sketch diagram of the 
+connections is shown in Figure ?. One problem exists however with this solution: 
+The 10.0 – 14.4 V of the battery is higher than the SMPS maximum input voltage. 
+A way to solve this would be to exchange the PMOS on the SMPS board for another NMOS, 
+which would increase the maximum input voltage.
+
+In this design there are three systems through which current either flows in or 
+out of the battery. To keep track of the SOC and ensure that the batteries are 
+being charged or discharged at an appropriate it is therefore necessary to collect
+current data for all the power converters. This data could be relayed through control 
+and read in on the energy Arduino through UART. The net battery current can then be 
+calculated by simply adding together the current passing through each of the power 
+converters. The rest of the charge algorithm would not be affected by this. This 
+implementation also integrates well with the integrated power point tracking algorithm 
+and will make sure that the demanded charge current is not higher than what can be 
+provided while simultaneously powering the rover.
 
 %End of energy functional section
 
@@ -609,15 +647,161 @@ What data do we send? UART
 %Start of energy implementation
 \subsection{Energy}
 
-\subsubsection{Implementation}
-Added mosfet as voltage divider by itself gave unreliable results, arduino can draw
+\textbf{SMPS Configuration}
+\vspace{10pt} 
+\newline
+The voltage of the series battery pack is higher than the voltage of the parallel connected
+PV panels. The voltage of the PV array must therefore be stepped up before it can be used
+for charging. The SMPS must then be operated in boost mode with the
+PV panels connected on port B and the battery on port A. Moreover, as the 
+SMPS has a max output voltage of 7 V in synchronous boost mode\cite{powerLogbook}, 
+it must be operated in non-synchronous mode. To operate in non-synchronous mode switch J1
+must be to the left and switch J2 must be to the right. Finally, the on/off switch is 
+set to off such that all power comes from the PV array and not from the USB connection 
+powering the arduino.
 
-\subsubsection{Tracking SOH and SOC during discharging}
+\textbf{Controlling the SMPS}
+\vspace{10pt} 
+\newline
+The SMPS is controlled by a dual loop controller, consisting of a fast and a slow loop.
+In the design of this dual loop controller the controller from the sample charging code
+was used as a starting point\cite{chargeCode}. 
 
-\subsubsection{Safety Mechanisms}
+The slow loop in the sample controller consists
+of a Moore state machine clocked at 1 Hz, governing the output current. However, as previously
+discussed the current setpoint needs to be set to 0 only for a couple of milliseconds when
+the cell voltages are being measured. This is not possible with a 1 Hz Moore machine and
+as such the slow loop was changed to a Mealy state machine, where the output could change
+with the clockspeed of the fast loop. In addition, the slow loop was expanded to also control
+the maximum power point tracking.
 
-\subsubsection{Charging Algorithm}
+The fast loop in the sample controller is clocked at 1 kHz and consists mainly of a 
+digital PI-controller used to set the duty cycle of the SMPS. As the state machine 
+was changed to a Mealy machine, the fast loop was expanded to determine the outputs in
+each state. This had the unfortunate side effect of creating timing issues as the code
+became more complex than what the Arduino could compute in a millisecond. This issue was
+solved by lowering the fast loop clock speed to 500 Hz. This did appear to impact its
+performance.
+It should also be noted that the PI-gains from the sample code were changed as they did
+not work optimally in boost mode. This was done through trial and error.
 
+\textbf{Measurements}
+\vspace{10pt} 
+\newline
+Measurements of the circuit currents and voltages are used to track the operation of the
+subsystem. When charging the battery the most important measurements are the output voltage,
+the cell voltages, and the battery current.
+
+The Arduino can only measure voltages up to 4 V as this is the voltage of its external
+reference. However, when using the SMPS in a boost configuration the output voltage will
+usually be higher than 4 V and can therefore not directly be measured by the Arduino.
+In power labs this issue was overcome through the use of a divide by 3 voltage divider\cite{powerLogbook}.
+Using the voltage divider the maximum voltage that can be measured is 12 V, which is still
+lower than the expected output voltages when charging the battery. To further divide
+the output voltage Vpd further divided by 5/3 using a voltage divider consisting of a 10k
+and a 15k resistor. The voltage at this second voltage divider should then be Vout/5, 
+which permits the Arduino to measure voltages up to 20 V. The
+resistors in the second voltage divider were large, so as to not interfere with the divider
+ratio of the first voltage divider. This did however cause a problem as the Arduino draws
+some current while sampling, which impacted the operation of the voltage divider. 
+To solve this problem the voltage was buffered using an op-amp 
+from the Circuits lab before being passed to the Arduino.
+
+The battery cells are configured in series, meaning that the cell voltages will differ from
+one another. Every cell voltage therefore needs to be measured individually. Luckily,
+the battery boards all have a measurements port specifically for this purpose. By setting
+the \emph{RLY} input of a battery board to \emph{HIGH} the cell voltage will appear at the
+\emph{MEAS} output. By connecting the \emph{MEAS} output to one of the analogue pins
+on the Arduino it is then possible to measure the cell voltage. Note however that when a 
+\emph{RLY} input is \emph{HIGH}, the battery cell will not be connected to its power
+terminal. If even a single cell is not connected in a series battery, then no current
+can flow through the battery. This creates a problem as it means the cells can only 
+ever be measured or charged/discharged at a given time. To have the smallest 
+impact on the operation on the battery cell voltage measurements should therefore 
+be completed as quickly as possible and only be taken when necessary.
+
+The following process was found the be appropriate for measuring the voltage 
+of a cell. Firstly, the desired output current is set to 0 mA. If this is not done, 
+switching the relay would cause all output current to flow into the capacitor, 
+causing the output voltage to spike. Testing showed that after 10 ms the current 
+had died down sufficiently for the relay
+to be switched on without any large voltage spike appearing. Switching the relay on
+takes 6 ms\cite{axicom}. The voltage on the Arduino input then needs about 16 ms to
+stabilise after which the voltage can be sampled. Finally the relay can be switched off, which
+takes 4 ms, and the measurement process is complete. In total making a measurement takes
+about 40 ms. 
+
+To reduce the time spent making measurements it is desireable to measure all cell voltages
+at the same time. However, for several reasons this was not found to work in practice. 
+Firstly, the design specification adviced against switching multiple relays at the same
+time as one might inadvertently create short circuits\cite{energyBrief}. Secondly, measuring
+all cells at the same time would take 4 Arduino inputs. Using 4 battery cells the Arduino
+already has limited available ports and using 4 of them for cell voltage measurements is not ideal. 
+To circumvent both of these issues only one cell voltage is measured at a given time.
+The cell voltages do not change very quickly and only need to be measured every couple 
+of seconds. It was found to work well if one cell voltage was measured every one second.
+As there are 4 battery cells this means that each cell is measured with 4 second intervals.
+
+The current in and out of the battery needs to be tracked to determine the SOC.
+However, with the given SMPS configuration the current sensor is on the wrong side of
+the SMPS to measure the current flowing into the batteries. The initial attempt at solving
+this issue was to connect a 0.5 ohm resistor between the SMPS output and the battery.
+By measuring the voltage across this resistor the current into the battery could be
+determined. Though initial test gave promising results, an excessively complex circuit
+was needed to ensure the sensor worked well for both positive and negative currents.
+It was determined that a better solution was to simply calculate the output current
+from the input current. When operating at the standard charging current of 250 mA,
+the SMPS will be in CCM and the output current can calculated as \( I_{out} = (1 - \delta)*I_{in} \).
+For smaller currents however, below about 150 mA, the SMPS might enter DCM. In this case the calculated 
+current will be somewhat higher than its true value, which might have an impact on the 
+SOC tracking. As such, calculating the output current from the input current is not ideal, 
+but is still considered the best option given the available resources. As is discussed 
+later the SOC algorithms has methods for correcting itself, which should mean that the
+SOC error will not be too large.
+
+
+\textbf{Charging Algorithm}
+\vspace{10pt} 
+\newline
+Constant output voltage was not found to work as it made voltage difference in cells.
+
+\textbf{Balancing}
+\vspace{10pt} 
+\newline
+
+\textbf{Safety Mechanisms}
+\vspace{10pt} 
+\newline
+In the energy submodule a lot of equipment is used at the limits of what it was designed for.
+To prevent damage to the equipment a function was run inside the fast control loop
+which every loop checks for abnormal cell voltages and excessive output voltage, input
+current and battery current. If any of the measurements are found to be outside the
+acceptable range, then the function immediately puts the state machine in the error
+state.
+
+\textbf{MPPT}
+\vspace{10pt} 
+\newline
+
+\textbf{Data Logging}
+\vspace{10pt} 
+\newline
+
+\textbf{SOC}
+\vspace{10pt} 
+\newline
+
+\textbf{SOH}
+\vspace{10pt} 
+\newline
+
+\textbf{Discharging}
+\vspace{10pt} 
+\newline
+
+\textbf{Final Design}
+\vspace{10pt} 
+\newline
 
 %End of energy implementation
 
@@ -969,7 +1153,7 @@ These include trademarks, as no brand is being developed, and design rights, as 
 been provided by the college and will not be significantly altered by students. Note however,
 that as the college has created the rover design, it owns the design rights and could stop students
 from using its appearance if desired, but would probably fail to obtain legal orders for it as the design
-has been "publicly" circulated and freely provided. 
+has been "publicly" circulated and freely provided.
 Patenting is a vital step which should be encouraged for inventors to apply their negative rights and 
 protect themselves from any infringement which seeks to use their original inventive work without permission. 
 There are clear guidelines in place to determine what constitutes a patent and unfortunately, 
@@ -1018,19 +1202,20 @@ title={References}
 ]
 
 
+\begin{appendices}
+
+
+\chapter{Appendix 1: Circuit Diagram of the Energy Submodule}
 \begin{figure}[H]
-\centering
-\includegraphics[scale=0.18]{logo.png}
-\caption{Sample Figure}
-\label{fig:image1}
+    \centering
+    \includegraphics[width=\textwidth]{Circuit_Diagram.png}
+    \label{fig:circuitDiagram}
 \end{figure}
 
-Sample Reference\cite{einstein}
 
 
-\begin{appendices}
-\chapter{Some Appendix}
-The contents...
+
+
 \end{appendices}
 
 \end{document}
