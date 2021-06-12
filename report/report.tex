@@ -779,8 +779,9 @@ One of the main goals was to make the user interface with the rover relatively s
 
 \vspace{\baselineskip}
 In order to find the true range of voltages the rover's limits needs to be found. The code that is responsible for the voltage range has a reference voltage of 4.096V. The value 4.096, is the Arduino's upper threshold for accurate conversion. On the other hand, the buck SMPS can generate up to 4.8V ( due to the power losses it cannot generate exactly 5V). If the Arduino's reference voltage is increased then if, for example, a 2.5V reference voltage is sent to the rover, it  would not $``$generate$"$ 2.5V as an input for the DC motors. This happens because the Arduino can handle only up to 4.096V and if this value is exceeded then the conversion will not be accurate. On the other hand, the lower limit is 1.46V because everything beyond that will not have enough power to move the rover. To conclude, the voltage range is from 1.46V to 4.096V in order to have a movable and an accurate rover. So, that is why the speed levels are divided like that. Those 5 speed levels can easily be "corresponded" to a specific voltage, and a specific voltage can easily be "corresponded" to a specific velocity.  After the the RPMs were found then, they were converted to speed values by the following formula:
- \[  \]  \[ v \left( \frac{km}{h} \right) =r\ast\frac{2 \pi }{60}\astN \left( rpm \right) \ast3.6 \] 
-where r is the radius of the wheel and is equal to 3.4cm and the number 3.6 is used to convert m/s to km/h. 
+ %\[  \]  \[ v \left( \frac{km}{h} \right) =r\ast\frac{2 \pi }{60}\astN \left( rpm \right) \ast3.6 \] 
+%I commented this out as it did not work and needs to be fixed -Edvard
+ where r is the radius of the wheel and is equal to 3.4cm and the number 3.6 is used to convert m/s to km/h. 
 
 \vspace{\baselineskip}
 
@@ -834,7 +835,7 @@ where r is the radius of the wheel and is equal to 3.4cm and the number 3.6 is u
 \hhline{--------}
 %row no:5
 \multicolumn{1}{|p{0.67in}}{\textbf{Slow}} & 
-\multicolumn{1}{|p{0.57in}}{\23.92 } & 
+\multicolumn{1}{|p{0.57in}}{23.92 } & 
 \multicolumn{1}{|p{0.62in}}{0.3066 } & 
 \multicolumn{1}{|p{0.58in}}{0.1905 } & 
 \multicolumn{1}{|p{0.78in}}{2.1} & 
@@ -919,7 +920,7 @@ After finding the specifications the next step was to make a movable rover. Init
 \vspace{\baselineskip}
 
 \vspace{\baselineskip}
-\textbf{{Controller}}}
+\textbf{{Controller}}
 \vspace{\baselineskip}
 
 The voltage controller had some pre-set values. Using the trial and error method, initially,  only one of the three variables of the PID controller was changed at a time while the others remained set. Regarding the derivative controller, it made the system unstable because it made it oscillating and inaccurate. So, the best choice was to set the Derivative controller equal to 0. Additionally, the combination of changes in the PI controller values decreased the settling time, the rise time, the overshoot and the steady state error. As it can be seen in the graph bellow, the difference between the initial and the final PID values is significant. The overshoot has been eliminated, the rise and the settling time have been improved dramatically and the steady state error has an acceptable value. Furthermore, it is worth mentioning that if the ratio  \( \frac{ki}{kp} \)  is great enough (larger than 8) then the response of the system becomes almost perfect.
@@ -955,7 +956,7 @@ The table below is showing the performance of the two PI controllers:
 \hhline{-----}
 %row no:2
 \multicolumn{1}{|p{0.83in}}{Initial} & 
-\multicolumn{1}{|p{0.99}}{48} & 
+\multicolumn{1}{|p{0.99in}}{48} & 
 \multicolumn{1}{|p{0.84in}}{0.143} & 
 \multicolumn{1}{|p{0.84in}}{1.25} & 
 \multicolumn{1}{|p{0.84in}|}{1.8} \\
@@ -1000,7 +1001,7 @@ As it can be seen in the graph below, using the previous PI values the system re
 \multicolumn{1}{|p{0.69in}|}{4} \\
 \hhline{-------}
 %row no:2
-\multicolumn{1}{|p{0.80}}{Steady State Error($\%$)} & 
+\multicolumn{1}{|p{0.80in}}{Steady State Error($\%$)} & 
 \multicolumn{1}{|p{0.68in}}{1.3} & 
 \multicolumn{1}{|p{0.68in}}{2} & 
 \multicolumn{1}{|p{0.68in}}{1.6} & 
@@ -1053,31 +1054,6 @@ it must be operated in non-synchronous mode. To operate in non-synchronous mode 
 must be to the left and switch J2 must be to the right. Finally, the on/off switch is 
 set to off such that all power comes from the PV array and not from the USB connection 
 powering the arduino.
-
-\textbf{Controlling the SMPS}
-\vspace{10pt} 
-\newline
-The SMPS is controlled by a dual loop controller, consisting of a fast and a slow loop.
-In the design of this dual loop controller the controller from the sample charging code
-was used as a starting point\cite{chargeCode}. 
-
-The slow loop in the sample controller consists
-of a Moore state machine clocked at 1 Hz, governing the output current. However, as previously
-discussed the current setpoint needs to be set to 0 only for a couple of milliseconds when
-the cell voltages are being measured. This is not possible with a 1 Hz Moore machine and
-as such the slow loop was changed to a Mealy state machine, where the output could change
-with the clockspeed of the fast loop. In addition, the slow loop was expanded to also control
-the maximum power point tracking.
-
-The fast loop in the sample controller is clocked at 1 kHz and consists mainly of a 
-digital PI-controller used to set the duty cycle of the SMPS. As the state machine 
-was changed to a Mealy machine, the fast loop was expanded to determine the outputs in
-each state. This had the unfortunate side effect of creating timing issues as the code
-became more complex than what the Arduino could compute in a millisecond. This issue was
-solved by lowering the fast loop clock speed to 500 Hz. This did appear to impact its
-performance.
-It should also be noted that the PI-gains from the sample code were changed as they did
-not work optimally in boost mode. This was done through trial and error.
 
 \textbf{Measurements}
 \vspace{10pt} 
@@ -1152,6 +1128,31 @@ SOC tracking. As such, calculating the output current from the input current is 
 but is still considered the best option given the available resources. As is discussed 
 later the SOC algorithms has methods for correcting itself, which should mean that the
 SOC error will not be too large.
+
+\textbf{Controlling the SMPS}
+\vspace{10pt} 
+\newline
+The SMPS is controlled by a dual loop controller, consisting of a fast and a slow loop.
+In the design of this dual loop controller the controller from the sample charging code
+was used as a starting point\cite{chargeCode}. 
+
+The slow loop in the sample controller consists
+of a Moore state machine clocked at 1 Hz, governing the output current. However, as previously
+discussed the current setpoint needs to be set to 0 only for a couple of milliseconds when
+the cell voltages are being measured. This is not possible with a 1 Hz Moore machine and
+as such the slow loop was changed to a Mealy state machine, where the output could change
+with the clockspeed of the fast loop. In addition, the slow loop was expanded to also control
+the maximum power point tracking.
+
+The fast loop in the sample controller is clocked at 1 kHz and consists mainly of a 
+digital PI-controller used to set the duty cycle of the SMPS. As the state machine 
+was changed to a Mealy machine, the fast loop was expanded to determine the outputs in
+each state. This had the unfortunate side effect of creating timing issues as the code
+became more complex than what the Arduino could compute in a millisecond. This issue was
+solved by lowering the fast loop clock speed to 500 Hz. This did appear to impact its
+performance.
+It should also be noted that the PI-gains from the sample code were changed as they did
+not work optimally in boost mode. This was done through trial and error.
 
 
 \textbf{Charging Algorithm}
@@ -1590,6 +1591,7 @@ title={References}
 ]
 
 
+\newpage
 \begin{appendices}
 
 
