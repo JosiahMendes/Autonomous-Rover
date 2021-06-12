@@ -77,12 +77,12 @@ ALT_CPPFLAGS += -pipe
 
 # This following VERSION comment indicates the version of the tool used to 
 # generate this makefile. A makefile variable is provided for VERSION as well. 
-# ACDS_VERSION: 16.1
-ACDS_VERSION := 16.1
+# ACDS_VERSION: 17.1
+ACDS_VERSION := 17.1
 
 # This following BUILD_NUMBER comment indicates the build number of the tool 
 # used to generate this makefile. 
-# BUILD_NUMBER: 196
+# BUILD_NUMBER: 590
 
 # Qsys--generated SOPCINFO file. Required for resolving node instance ID's with 
 # design component names. 
@@ -111,6 +111,10 @@ BSP_TYPE := hal
 
 # CDX present. 
 # setting CDX is false
+
+# Compile Newlib 
+# setting COMPILE_NEWLIB is 1
+COMPILE_NEWLIB = 1
 
 # CPU Name 
 # setting CPU_NAME is nios2_gen2
@@ -152,14 +156,14 @@ SOPC_SYSID_FLAG += --id=0
 ELF_PATCH_FLAG  += --id 0
 
 # The SOPC System ID Base Address 
-# setting SOPC_SYSID_BASE_ADDRESS is 0x41100
-SOPC_SYSID_FLAG += --sidp=0x41100
-ELF_PATCH_FLAG  += --sidp 0x41100
+# setting SOPC_SYSID_BASE_ADDRESS is 0x41120
+SOPC_SYSID_FLAG += --sidp=0x41120
+ELF_PATCH_FLAG  += --sidp 0x41120
 
 # The SOPC Timestamp 
-# setting SOPC_TIMESTAMP is 1622684923
-SOPC_SYSID_FLAG += --timestamp=1622684923
-ELF_PATCH_FLAG  += --timestamp 1622684923
+# setting SOPC_TIMESTAMP is 1623496839
+SOPC_SYSID_FLAG += --timestamp=1623496839
+ELF_PATCH_FLAG  += --timestamp 1623496839
 
 # Enable JTAG UART driver to recover when host is inactive causing buffer to 
 # full without returning error. Printf will not fail with this recovery. none 
@@ -167,6 +171,15 @@ ELF_PATCH_FLAG  += --timestamp 1622684923
 
 # Small-footprint (polled mode) driver none 
 # setting altera_avalon_jtag_uart_driver.enable_small_driver is false
+
+# Enable driver ioctl() support. This feature is not compatible with the 
+# 'small' driver; ioctl() support will not be compiled if either the UART 
+# 'enable_small_driver' or HAL 'enable_reduced_device_drivers' settings are 
+# enabled. none 
+# setting altera_avalon_uart_driver.enable_ioctl is false
+
+# Small-footprint (polled mode) driver none 
+# setting altera_avalon_uart_driver.enable_small_driver is false
 
 # Build a custom version of newlib with the specified space-separated compiler 
 # flags. The custom newlib build will be placed in the <bsp root>/newlib 
@@ -354,9 +367,17 @@ ELF_PATCH_FLAG  += --stdin_dev jtag_uart
 
 # Slave descriptor of STDOUT character-mode device. This setting is used by the 
 # ALT_STDOUT family of defines in system.h. none 
-# setting hal.stdout is jtag_uart
-ELF_PATCH_FLAG  += --stdout_dev jtag_uart
+# setting hal.stdout is uart_0
+ELF_PATCH_FLAG  += --stdout_dev uart_0
 
+
+#------------------------------------------------------------------------------
+#                 CUSTOM NEWLIB LIBRARY & INCLUDE PATHS
+#------------------------------------------------------------------------------
+
+NEWLIB_DIR = $(BSP_ROOT_DIR)/newlib
+ALT_INCLUDE_DIRS += $(NEWLIB_DIR)/nios2-elf/include
+ALT_LIBRARY_DIRS += $(NEWLIB_DIR)/nios2-elf/lib
 
 #------------------------------------------------------------------------------
 #                 SOFTWARE COMPONENT & DRIVER INCLUDE PATHS
@@ -369,6 +390,26 @@ ALT_INCLUDE_DIRS += $(ALT_LIBRARY_ROOT_DIR)/HAL/inc
 #------------------------------------------------------------------------------
 
 ALT_CPPFLAGS += -DALT_SINGLE_THREADED
+
+#------------------------------------------------------------------------------
+#        SOFTWARE COMPONENT & DRIVER PRODUCED ALT_CFLAGS ADDITIONS
+#------------------------------------------------------------------------------
+
+ALT_CFLAGS += -fno-math-errno
+ALT_CFLAGS += -mcustom-fabss=224
+ALT_CFLAGS += -mcustom-fadds=253
+ALT_CFLAGS += -mcustom-fcmpeqs=227
+ALT_CFLAGS += -mcustom-fcmpges=228
+ALT_CFLAGS += -mcustom-fcmpgts=229
+ALT_CFLAGS += -mcustom-fcmples=230
+ALT_CFLAGS += -mcustom-fcmplts=231
+ALT_CFLAGS += -mcustom-fcmpnes=226
+ALT_CFLAGS += -mcustom-fdivs=255
+ALT_CFLAGS += -mcustom-fixsi=249
+ALT_CFLAGS += -mcustom-floatis=250
+ALT_CFLAGS += -mcustom-fmuls=252
+ALT_CFLAGS += -mcustom-fnegs=225
+ALT_CFLAGS += -mcustom-fsubs=254
 
 #END MANAGED
 

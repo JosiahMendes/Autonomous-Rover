@@ -9,6 +9,7 @@
     "@testing-library/user-event": "^12.8.3",
     "express": "^4.17.1",
     "html-react-parser": "^1.2.6",
+    "javascript-astar": "^0.4.1",
     "konva": "^8.0.2",
     "mongodb": "^3.6.9",
     "mongodb-client-encryption": "^1.2.3",

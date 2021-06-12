@@ -1,5 +1,5 @@
-#define RXP2 16
-#define TXP2 17
+#define RXP2 18
+#define TXP2 5
 
 void setup() {
   Serial.begin(115200);
@@ -52,8 +52,7 @@ void loop() {
             
             
           }
-          DriveReady = 'L';// break from while
-
+          break;
         }
       }
       drv_ready = true;
@@ -74,7 +73,34 @@ void loop() {
         Serial.print("D");Serial.println(Drive_message);
         
       }
+      if(DriveReady == 'Q')//distance covered before it was stopped
+      {
+        Serial.println("driving sent current position");
+        delay(3);
+        int k = Serial2.available();
+        char Drive_distance[32];
+        int count = 0;
+        while (k > 0) {
+              Serial.println("In3");
+              char TermChar = Serial2.read();
+              if(TermChar == ']')//finished sending distance
+                break;
+              Drive_distance[count] = TermChar;
+              Drive_distance[count + 1] = '\0';
+              k--;
+              count++;
+            }
+            Serial.println(Drive_distance);
+      }
 
+    }
+    if(Serial.available())
+    {
+      char temp = Serial.read();
+      if(temp == 'S'){
+        Serial2.write(temp); //Stop the Rover
+        Serial.println("Stop signal sent");
+      }
     }
 
 

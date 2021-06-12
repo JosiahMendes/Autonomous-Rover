@@ -36,7 +36,7 @@ module EEE_IMGPROC(
 parameter IMAGE_W = 11'd640;
 parameter IMAGE_H = 11'd480;
 parameter MESSAGE_BUF_MAX = 256;
-parameter MSG_INTERVAL = 20;
+parameter MSG_INTERVAL = 30;
 parameter BB_COL_DEFAULT = 24'h00ff00;
 ////////////////////////////////////////////////////////////////////////
 
@@ -119,31 +119,31 @@ reg [10:0] y_x_min, y_y_min, y_x_max, y_y_max;
 always@(posedge clk) begin
 	if (in_valid) begin
 
-        if (red_detect & in_valid) begin	//Update bounds when the pixel is red
+        if (red_detect & in_valid & y > 240) begin	//Update bounds when the pixel is red
             if (x < r_x_min) r_x_min <= x;
             if (x > r_x_max) r_x_max <= x;
             if (y < r_y_min) r_y_min <= y;
             r_y_max <= y;
         end
-        else if (blue_detect & in_valid) begin	//Update bounds when the pixel is red
+        else if (blue_detect & in_valid & y > 240 ) begin	//Update bounds when the pixel is red
             if (x < b_x_min) b_x_min <= x;
             if (x > b_x_max) b_x_max <= x;
             if (y < b_y_min) b_y_min <= y;
             b_y_max <= y;
         end 
-        else if (green_detect ) begin	//Update bounds when the pixel is red
+        else if (green_detect & in_valid & y > 240) begin	//Update bounds when the pixel is red
             if (x < g_x_min) g_x_min <= x;
             if (x > g_x_max) g_x_max <= x;
             if (y < g_y_min) g_y_min <= y;
             g_y_max <= y;
         end
-        else if (yellow_detect) begin	//Update bounds when the pixel is red
+        else if (yellow_detect & in_valid & y > 240) begin	//Update bounds when the pixel is red
             if (x < y_x_min) y_x_min <= x;
             if (x > y_x_max) y_x_max <= x;
             if (y < y_y_min) y_y_min <= y;
             y_y_max <= y;
         end
-        else if (grey_detect) begin	//Update bounds when the pixel is red
+        else if (grey_detect& in_valid & y > 240) begin	//Update bounds when the pixel is red
             if (x < gr_x_min) gr_x_min <= x;
             if (x > gr_x_max) gr_x_max <= x;
             if (y < gr_y_min) gr_y_min <= y;
@@ -151,7 +151,7 @@ always@(posedge clk) begin
         end
 
         if (videoPacketSOP) begin	//Reset bounds on start of packet
-            r_x_min  <= IMAGE_W-11'h1; 	r_x_max  <= 0;	r_y_min  <= IMAGE_H-11'h1;	r_y_max <= 0;
+         r_x_min  <= IMAGE_W-11'h1; 	r_x_max  <= 0;	r_y_min  <= IMAGE_H-11'h1;	r_y_max <= 0;
 			b_x_min  <= IMAGE_W-11'h1;  b_x_max  <= 0;	b_y_min  <= IMAGE_H-11'h1;	b_y_max <= 0;
 			g_x_min  <= IMAGE_W-11'h1;	g_x_max  <= 0;	g_y_min  <= IMAGE_H-11'h1;	g_y_max <= 0;
 			y_x_min  <= IMAGE_W-11'h1;	y_x_max  <= 0;	y_y_min  <= IMAGE_H-11'h1;	y_y_max <= 0;
@@ -187,7 +187,7 @@ always@(posedge clk) begin
         b_top 	<= b_y_min;
         b_bot 	<= b_y_max;	
 
-		y_left 	<= y_x_min;
+		  y_left 	<= y_x_min;
         y_right <= y_x_max;
         y_top 	<= y_y_min;
         y_bot 	<= y_y_max;	
@@ -198,11 +198,11 @@ always@(posedge clk) begin
         gr_bot   <= gr_y_max;	
 		
 		//Start message writer FSM once every MSG_INTERVAL frames, if there is room in the FIFO
-		frame_count <= frame_count - 8'd1;
+		frame_count <= frame_count - 1;
 		
 		if (frame_count == 0 && msg_buf_size < MESSAGE_BUF_MAX - 3) begin
 			msg_state <= 4'b0001;
-			frame_count <= MSG_INTERVAL-8'd1;
+			frame_count <= MSG_INTERVAL-1;
 		end
 	end
 	
@@ -336,6 +336,7 @@ STREAM_REG #(.DATA_WIDTH(26)) out_reg (
 
 ///////////////////////////////////////////////////////////////////////
 //RGB to HSV
+
 rgb_to_hsv rgb_hsv(
 	.clk(clk),
 	.rst_n(reset_n),
