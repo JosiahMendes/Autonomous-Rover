@@ -178,10 +178,8 @@ Qsys u0 (
 		
 		.eee_imgproc_0_conduit_mode_new_signal     (SW[0]),
 		
-		.spi_0_external_SS_n							    (ARDUINO_IO[10]),
-		.spi_0_external_MOSI								 (ARDUINO_IO[11]),
-		.spi_0_external_MISO								 (ARDUINO_IO[12]),
-		.spi_0_external_SCLK								 (ARDUINO_IO[13])
+		.uart_0_external_connection_rxd            (ARDUINO_IO[9]),            //       uart_0_external_connection.rxd
+		.uart_0_external_connection_txd            (ARDUINO_IO[8])             //                                 .txd
 		
 	);
 
