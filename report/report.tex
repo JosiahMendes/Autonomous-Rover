@@ -131,41 +131,43 @@
 
 \subsection{Vision}
 \subsubsection{Requirements}
-\subsubsection{Initial Design Choices}
+\subsubsection{Initial Designs}
 
 \subsection{Control}
 \subsubsection{Requirements}
-\subsubsection{Initial Design Choices}
+\subsubsection{Initial Design}
 
 \subsection{Command}
 \subsubsection{Requirements}
-\subsubsection{Initial Design Choices}
+\subsubsection{Initial Design}
 
 \subsection{Drive}
 \subsubsection{Requirements}
-\subsubsection{Initial Design Choices}
+\subsubsection{Initial Design}
 
 
 \subsection{Integration}
 \subsubsection{Requirements}
-\subsubsection{Initial Design Choices}
+\subsubsection{Initial Design}
 
 
 %Start of functional energy section
 \subsection{Energy}
 \subsubsection{Requirements}
-\begin{abstract}
-    The main goal of the energy sub-module is to design a battery pack for the rover and charge it using solar power. With this goal in mind, the energy sub-module must develop a battery management system which allows the tracking of battery SOC and SOH, and if necessary perform SOH maintenance.         
-\end{abstract}
 
+The main goal of the energy sub-module is to design a battery pack for the 
+rover and charge it using solar power. With this goal in mind, the energy 
+sub-module must develop a battery management system which allows the tracking 
+of battery SOC and SOH, and if necessary perform SOH maintenance.         
 
-\subsubsection{Initial Design Choices}
 
 \subsubsection{Characterising Components}
-When designing a system it is necessary to know the behaviour and limitations of its constituent components. There are three main components that make up the energy subsystem: the battery cells, the PV panels and the SMPS.
+When designing a system it is necessary to know the behaviour and limitations of its
+constituent components. There are three main components that make up the energy 
+subsystem: the battery cells, the PV panels and the SMPS.
 
-\textbf{\chapter{Battery Cells}} 
-\newline
+\textbf{Battery Cells}
+\vspace{10pt} 
 \newline
 To determine the behaviour of the battery cells they were all tracked through a full charge/discharge 
 cycle using the provided “Battery\_Charge\_Cycle\_Logged\_V1.1.ino” code\cite{chargeCode}. 
@@ -177,7 +179,7 @@ The cell voltage of cell 1 over a full discharge/charge cycle is shown in Figure
     \includegraphics[scale=0.18]{charge_cycle.png}
     \caption{The voltage evolution of cell 1 through a full discharge/charge cycle.}
     \label{fig:charge_cycle}
-    \end{figure}
+\end{figure}
 
 Note the following important points on the graph. At 200 s the cell is done charging and
 enters an idle state for 30 s after which it starts discharging. At ~8000 s the cell is fully
@@ -204,8 +206,9 @@ As expected all cells have a capacity somewhere around 500 mAh. However, some ce
 are have a higher capacity than others which may have implications for the performance
 of certain battery cell configurations.
 
-\textbf{\chapter{PV panels}} 
-\newline
+
+\textbf{PV panels}
+\vspace{10pt} 
 \newline
 The provided PV panels are rated for a maximum power of 1.15 W at a voltage 
 of 5.0 V and current 230 mA. Away from the maximum power point the performance of 
@@ -231,7 +234,8 @@ sources with a nearly constant current at low voltages and a rapid current
 reduction at high voltages\cite{green}. Moreover, we see that the provided lamp activates 
 the panels poorly as the peak power for each of the panels is only ~0.5 W.
 
-\textbf{\chapter{SMPS}} 
+\textbf{SMPS}
+\vspace{10pt} 
 \newline
 \begin{wrapfigure}[16]{r}[0pt]{0.5\textwidth}
     \begin{center}
@@ -251,7 +255,11 @@ will be the SMPS efficiency during non-synchronous boost operation. A graph of
 efficiency versus output current is shown in Figure~\ref{fig:efficiency}.
 
 
-\subsubsection{Battery Configuration}
+\subsubsection{Initial Design}
+
+\textbf{Battery Configuration}
+\vspace{10pt} 
+\newline
 When designing the battery pack there are two principal choices that need to be made. 
 Firstly, how many battery cells should the battery pack consist of and, secondly, 
 in what manner should these cells be connected? 
@@ -293,7 +301,7 @@ shown in the table below:
     Peak charging power (W) & 0.9 & 1.8 & 2.7 & 3.6 & 4.5 \\ [1ex] 
     \hline
     \end{tabular}
-    \end{center}
+\end{center}
 
 
 A 4 cell battery pack is the largest battery pack which has a power 
@@ -347,13 +355,15 @@ This is such a large drawback of using a parallel battery pack, that
 despite all the previously stated disadvantages of a series battery pack, 
 a series battery pack has been deemed the best option.
 
-\subsubsection{PV Array Configuration}
 
+\textbf{PV Array Configuration}
+\vspace{10pt} 
+\newline
 To facilitate the highest power output all the four provided PV panels will be used.
-    There are four different ways in which the four panels can feasibly be connected. 
-    The different arrangements are shown in figure~\ref{fig:arrayConfigurations}.
+There are four different ways in which the four panels can feasibly be connected. 
+The different arrangements are shown in figure~\ref{fig:arrayConfigurations}.
 
-    \begin{figure}[H]
+\begin{figure}[H]
     \centering
     \includegraphics[scale=0.10]{Series(S)}
     \includegraphics[scale=0.10]{Series-parallel(SP)}
@@ -387,7 +397,9 @@ or Total-Cross-Tied configuration. This leaves a purely parallel battery
 pack as the only viable option, which is why it has been chosen. 
 
 
-\subsubsection{SMPS Configuration}
+\textbf{SMPS Configuration}
+\vspace{10pt} 
+\newline
 As the voltage of the battery pack is higher than the voltage of the series 
 connected battery cells, the voltage of the solar panels must be stepped up 
 when used for charging. This means that the SMPS must be operated in boost 
@@ -395,7 +407,9 @@ mode with the solar panels on port B and battery on port A. Moreover, as the
 SMPS has a max output voltage of 7 V in synchronous boost operation\cite{powerLogbook}, 
 it must be operated in non-synchronous mode.
 
-\subsubsection{Maximum Power Point Tracking}
+\textbf{Maximum Power Point Tracking}
+\vspace{10pt} 
+\newline
 Power provided by PV panels often has to be condition before use. Commonly this 
 is done through the use of a two-stage power converter. The first stage of the power
 converter does maximum power point tracking to ensure the panels provide as 
@@ -448,7 +462,9 @@ the charging algorithm must be trying to draw more power from the SMPS than is
 possible. If so, the charging algorithm must be told to operate a lower power point. How this
 is implemented is covered in section ....
 
-\subsubsection{State of Charge}
+\textbf{State of Charge}
+\vspace{10pt} 
+\newline
 The state of charge (SOC) of a battery is defined as the remaining usable charge 
 given as a percentage of the battery’s total charge capacity\cite{DICKINSON2009452}. There are many 
 methods for  estimating the SOC of a battery, the most common of which rely on 
@@ -493,7 +509,9 @@ it is possible to create a lookup table which relates the current SOC to how
 much energy it is still possible to draw from the battery. This is the method 
 which will be used to find the energy left in the battery. 
 
-\subsubsection{State of Health}
+\textbf{State of Health}
+\vspace{10pt} 
+\newline
 The state of health of a battery is a measure of its current condition and 
 performance compared to when it was new\cite{mpower}. Indicators of a battery’s state 
 of health include battery charge capacity, energy capacity, cell voltage 
@@ -547,7 +565,9 @@ an initial voltage difference of 200 mV, balancing only takes about
     \label{fig:balancing}
 \end{figure}
 
-\subsubsection{Communicating with Other Modules}
+\textbf{Communicating with Other Modules}
+\vspace{10pt} 
+\newline
 Though it is not necessary to fully integrate the energy module with the rest of 
 the rover, other submodules, specifically command, needs access data such as the 
 battery SOH and SOC. For communicating with other modules the Arduino shield has 
@@ -564,7 +584,11 @@ message ID, which allows the command script to decode what type of data is being
 sent. 
 
 What data do we send? UART
-\subsubsection{Physical Integration of the Energy Module}
+\textbf{Physical Integration of the Energy Module}
+\vspace{10pt} 
+\newline
+
+
 %End of energy functional section
 
 %End of funtional section
