@@ -135,6 +135,7 @@
 \section{Functional Design}
 
 \subsection{Control}
+
 \subsubsection{Requirements}
 
 The Control module within the context of the rover has one main goal: 
@@ -185,13 +186,71 @@ communication peripherals it can pursue with peer microcontrollers.
 However, unlike Arduinos which have at most 1 SPI, 2 I2C and 1 UART port, 
 the ESP32 can support up to 3 SPI, 2 I2C and 3 UART ports which are 
 configurable to most of the GPIO pins available. Considering the ESP32 
-will have to interface with at most 3 other subsystems through wired 
+will have to interface with at most three other subsystems through wired 
 communication, there is a lot of choice with peripherals that must be 
 investigated.
 
 \subsubsection{Initial Design Choices} 
 
+There are many options available for programming the ESP32. Due to the 
+lax requirements with regards to communication, it was quickly determined 
+that the Arduino IDE and supporting libraries for the ESP32 would be 
+enough for developing what is necessary. As there are stringent practices 
+for the base Arduino Libraries and ESP8266 Libraries, this was extended 
+to a majority of the functionality available to the ESP32 including WiFi, 
+Bluetooth, UART, SPI and I2C. Seeing as the ESP32 through Espressif is 
+programmed through C, most of this can be imported through the Arduino IDE 
+which supports simpler methods for flashing software onto the ESP32.
 
+As there is no requirement imposed upon the data being transferred 
+and displayed, this results in complete freedom for the form in which 
+data is communicated through the ESP32 and whether it should be processed. 
+Seeing as the ESP32 will be handling communication between four other 
+subsystems, it was decided that the amount of processing on the device 
+should be limited as much as possible and offloaded to the other 
+subsystems. This is to ensure that bottlenecks would not appear due to a 
+sizable processing time in between transmission of data, as this would 
+cause crippling delays for communication. The simplest way to ensure the 
+integrity of the data is to standardise the type for data being 
+transferred. Since initially, the formatting and content of the data is 
+unclear, receiving and sending them as bytes or characters would be the 
+most versatile solution. Internal buffers for the ESP32 would store 
+individual commands or data lines and send them to the required subsystem 
+for processing.
+
+With regards to the communication between Command and Control, 
+there were a couple of options available. As the Command subsystem 
+would be hosted on a website, we could choose from application layer 
+protocols like HTTPs or MQTT, but as we decided our application was 
+more simplistic with regards to the type of data being communicated, we 
+opted for the transport layer protocol, TCP. This is due to the need for 
+consistent transmission of data, retransmitting if packets are lost and 
+ensuring the data does reach its destination. Speed by comparison is a 
+less stringent requirement and as such, UDP was discarded as a choice.
+
+For both Drive and Energy, the Arduino Nano Everything provided by the 
+project organisers had it’s UART ports exposed through the specific 
+hardware and it’s connections. As such, there was little need for 
+deliberation over the protocol. The peripheral chosen for both these 
+groups was UART. For the Energy submodule specifically, since it can’t 
+be integrated into the Rover physically, it was decided that any necessary 
+data would be transmitted directly to Command. This is through the UART 
+USB connection from the Arduino to the computer, which would then 
+communicate with Command over TCP. However, to ensure Energy can be 
+integrated if necessary, one UART port for the ESP32 was set aside for 
+Energy.
+
+For Vision, there are two types of data which need to be transferred 
+through the ESP32; the image from the camera and data regarding object 
+detection which could include values like distance to the object. Since 
+the image transfer will likely take a long time to accomplish, a decision
+was made to dedicate two peripherals between Vision and Control. 
+Considering the ESP32 will sit on top of the DE10-Lite FPGA, the 
+availability of ports is not a concern. As two UART ports are unavailable 
+since one will be used to communicate with Drive and the other is 
+dedicated for Energy, the peripherals chosen instead will be SPI. 
+One SPI connection is dedicated to sending images while the other is 
+dedicated to sending any data between the ESP32 and the FPGA.
 
 \subsection{Command}
 
