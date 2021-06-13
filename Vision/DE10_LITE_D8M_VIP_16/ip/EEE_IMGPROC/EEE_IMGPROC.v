@@ -36,7 +36,7 @@ module EEE_IMGPROC(
 parameter IMAGE_W = 11'd640;
 parameter IMAGE_H = 11'd480;
 parameter MESSAGE_BUF_MAX = 256;
-parameter MSG_INTERVAL = 30;
+parameter MSG_INTERVAL = 120;
 parameter BB_COL_DEFAULT = 24'h00ff00;
 ////////////////////////////////////////////////////////////////////////
 
@@ -77,11 +77,11 @@ assign greenBB_active 	= (((x == g_left) | (x == g_right)) & (g_bot >= y & y >= 
 assign blueBB_active 	= (((x == b_left) | (x == b_right)) & (b_bot >= y & y >= b_top)) | (((y == b_top) | (y == b_bot)) & (b_left <= x & x <= b_right));
 assign yellowBB_active 	= (((x == y_left) | (x == y_right)) & (y_bot >= y & y >= y_top)) | (((y == y_top) | (y == y_bot)) & (y_left <= x & x <= y_right));
 assign greyBB_active 	= (((x == gr_left) | (x == gr_right)) & (gr_bot >= y & y >= gr_top)) | (((y == gr_top) | (y == gr_bot)) & (gr_left <= x & x <= gr_right));
-assign new_image 		= 	redBB_active	? {8'hff, 8'h00, 8'h00} : 
-							blueBB_active 	? {8'hCC, 8'hff, 8'hff} :
-							greenBB_active 	? {8'h00, 8'hff, 8'h00} :
-							yellowBB_active ? {8'hff, 8'hff, 8'h00} :
-							greyBB_active 	? {8'hff, 8'hff, 8'hff} :
+assign new_image 		= 	redBB_active	? {8'hff, 8'h92, 8'hf1} : 
+							blueBB_active 	? {8'h28, 8'hc4, 8'hda} :
+							greenBB_active 	? {8'h97, 8'hdf, 8'h61} :
+							yellowBB_active ? {8'hff, 8'ha0, 8'h4c} :
+							greyBB_active 	? {8'hb7, 8'hc6, 8'hff} :
 							detectedAreaRGB;
 
 // Switch output pixels depending on mode switch
@@ -209,7 +209,7 @@ always@(posedge clk) begin
 	//Cycle through message writer states once started
 	if (msg_state != 4'b0000)
 		begin
-			if (msg_state == 4'b1101)  msg_state <= 4'b0000;
+			if (msg_state == 4'b1011)  msg_state <= 4'b0000;
 			else msg_state <= msg_state + 4'b0001;
 		end
 end
@@ -273,14 +273,6 @@ always@(*) begin	//Write words to FIFO as state machine advances
 		end
 		4'b1011: begin
 			msg_buf_in = {5'b0, gr_x_max, 5'b0, gr_y_max}; //Bottom right coordinate - GREY
-			msg_buf_wr = 1'b1;
-		end
-		4'b1100:begin
-			msg_buf_in = `PIXEL_VALUE_ID;
-			msg_buf_wr = 1'b1;
-		end
-		4'b1101:begin
-			msg_buf_in = {8'b0,redStreamIN,greenStreamIN,blueStreamIN};
 			msg_buf_wr = 1'b1;
 		end
 		default: begin

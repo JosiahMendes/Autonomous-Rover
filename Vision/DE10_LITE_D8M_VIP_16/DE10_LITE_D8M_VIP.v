@@ -158,7 +158,7 @@ Qsys u0 (
 		.terasic_camera_0_conduit_end_LVAL         (MIPI_PIXEL_HS_d),         	//                                 .LVAL
 		.terasic_camera_0_conduit_end_PIXCLK       (~MIPI_PIXEL_CLK_d),        	//                                 .PIXCLK
 		
-		.terasic_auto_focus_0_conduit_vcm_i2c_sda  (CAMERA_I2C_SDA),  			//     terasic_auto_focus_0_conduit.vcm_i2c_sda
+	   .terasic_auto_focus_0_conduit_vcm_i2c_sda  (CAMERA_I2C_SDA),  			//     terasic_auto_focus_0_conduit.vcm_i2c_sda
 		.terasic_auto_focus_0_conduit_clk50        (MAX10_CLK1_50),        		//                                 .clk50
 		.terasic_auto_focus_0_conduit_vcm_i2c_scl  (CAMERA_I2C_SCL),  			//                                 .vcm_i2c_scl
 		
@@ -178,8 +178,8 @@ Qsys u0 (
 		
 		.eee_imgproc_0_conduit_mode_new_signal     (SW[0]),
 		
-		.uart_0_external_connection_rxd            (ARDUINO_IO[9]),            //       uart_0_external_connection.rxd
-		.uart_0_external_connection_txd            (ARDUINO_IO[8])             //                                 .txd
+		.uart_0_external_connection_rxd            (ARDUINO_IO[8]),            //       uart_0_external_connection.rxd
+		.uart_0_external_connection_txd            (ARDUINO_IO[9])             //                                 .txd
 		
 	);
 

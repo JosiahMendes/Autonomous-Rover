@@ -30,4 +30,28 @@ module colour_threshold(
 							  & (8'd50  < sat) & (sat < 8'd130 )
 							  & (8'd50  < val) & (val < 8'd100 );
 
+//DARK MODE
+//	assign red_detect = 		((8'd244   < hue) & (hue < 8'd255  ) || (8'd0   < hue) & (hue < 8'd18  ))
+//							  & (8'd203  < sat) & (sat < 8'd236 ) 
+//							  & (8'd163  < val) & (val < 8'd255 );
+//
+//   assign green_detect =  		(8'd46 < hue) & (hue < 8'd78 ) 
+//							  & (8'd158 < sat) & (sat < 8'd255 )
+//							  & (8'd37 < val) & (val < 8'd139 );
+//								 
+//	assign blue_detect = 		(8'd31 < hue) & (hue < 8'd48 ) 
+//							  & (8'd32  < sat) & (sat < 8'd136 )
+//							  & (8'd45  < val) & (val < 8'd153 );
+//
+//	assign yellow_detect = 		(8'd8  < hue) & (hue < 8'd20  )  
+//							  & (8'd220 < sat) & (sat < 8'd255 )
+//							  & (8'd179  < val) & (val < 8'd255 );
+//
+//	assign grey_detect = 		(8'd7  < hue) & (hue < 8'd56 ) 
+//							  & (8'd86  < sat) & (sat < 8'd255 )
+//							  & (8'd0  < val) & (val < 8'd36 );
+
+
+	
+
 endmodule

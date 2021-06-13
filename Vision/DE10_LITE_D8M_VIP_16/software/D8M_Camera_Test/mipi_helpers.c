@@ -47,22 +47,22 @@ void mipi_show_error_info(void){
 	MDLSynErr = MipiBridgeRegRead(MIPI_REG_MDLSynErr);
 	FrmErrCnt = MipiBridgeRegRead(MIPI_REG_FrmErrCnt);
 	MDLErrCnt = MipiBridgeRegRead(MIPI_REG_MDLErrCnt);
-	printf("PHY_status=%xh, CSI_status=%xh, MDLSynErr=%xh, FrmErrCnt=%xh, MDLErrCnt=%xh\r\n", PHY_status, SCI_status, MDLSynErr,FrmErrCnt, MDLErrCnt);
+	fprintf(stderr,"PHY_status=%xh, CSI_status=%xh, MDLSynErr=%xh, FrmErrCnt=%xh, MDLErrCnt=%xh\r\n", PHY_status, SCI_status, MDLSynErr,FrmErrCnt, MDLErrCnt);
 }
 
 void mipi_show_error_info_more(void){
-    printf("FrmErrCnt = %d\n",MipiBridgeRegRead(0x0080));
-    printf("CRCErrCnt = %d\n",MipiBridgeRegRead(0x0082));
-    printf("CorErrCnt = %d\n",MipiBridgeRegRead(0x0084));
-    printf("HdrErrCnt = %d\n",MipiBridgeRegRead(0x0086));
-    printf("EIDErrCnt = %d\n",MipiBridgeRegRead(0x0088));
-    printf("CtlErrCnt = %d\n",MipiBridgeRegRead(0x008A));
-    printf("SoTErrCnt = %d\n",MipiBridgeRegRead(0x008C));
-    printf("SynErrCnt = %d\n",MipiBridgeRegRead(0x008E));
-    printf("MDLErrCnt = %d\n",MipiBridgeRegRead(0x0090));
-    printf("FIFOSTATUS = %d\n",MipiBridgeRegRead(0x00F8));
-    printf("DataType = 0x%04x\n",MipiBridgeRegRead(0x006A));
-    printf("CSIPktLen = %d\n",MipiBridgeRegRead(0x006E));
+    fprintf(stderr,"FrmErrCnt = %d\n",MipiBridgeRegRead(0x0080));
+    fprintf(stderr,"CRCErrCnt = %d\n",MipiBridgeRegRead(0x0082));
+    fprintf(stderr,"CorErrCnt = %d\n",MipiBridgeRegRead(0x0084));
+    fprintf(stderr,"HdrErrCnt = %d\n",MipiBridgeRegRead(0x0086));
+    fprintf(stderr,"EIDErrCnt = %d\n",MipiBridgeRegRead(0x0088));
+    fprintf(stderr,"CtlErrCnt = %d\n",MipiBridgeRegRead(0x008A));
+    fprintf(stderr,"SoTErrCnt = %d\n",MipiBridgeRegRead(0x008C));
+    fprintf(stderr,"SynErrCnt = %d\n",MipiBridgeRegRead(0x008E));
+    fprintf(stderr,"MDLErrCnt = %d\n",MipiBridgeRegRead(0x0090));
+    fprintf(stderr,"FIFOSTATUS = %d\n",MipiBridgeRegRead(0x00F8));
+    fprintf(stderr,"DataType = 0x%04x\n",MipiBridgeRegRead(0x006A));
+    fprintf(stderr,"CSIPktLen = %d\n",MipiBridgeRegRead(0x006E));
 }
 
 bool MIPI_Init(void){
@@ -71,7 +71,7 @@ bool MIPI_Init(void){
 
 	bSuccess = oc_i2c_init_ex(I2C_OPENCORES_MIPI_BASE, 50*1000*1000,400*1000); //I2C: 400K
 	if (!bSuccess)
-		printf("failed to init MIPI- Bridge i2c\r\n");
+		fprintf(stderr,"failed to init MIPI- Bridge i2c\r\n");
 
     usleep(50*1000);
     MipiBridgeInit();
@@ -80,7 +80,7 @@ bool MIPI_Init(void){
 
 //	bSuccess = oc_i2c_init_ex(I2C_OPENCORES_CAMERA_BASE, 50*1000*1000,400*1000); //I2C: 400K
 //	if (!bSuccess)
-//		printf("failed to init MIPI- Camera i2c\r\n");
+//		fprintf(stderr,"failed to init MIPI- Camera i2c\r\n");
 
     MipiCameraInit();
     MIPI_BIN_LEVEL(DEFAULT_LEVEL);

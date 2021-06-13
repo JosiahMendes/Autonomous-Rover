@@ -9,7 +9,8 @@
    <export preferredWidth="267" />
   </columns>
  </systemtable>
- <library expandedCategories="Library,Project" />
+ <library
+   expandedCategories="Library,Project,Project/Interface Protocols,Project/Interface Protocols/Serial" />
  <window width="1971" height="1040" x="8" y="0" />
  <generation greybox="0" block_symbol_file="0" />
 </preferences>

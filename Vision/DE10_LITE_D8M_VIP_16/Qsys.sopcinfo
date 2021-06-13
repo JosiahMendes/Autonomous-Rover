@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <EnsembleReport name="Qsys" kind="Qsys" version="1.0" fabric="QSYS">
  <!-- Format version 17.1 590 (Future versions may contain additional information.) -->
- <!-- 2021.06.12.13:50:05 -->
+ <!-- 2021.06.13.01:16:14 -->
  <!-- A collection of modules and connections -->
  <parameter name="AUTO_GENERATION_ID">
   <type>java.lang.Integer</type>
-  <value>1623502205</value>
+  <value>1623543373</value>
   <derived>false</derived>
   <enabled>true</enabled>
   <visible>false</visible>
@@ -11669,7 +11669,7 @@ the requested settings for a module instance. -->
   </assignment>
   <assignment>
    <name>embeddedsw.CMacro.HARDWARE_DIVIDE_PRESENT</name>
-   <value>0</value>
+   <value>1</value>
   </assignment>
   <assignment>
    <name>embeddedsw.CMacro.HARDWARE_MULTIPLY_PRESENT</name>
@@ -11685,6 +11685,10 @@ the requested settings for a module instance. -->
   </assignment>
   <assignment>
    <name>embeddedsw.CMacro.HAS_DEBUG_STUB</name>
+   <value></value>
+  </assignment>
+  <assignment>
+   <name>embeddedsw.CMacro.HAS_DIVISION_ERROR_EXCEPTION</name>
    <value></value>
   </assignment>
   <assignment>
@@ -11782,6 +11786,10 @@ the requested settings for a module instance. -->
   <assignment>
    <name>embeddedsw.dts.params.altr,exception-addr</name>
    <value>0x00020020</value>
+  </assignment>
+  <assignment>
+   <name>embeddedsw.dts.params.altr,has-div</name>
+   <value>1</value>
   </assignment>
   <assignment>
    <name>embeddedsw.dts.params.altr,has-initda</name>
@@ -12353,7 +12361,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="dividerType">
    <type>java.lang.String</type>
-   <value>no_div</value>
+   <value>srt2</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -13211,7 +13219,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="instSlaveMapParam">
    <type>java.lang.String</type>
-   <value><![CDATA[<address-map><slave name='onchip_memory2_0.s1' start='0x20000' end='0x3D8F0' type='altera_avalon_onchip_memory2.s1' /><slave name='nios2_gen2.debug_mem_slave' start='0x40800' end='0x41000' type='altera_nios2_gen2.debug_mem_slave' /></address-map>]]></value>
+   <value><![CDATA[<address-map><slave name='onchip_memory2_0.s1' start='0x20000' end='0x40000' type='altera_avalon_onchip_memory2.s1' /><slave name='nios2_gen2.debug_mem_slave' start='0x40800' end='0x41000' type='altera_nios2_gen2.debug_mem_slave' /></address-map>]]></value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>false</visible>
@@ -13231,7 +13239,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="dataSlaveMapParam">
    <type>java.lang.String</type>
-   <value><![CDATA[<address-map><slave name='onchip_memory2_0.s1' start='0x20000' end='0x3D8F0' type='altera_avalon_onchip_memory2.s1' /><slave name='nios2_gen2.debug_mem_slave' start='0x40800' end='0x41000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='uart_0.s1' start='0x41000' end='0x41020' type='altera_avalon_uart.s1' /><slave name='EEE_IMGPROC_0.s1' start='0x41020' end='0x41040' type='EEE_IMGPROC.s1' /><slave name='timer.s1' start='0x41040' end='0x41060' type='altera_avalon_timer.s1' /><slave name='TERASIC_AUTO_FOCUS_0.mm_ctrl' start='0x41060' end='0x41080' type='TERASIC_AUTO_FOCUS.mm_ctrl' /><slave name='i2c_opencores_camera.avalon_slave_0' start='0x41080' end='0x410A0' type='i2c_opencores.avalon_slave_0' /><slave name='i2c_opencores_mipi.avalon_slave_0' start='0x410A0' end='0x410C0' type='i2c_opencores.avalon_slave_0' /><slave name='mipi_pwdn_n.s1' start='0x410C0' end='0x410D0' type='altera_avalon_pio.s1' /><slave name='mipi_reset_n.s1' start='0x410D0' end='0x410E0' type='altera_avalon_pio.s1' /><slave name='key.s1' start='0x410E0' end='0x410F0' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x410F0' end='0x41100' type='altera_avalon_pio.s1' /><slave name='led.s1' start='0x41100' end='0x41110' type='altera_avalon_pio.s1' /><slave name='altpll_0.pll_slave' start='0x41110' end='0x41120' type='altpll.pll_slave' /><slave name='sysid_qsys.control_slave' start='0x41120' end='0x41128' type='altera_avalon_sysid_qsys.control_slave' /><slave name='jtag_uart.avalon_jtag_slave' start='0x41128' end='0x41130' type='altera_avalon_jtag_uart.avalon_jtag_slave' /></address-map>]]></value>
+   <value><![CDATA[<address-map><slave name='onchip_memory2_0.s1' start='0x20000' end='0x40000' type='altera_avalon_onchip_memory2.s1' /><slave name='nios2_gen2.debug_mem_slave' start='0x40800' end='0x41000' type='altera_nios2_gen2.debug_mem_slave' /><slave name='uart_0.s1' start='0x41000' end='0x41020' type='altera_avalon_uart.s1' /><slave name='EEE_IMGPROC_0.s1' start='0x41020' end='0x41040' type='EEE_IMGPROC.s1' /><slave name='timer.s1' start='0x41040' end='0x41060' type='altera_avalon_timer.s1' /><slave name='TERASIC_AUTO_FOCUS_0.mm_ctrl' start='0x41060' end='0x41080' type='TERASIC_AUTO_FOCUS.mm_ctrl' /><slave name='i2c_opencores_camera.avalon_slave_0' start='0x41080' end='0x410A0' type='i2c_opencores.avalon_slave_0' /><slave name='i2c_opencores_mipi.avalon_slave_0' start='0x410A0' end='0x410C0' type='i2c_opencores.avalon_slave_0' /><slave name='mipi_pwdn_n.s1' start='0x410C0' end='0x410D0' type='altera_avalon_pio.s1' /><slave name='mipi_reset_n.s1' start='0x410D0' end='0x410E0' type='altera_avalon_pio.s1' /><slave name='key.s1' start='0x410E0' end='0x410F0' type='altera_avalon_pio.s1' /><slave name='sw.s1' start='0x410F0' end='0x41100' type='altera_avalon_pio.s1' /><slave name='led.s1' start='0x41100' end='0x41110' type='altera_avalon_pio.s1' /><slave name='altpll_0.pll_slave' start='0x41110' end='0x41120' type='altpll.pll_slave' /><slave name='sysid_qsys.control_slave' start='0x41120' end='0x41128' type='altera_avalon_sysid_qsys.control_slave' /><slave name='jtag_uart.avalon_jtag_slave' start='0x41128' end='0x41130' type='altera_avalon_jtag_uart.avalon_jtag_slave' /></address-map>]]></value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>false</visible>
@@ -13965,7 +13973,7 @@ parameters are a RESULT of the module parameters. -->
     <slaveName>s1</slaveName>
     <name>onchip_memory2_0.s1</name>
     <baseAddress>131072</baseAddress>
-    <span>121072</span>
+    <span>131072</span>
    </memoryBlock>
    <memoryBlock>
     <isBridge>false</isBridge>
@@ -14338,7 +14346,7 @@ parameters are a RESULT of the module parameters. -->
     <slaveName>s1</slaveName>
     <name>onchip_memory2_0.s1</name>
     <baseAddress>131072</baseAddress>
-    <span>121072</span>
+    <span>131072</span>
    </memoryBlock>
   </interface>
   <interface name="irq" kind="interrupt_receiver" version="17.1">
@@ -15642,7 +15650,7 @@ the requested settings for a module instance. -->
   </assignment>
   <assignment>
    <name>embeddedsw.CMacro.SIZE_VALUE</name>
-   <value>121072</value>
+   <value>131072</value>
   </assignment>
   <assignment>
    <name>embeddedsw.CMacro.WRITABLE</name>
@@ -15774,7 +15782,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="memorySize">
    <type>long</type>
-   <value>121072</value>
+   <value>131072</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -16058,7 +16066,7 @@ parameters are a RESULT of the module parameters. -->
    </parameter>
    <parameter name="addressSpan">
     <type>java.math.BigInteger</type>
-    <value>121072</value>
+    <value>131072</value>
     <derived>true</derived>
     <enabled>true</enabled>
     <visible>false</visible>
@@ -16146,7 +16154,7 @@ parameters are a RESULT of the module parameters. -->
    </parameter>
    <parameter name="explicitAddressSpan">
     <type>java.math.BigInteger</type>
-    <value>121072</value>
+    <value>131072</value>
     <derived>false</derived>
     <enabled>true</enabled>
     <visible>true</visible>
@@ -18205,7 +18213,7 @@ the requested settings for a module instance. -->
   </assignment>
   <assignment>
    <name>embeddedsw.CMacro.TIMESTAMP</name>
-   <value>1623502205</value>
+   <value>1623543373</value>
   </assignment>
   <assignment>
    <name>embeddedsw.dts.compatible</name>
@@ -18225,7 +18233,7 @@ the requested settings for a module instance. -->
   </assignment>
   <assignment>
    <name>embeddedsw.dts.params.timestamp</name>
-   <value>1623502205</value>
+   <value>1623543373</value>
   </assignment>
   <assignment>
    <name>embeddedsw.dts.vendor</name>
@@ -18241,7 +18249,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="timestamp">
    <type>int</type>
-   <value>1623502205</value>
+   <value>1623543373</value>
    <derived>true</derived>
    <enabled>false</enabled>
    <visible>false</visible>

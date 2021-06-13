@@ -2,8 +2,8 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>12-Jun-2021 12:28:32</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1623497312192</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>Jun 13, 2021 1:53:01 AM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1623545581096</BspGeneratedUnixTimeStamp>
         <BspGeneratedLocation>C:\Users\josmen01\Local\Vision\DE10_LITE_D8M_VIP_16\software\D8M_Camera_Test_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>..\..\Qsys.sopcinfo</SopcDesignFile>
@@ -386,7 +386,7 @@
                 <SettingName>hal.make.bsp_cflags_optimization</SettingName>
                 <Identifier>BSP_CFLAGS_OPTIMIZATION</Identifier>
                 <Type>UnquotedString</Type>
-                <Value>-O0</Value>
+                <Value>-O3</Value>
                 <DefaultValue>-O0</DefaultValue>
                 <DestinationFile>makefile_variable</DestinationFile>
                 <Description>C/C++ compiler optimization level. "-O0" = no optimization,"-O2" = "normal" optimization, etc. "-O0" is recommended for code that you want to debug since compiler optimization can remove variables and produce non-sequential execution of code while debugging. This setting defines the value of BSP_CFLAGS_OPTIMIZATION in Makefile.</Description>
@@ -924,8 +924,8 @@
         </Setting>
         <MemoryMap>
                 <slaveDescriptor>onchip_memory2_0</slaveDescriptor>
-                <addressRange>0x00020000 - 0x0003D8EF</addressRange>
-                <addressSpan>121072</addressSpan>
+                <addressRange>0x00020000 - 0x0003FFFF</addressRange>
+                <addressSpan>131072</addressSpan>
                 <attributes>memory</attributes>
         </MemoryMap>
         <MemoryMap>
