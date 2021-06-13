@@ -8,17 +8,18 @@ x1 = 1:size(cell1.Var1);
 
 figure('Position', [10 10 900 400]);
 hold on;
-plot(x1 - 3000, cell1.Var2)
-title('Charge cycle of cell 1', 'fontSize', 16);
-xlabel('Time [s]','fontSize', 14);
-ylabel('Cell voltage [mV]',  'fontSize', 14);
+plot(x1 - 3000, cell1.Var2, "lineWidth",1)
+set(gca,'FontSize',14)
+title('Discharge/Charge Cycle for LiFePO_4 Battery Cell', 'fontSize', 16);
+xlabel('Time [s]','fontSize', 16);
+ylabel('Cell voltage [mV]',  'fontSize', 16);
 xlim([0,15876]);
 grid
 
 
 
 
-%Find the capacity of each of the cells
+%% Find the capacity of each of the cells
 
 cell1 = readtable('Cell1.CSV');
 cell2 = readtable('Cell2.CSV');
