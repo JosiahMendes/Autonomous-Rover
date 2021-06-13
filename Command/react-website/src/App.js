@@ -7,13 +7,14 @@ import View from './components/pages/View';
 import Command from './components/pages/Command';
 import Power from './components/pages/Power';
 import Socket from './components/Socket';
-import {Rect} from 'react-konva';
+import {Rect, Circle} from 'react-konva';
 
 const roverWidth = 25;
 var global_angle = 0;
 var currPos = [window.innerWidth/2 - roverWidth/2, window.innerHeight/2];
 var currPos_backend = [0,0];
 var roverPath = [];
+var obstacleSet = [];
 
 function paths(roverPath, totalAngle, angleDistance, pos, color) {
   //var scale = 5;
@@ -30,6 +31,32 @@ function paths(roverPath, totalAngle, angleDistance, pos, color) {
   currPos_backend = [Number(currPos_backend[0]) - Number(angleDistance[1])*sine,
               Number(currPos_backend[1]) + Number(angleDistance[1])*cosine];
   return [roverPath, finalAngle, newPos];
+}
+
+function drawObstacle(obstacle, pos, angle) {
+  var color = "black";
+  switch(obstacle[0]) {
+    case "pink":
+      color = "#eb7bdd";
+      break
+    case "green":
+      color = "#97df62";
+      break
+    case "blue":
+      color = "#8bcbd4";
+      break
+    case "orange":
+      color = "fc9031";
+      break
+    case "grey":
+      color = "1c1e1b";
+      break
+    default:
+      //
+  };
+  var xpos = obstacle[1][0]*Math.cos(angle*Math.PI/180) - obstacle[1][1]*Math.sin(angle*Math.PI/180);
+  var ypos = obstacle[1][0]*Math.sin(angle*Math.PI/180) + obstacle[1][1]*Math.cos(angle*Math.PI/180);
+  obstacleSet.push(<Circle x={pos[0]+xpos} y={pos[1]+ypos} radius={2.5} fill={color}/>);
 }
 
 function App() {
@@ -49,6 +76,13 @@ function App() {
       setAngleDistance(data);
     })
   }, []);
+  const [obstacle, setObstacle] = useState(["unknown",[0,0]]);
+  useEffect(() => {
+    Socket.on("Obstacle", data => {
+      setObstacle(data);
+      drawObstacle(obstacle, currPos, global_angle);
+    });
+  });
   useEffect(() => {
     Socket.on("CurrentPosition", data => {
       Socket.emit("CurrentPosition", [currPos_backend, global_angle]);
@@ -56,6 +90,8 @@ function App() {
   }, []);
 
   [roverPath, global_angle, currPos] = paths(roverPath, global_angle, angleDistanceSet, currPos, "grey");
+  setAngleDistance([0,0]);
+  setObstacle(["unknown",[0,0]]);
   return (
     <>
     <Router>
@@ -65,7 +101,7 @@ function App() {
           <Home {...props} batteryLevel={(batteryLevel[0]+batteryLevel[1]+batteryLevel[2]+batteryLevel[3])/4}/>
         )} />
         <Route path='/view' render={(props) => (
-          <View {...props} path={roverPath} pos={currPos}/>
+          <View {...props} path={roverPath} pos={currPos} obstacle={obstacleSet}/>
         )} />
         <Route path='/command' render={(props) => (
           <Command {...props} />
