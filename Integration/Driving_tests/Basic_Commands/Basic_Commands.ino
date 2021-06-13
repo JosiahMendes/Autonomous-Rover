@@ -13,6 +13,32 @@ void setup() {
   Serial1.write('@');
 }
 bool test_command = true;
+float choose_speed(char sp)
+{
+  float ret_speed;
+  switch(sp){
+    case 'A':
+      ret_speed = 4.05;
+      break;
+    case 'B':
+      ret_speed = 3.4;
+      break;
+    case 'C':
+      ret_speed = 2.75;
+      break;
+    case 'D':
+      ret_speed = 2.1;
+      break;
+    case 'E':
+      ret_speed = 1.46;
+      break;
+    default :
+      ret_speed = 2.75;
+      
+  }
+  return ret_speed;
+  
+}
 void loop() {
   vref = 0.5;
   rover.VoltageRegulationStep();
@@ -40,54 +66,72 @@ void loop() {
         rcvd = true;
       }
       if (rcvd) {
-        Serial1.write("Driving Received: "); //debugging purposes
-        Serial1.write(Command);
+        //Serial1.write("Driving Received: "); //debugging purposes //interfered with stop signal
+       // Serial1.write(Command);
         Serial.print("Got this command: "); Serial.println(Command); //debugging purposes
         rcvd = false;
         //Process Command
         int count = 0;
         char parameter[32] = ""; //either distance or angle
         int count_param = 0;
-
+        char command;
+        char sp;
         for (int i = 0; i < 32; ++i) {
-          Serial.println(i);
-          if (Command[i] != ',') {
-            parameter[count_param] = Command[i];
-            count_param++;
-            if (i == 31) {
-              if (count % 2 == 0)
-              {
-                Serial.print("Paramter1 is: "); Serial.println(parameter);
-                vref = 2.5;
-                for(int i = 0;i< 500;++i)
-                  rover.VoltageRegulationStep();
-                rover.move_forward(2.5,atoi(parameter));
-              }
-              else {
-                Serial.print("Paramter2 is: "); Serial.println(parameter);
-                 rover.rotate_clockwise(atoi(parameter)/10);
-              }
-            }
+         if(i==0)
+         {
+          command = Command[i];
+          if(command == 'M')
+          {
+            sp = Command[i+1];
+            i++;
           }
-          else if (Command[i] == ',') {
-            if (count % 2 == 0)
+          continue;
+         }
+          
+          if (Command[i] == ',' || i == 31) {
+            if (command == 'M')
             {
+              
               Serial.print("Paramter1 is: "); Serial.println(parameter);
-              vref = 2.5;
+              
+              float ret_speed = choose_speed(sp);
+              vref = ret_speed;
                 for(int i = 0;i< 500;++i)
                   rover.VoltageRegulationStep();
-              rover.move_forward(2.5,atoi(parameter));
+              if(atoi(parameter) > 0)
+                rover.move_forward(ret_speed,atoi(parameter));
+              else 
+                rover.move_backward(ret_speed,abs(atoi(parameter)));
             }
             else {
               Serial.print("Paramter2 is: "); Serial.println(parameter);
-               rover.rotate_clockwise(atoi(parameter)/10);
+              vref=1.6;
+               for(int i = 0;i< 500;++i)
+                  rover.VoltageRegulationStep();
+               if(atoi(parameter) > 0)
+                rover.rotate_clockwise(atoi(parameter));
+               else
+                rover.rotate_anticlockwise(abs(atoi(parameter)));
             }
             count++;
             count_param = 0;
             strcpy(parameter, "");
+            command = i!= 31 ? Command[i+1] : ' ';
+            i = i+1;
+            if(command == 'M')
+            {
+              sp = Command[i+1];
+              i++;
+            }
 
           }
+         else if (Command[i] != ',') {
+            parameter[count_param] = Command[i];
+            count_param++;
+            
+          }
         }
+        Serial1.write('@');
 
       }
 

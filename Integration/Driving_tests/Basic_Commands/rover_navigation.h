@@ -62,8 +62,8 @@ class Rover{
   void SetMotorPins();
   void SetState(int Rstate, int Lstate);
   //Navigation Methods
-  void move_forward(float rover_speed, int distance);
-  void move_backward(float rover_speed, int distance);
+  void move_forward(float rover_speed, long int distance);
+  void move_backward(float rover_speed, long int distance);
   void rotate_clockwise(int deg);
   void rotate_anticlockwise(int deg);
   void Stop();

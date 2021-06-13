@@ -48,14 +48,14 @@ extern int ADNS3080_PRODUCT_ID_VAL;
 
 
 
-extern float total_x;
+extern double total_x;
 
-extern float total_y;
+extern double total_y;
 
 
-extern float total_x1;
+extern double total_x1;
 
-extern float total_y1;
+extern double total_y1;
 
 
 extern int x;
