@@ -570,35 +570,7 @@ the total amount of usable energy in a battery if done during discharging.
 Secondly, differences in impedance and charge curves between cells might 
 make it look as though a cell is charged more than others, but the voltage 
 difference might disappear naturally as the battery is charged more or as 
-charge current is reduced towards the end of a charge cycle. As such, the 
-implemented charging algorithm only does balancing during the constant 
-voltage part of charging. The balancing is done using the code shown in 
-Figure~\ref{fig:balancingCode}. During CV charging it is desirable that all cells have a voltage 
-of 3600 mV. If any cell has a voltage which is higher than 3600 mV its 
-voltage is too high and the dissipative resistors are switched on to lower 
-the voltage to the voltage set point. 
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width = \textwidth]{Balancing_code.png}
-    \caption{Function called while charging at high SOC to balance out the voltage of the cells.}
-    \vspace{-10pt}
-    \label{fig:balancingCode}
-\end{figure}
-
-Alongside the constant voltage charging algorithm this code was extremely 
-successful at balancing the cells. The balancing is shown in action in Figure~\ref{fig:balancing}. 
-One by one, the cell voltages are brought up to and kept at 3600 mV. Even with 
-an initial voltage difference of 200 mV, balancing only takes about 
-1000 seconds = 17 minutes. 
-
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.48\textwidth]{balancing.png}
-    \caption{Cell voltages as they are being balanced, ignore voltage spikes at end as they are not related to the balancing.}
-    \label{fig:balancing}
-\end{figure}
+charge current is reduced towards the end of a charge cycle.
 
 \textbf{Communicating with Other Modules}
 \vspace{10pt} 
@@ -1172,6 +1144,11 @@ Regarding the Current Controller, it was not tuned because the voltage controlle
 
 %Start of energy implementation
 \subsection{Energy}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Circuit_Diagram.png}
+    \label{fig:circuitDiagram}
+\end{figure}
 
 \textbf{SMPS Configuration}
 \vspace{10pt} 
@@ -1285,16 +1262,6 @@ performance.
 It should also be noted that the PI-gains from the sample code were changed as they did
 not work optimally in boost mode. This was done through trial and error.
 
-
-\textbf{Charging Algorithm}
-\vspace{10pt} 
-\newline
-Constant output voltage was not found to work as it made voltage difference in cells.
-
-\textbf{Balancing}
-\vspace{10pt} 
-\newline
-
 \textbf{Safety Mechanisms}
 \vspace{10pt} 
 \newline
@@ -1305,17 +1272,102 @@ current and battery current. If any of the measurements are found to be outside 
 acceptable range, then the function immediately puts the state machine in the error
 state.
 
-\textbf{MPPT}
+\textbf{Charging Algorithm}
+%\vspace{10pt} 
+%\newline
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[scale=0.5]{State_diagram.png}
+		\caption{Charging algorithm state machine}
+	\end{Center}
+\end{figure}
+\vspace{-20pt}
+The battery cells are designed to be charged first with a constant current and then
+with a constant voltage of 3.6 V\cite{batteryDatasheet}.
+The implemented charging algorithm follows this specification as much as possible. 
+However, some modifications needed to be made to accomodate other design choices.
+When turned on, the state machine starts in state 0 where the output current is set
+to 0. It waits in this state until the OL/CL switch is set to 1 after which it moves 
+to the constant current state. In the constant current state the current is nominally 
+250 mA. However, as will be discussed later, if the solar panels do not produce enough
+power to charge at 250 mA, the MPPT algorithm might impose another lower value for 
+the constant current in this state. Moreover, technically the current is not constant
+in this state as 40 ms of each second is used to measure cell voltages, and there will 
+therefore be zero current. These short charge breaks were not found to have an impact 
+on the performance of the charging process. However, charging LiFePO4 battery cells with a
+pulsating current has even been found to severly reduce battery degradation\cite{PulseCharging},
+which might even mean better performance than truly constant current in the long term. The
+charging algorithm leaves the constant current state for the constant voltage state
+once any cell reaches a cell voltage of 3600 mV.
+
+Implementing the constant voltage state of the charging algorithm was a challenge. The
+reason being that for a series battery pack, even if the voltage across the battery pack
+as a whole is constant this does not mean that the voltage across individual cells is constant.
+Testing revealed that if the output voltage was kept constant the weaker cells would rise 
+quickly in voltage as the current died down. To avoid this problem the constant voltage
+state was redesigned from keeping the voltage across the battery pack constant, to trying
+to keep the voltage of each individual cell constant. This was done in two steps. Firstly,
+the battery input current is regulated so as to keep the highest cell voltage in the range
+3600 to 3630 mV. Secondly, balancing ensures that cells of lower voltage catch up to the highest
+voltage. The code for this is shown in Figure~\ref{fig:Constant_Voltage}. Initial test of this code
+gave promising results, but it could not fully be tested due to the ban on working with batteries.
+However, in Figure~\ref{fig:balancing} the ability of the code to stabilise all cell voltages
+around 3600 mV is shown. After all cell voltages had reached 3600 mV and the current had died
+to below 30 mA, the charging algorithm is done and the state machine enters an idle state, where
+it stays until the OL/CL switch is flipped to reset the system.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width = 0.7\textwidth]{Constant_voltage.png}
+    \caption{Code used to keep cell voltages constant.}
+    \vspace{-10pt}
+    \label{fig:Constant_Voltage}
+\end{figure}
+
+
+\textbf{Balancing}
 \vspace{10pt} 
 \newline
+As such, the 
+implemented charging algorithm only does balancing during the constant 
+voltage part of charging. The balancing is done using the code shown in 
+Figure~\ref{fig:balancingCode}. During CV charging it is desirable that all cells have a voltage 
+of 3600 mV. If any cell has a voltage which is higher than 3600 mV its 
+voltage is too high and the dissipative resistors are switched on to lower 
+the voltage to the voltage set point. 
 
-\textbf{Data Logging}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width = \textwidth]{Balancing_code.png}
+    \caption{Function called while charging at high SOC to balance out the voltage of the cells.}
+    \vspace{-10pt}
+    \label{fig:balancingCode}
+\end{figure}
+
+Alongside the constant voltage charging algorithm this code was extremely 
+successful at balancing the cells. The balancing is shown in action in Figure~\ref{fig:balancing}. 
+One by one, the cell voltages are brought up to and kept at 3600 mV. Even with 
+an initial voltage difference of 200 mV, balancing only takes about 
+1000 seconds = 17 minutes. 
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.48\textwidth]{balancing.png}
+    \caption{Cell voltages as they are being balanced, ignore voltage spikes at end as they are not related to the balancing.}
+    \label{fig:balancing}
+\end{figure}
+
+\textbf{MPPT}
 \vspace{10pt} 
 \newline
 
 \textbf{SOC}
 \vspace{10pt} 
 \newline
+Got the energy table from CSV file.
+Stored in CSV file, but takes long so only log every 4 seconds.
+Lookup table
 
 \textbf{SOH}
 \vspace{10pt} 
@@ -1324,11 +1376,14 @@ state.
 \textbf{Discharging}
 \vspace{10pt} 
 \newline
-
-\textbf{Final Design}
-\vspace{10pt} 
-\newline
-
+The energy module is also tasked with keeping track of the SOC and SOH during discharging.
+This was done using the same algorithms as during charging, with one noteable exception.
+During discharging the battery power was continually tracked as a function of time and
+SOC. When the battery is done discharging, this information is used to update the table
+relating the SOC of the battery to the remaining usable energy. This is done using the
+formula \( New Energy Array = 0.99*(Old Energy Array) + 0.01*(Measured Energy Array) \). 
+By having the energy array update itself it is hoped that the energy array will be a good
+approximation even after many battery cycles as the battery performance starts to deteriorate.
 %End of energy implementation
 
 %End of implementation section
@@ -1730,7 +1785,7 @@ title={References}
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{Circuit_Diagram.png}
-    \label{fig:circuitDiagram}
+    \label{fig:circuitDiagram2}
 \end{figure}
 
 

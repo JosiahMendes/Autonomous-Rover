@@ -366,27 +366,27 @@ void loop() {
               break;
             }
     
-            case 2:{ // Balancing state
+            case 2:{ // Constant voltage/Balancing state
               if(input_switch == 0){ //If the switch = 0, then go back to start
                 next_state = 0;
               }else if(min_cell < 3600 or I_setpoint > 30){ //If not done balancing stay in balancing state
                 next_state = 2;
-                if (max_cell > 3630 and I_setpoint > 0 or I_setpoint > max_power / V_out){
+                if (max_cell > 3630 and I_setpoint > 0 or I_setpoint > max_power / V_out){ //If the 
                   I_setpoint -= 0.5;
                 }else if(max_cell < 3600 and I_setpoint < 250 and I_setpoint < max_power / V_out){
                   I_setpoint += 0.5;
                 }
               }else{ //If done balancing move to charge rest
                 next_state = 3; //Go to charge rest
-                SOH[1]++;//We have now finished a charge cycle so add 1 to SOH[1], could have done this in state 5 as well
-                SOH[0] = 0; //At this point no charged has been used so reset SOH[0] 
+                SOH[1]++;//We have now finished a charge cycle so add 1 to SOH[1]
+                SOH[0] = 0; //At this point no charge has been used so reset depth of discharge
                 SOH[4] = 0; //At this point no energy has been expended so reset SOH[4]     
               }
               
               break;
             }
             
-            case 3:{ // Charge Rest, no current, here we need to exchange solar panels for 10 ohm resistor
+            case 3:{ // Charge Rest, no current
               if (input_switch == 1) { // if switch, stay put
                 next_state = 3;
               } else { // otherwise go to idle state
