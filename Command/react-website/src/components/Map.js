@@ -6,7 +6,7 @@ var stageY = 0;
 var stageWidth = window.innerWidth;
 var stageHeight = window.innerHeight*3/4;
 
-export default function Map({roverPath, pos}) {
+export default function Map({roverPath, pos, obstacle}) {
     var roverWidth = 25;
     var basePos = [window.innerWidth/2 - roverWidth/2, window.innerHeight/2];
     if(pos[0] < -stageX) {
@@ -29,6 +29,7 @@ export default function Map({roverPath, pos}) {
                 <Text x={52} y={40} text="Blue triangle: the base" fontSize={18} />
                 <RegularPolygon sides={3} x={basePos[0]} y={basePos[1]} fill="blue" radius={20}/>
                 <Star x={pos[0]} y={pos[1]} fill="red" numPoints={5} innerRadius={10} outerRadius={20} />
+                {obstacle}
             </Layer>
         </Stage>
     )
