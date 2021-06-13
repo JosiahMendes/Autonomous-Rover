@@ -135,9 +135,127 @@
 \section{Functional Design}
 
 \subsection{Control}
+
 \subsubsection{Requirements}
+
+The Control module within the context of the rover has one main goal: 
+to act as the communication hub between all the subsystems, delivering
+the relevant data where it is required to allow for the rover to integrate
+as a whole \cite{MarsRoverSpec}.  These functional requirements can be 
+obtained from the Functional Design diagram for control, outlining all the 
+data flow for the Control subsystem. There are a couple of core objectives 
+hich must be achieved in order to fulfil this role as outlined below:
+
+\begin{enumerate}
+    \item Act as a WiFi Access Point sitting under a router to receive
+    commands from the Command subsystem and send data through 
+    socket-level communication.
+    \item Use a relevant hardware-level data transmission protocol to
+    send movement commands to the Drive subsystem and receive data for 
+    Command. 
+    \item Use a relevant hardware-level data transmission protocol to 
+    receive the Vision subsystem data.
+    \item Connect the Energy subsystem with the rover, sending the 
+    relevant data to the Command subsystem.
+\end{enumerate}
+
+Although the hardware is fixed, the solutions to the outlined problems
+above are mostly up to design. It is for this reason that the main 
+challenge stems from understanding what works best for communication 
+to each subsystem and more importantly, how to integrate it such that 
+the transmission of data can be smoothly facilitated through the ESP32.
+
+\subsubsection{Hardware Organisation}
+
+The Control module comprises of two hardware components \cite{BoxContent}: 
+the ESP32, a system on chip microcontroller \cite{ESP32Datasheet}, as 
+well as an Arduino adapter board designed to map some of the available 
+GPIO pins on the ESP32 to an Arduino-like board \cite{ESP32ArduinoAdapter}.
+
+This hardware was provided by the project organisers and it immediately 
+limits the tools which can be used, however the wide array of functionality 
+which this microcontroller can provide through programming the chip allows
+for sufficient freedom and capabilities to complete the required tasks. The
+GPIO pins are highly configurable when compared to an Arduino-Uno 
+\cite{MicrocontrollerComparison}, as they are capable of using more data 
+communication through almost any of the pins via software configuration 
+\cite{ESP32PinOut}. It is low-cost and low-power, capable of using 
+WiFi capabilities at 2.4GHz and Bluetooth \cite{ESP32Datasheet} to 
+interface wirelessly with other devices. Using the Arduino Adapter 
+board \cite{ESP32ArduinoAdapter}, it can sit directly on top of an 
+Arduino or device with similar pins to directly interface through 
+physical connections. 
+
+For wired communications, the ESP32 has limitations for the type of 
+communication peripherals it can pursue with peer microcontrollers. 
+However, unlike Arduinos which have at most 1 SPI, 2 I2C and 1 UART port, 
+the ESP32 can support up to 3 SPI, 2 I2C and 3 UART ports which are 
+configurable to most of the GPIO pins available. Considering the ESP32 
+will have to interface with at most three other subsystems through wired 
+communication, there is a lot of choice with peripherals that must be 
+investigated.
+
 \subsubsection{Initial Design Choices} 
 
+There are many options available for programming the ESP32. Due to the 
+lax requirements with regards to communication, it was quickly determined 
+that the Arduino IDE and supporting libraries for the ESP32 would be 
+enough for developing what is necessary. As there are stringent practices 
+for the base Arduino Libraries and ESP8266 Libraries, this was extended 
+to a majority of the functionality available to the ESP32 including WiFi, 
+Bluetooth, UART, SPI and I2C. Seeing as the ESP32 through Espressif is 
+programmed through C, most of this can be imported through the Arduino IDE 
+which supports simpler methods for flashing software onto the ESP32.
+
+As there is no requirement imposed upon the data being transferred 
+and displayed, this results in complete freedom for the form in which 
+data is communicated through the ESP32 and whether it should be processed. 
+Seeing as the ESP32 will be handling communication between four other 
+subsystems, it was decided that the amount of processing on the device 
+should be limited as much as possible and offloaded to the other 
+subsystems. This is to ensure that bottlenecks would not appear due to a 
+sizable processing time in between transmission of data, as this would 
+cause crippling delays for communication. The simplest way to ensure the 
+integrity of the data is to standardise the type for data being 
+transferred. Since initially, the formatting and content of the data is 
+unclear, receiving and sending them as bytes or characters would be the 
+most versatile solution. Internal buffers for the ESP32 would store 
+individual commands or data lines and send them to the required subsystem 
+for processing.
+
+With regards to the communication between Command and Control, 
+there were a couple of options available. As the Command subsystem 
+would be hosted on a website, we could choose from application layer 
+protocols like HTTPs or MQTT, but as we decided our application was 
+more simplistic with regards to the type of data being communicated, we 
+opted for the transport layer protocol, TCP. This is due to the need for 
+consistent transmission of data, retransmitting if packets are lost and 
+ensuring the data does reach its destination. Speed by comparison is a 
+less stringent requirement and as such, UDP was discarded as a choice.
+
+For both Drive and Energy, the Arduino Nano Everything provided by the 
+project organisers had it’s UART ports exposed through the specific 
+hardware and it’s connections. As such, there was little need for 
+deliberation over the protocol. The peripheral chosen for both these 
+groups was UART. For the Energy submodule specifically, since it can’t 
+be integrated into the Rover physically, it was decided that any necessary 
+data would be transmitted directly to Command. This is through the UART 
+USB connection from the Arduino to the computer, which would then 
+communicate with Command over TCP. However, to ensure Energy can be 
+integrated if necessary, one UART port for the ESP32 was set aside for 
+Energy.
+
+For Vision, there are two types of data which need to be transferred 
+through the ESP32; the image from the camera and data regarding object 
+detection which could include values like distance to the object. Since 
+the image transfer will likely take a long time to accomplish, a decision
+was made to dedicate two peripherals between Vision and Control. 
+Considering the ESP32 will sit on top of the DE10-Lite FPGA, the 
+availability of ports is not a concern. As two UART ports are unavailable 
+since one will be used to communicate with Drive and the other is 
+dedicated for Energy, the peripherals chosen instead will be SPI. 
+One SPI connection is dedicated to sending images while the other is 
+dedicated to sending any data between the ESP32 and the FPGA.
 
 \subsection{Command}
 
@@ -1407,56 +1525,6 @@ approximation even after many battery cycles as the battery performance starts t
 
 \section{Systems}
 
-\subsection{Control}
- 
-\subsubsection{Overview of Module and Goals}
-The Control module within the context of the rover has one main goal: 
-to act as the communication hub between all the subsystems, delivering
-the relevant data where it is required to allow for the rover to integrate
-as a whole \cite{MarsRoverSpec}. There are a couple of core objectives which must be 
-achieved in order to fulfil this role and they are as follows:
-
-\begin{enumerate}
-    \item Act as a WiFi Access Point sitting under a router to receive
-    commands from the Command subsystem and send data through socket-level communication.
-    \item Use a relevant hardware-level data transmission protocol to
-    send movement commands to the Drive subsystem and receive data for Command. 
-    \item Use a relevant hardware-level data transmission protocol to receive
-    the Vision subsystem data.
-    \item Connect the Energy subsystem with the rover, sending the relevant data
-    to the Command subsystem.
-\end{enumerate}
-
-Although the hardware is fixed, the solutions to the outlined problems
-above are mostly up to design. It is for this reason that the main challenge
-stems from understanding what works best for communication to each subsystem
-and more importantly, how to integrate it such that the transmission of data
-can be smoothly facilitated through the ESP32.
-
-\subsubsection{Hardware Organisation}
-
-The Control module comprises of two hardware components \cite{BoxContent}: 
-the ESP32, a system on chip microcontroller \cite{ESP32Datasheet}, as well as an Arduino adapter
-board designed to map some of the available GPIO pins on the ESP32 to an Arduino-like
-board \cite{ESP32ArduinoAdapter}.
-
-This hardware was provided by the project organisers and it immediately limits
-the tools which can be used, however the wide array of functionality which
-this microcontroller can provide through programming the chip allows
-for sufficient freedom and capabilities to complete the required tasks. The
-GPIO pins are highly configurable when compared to an Arduino-Uno \cite{MicrocontrollerComparison}, as they
-are capable of using more data communication through almost any of the pins
-via software configuration \cite{ESP32PinOut}. It is low-cost and low-power, 
-capable of using WiFi capabilities at 2.4GHz and Bluetooth \cite{ESP32Datasheet} to interface wirelessly
-with other devices. Using the Arduino Adapter board \cite{ESP32ArduinoAdapter}, it can sit directly on top of
-an Arduino or device with similar pins to directly interface through physical connections. 
-
-
-\subsubsection{Drive and Control}
-
-\subsubsection{Vision and Control}
-
-\subsubsection{Command and Control}
 
 \subsection{Comms}
 
