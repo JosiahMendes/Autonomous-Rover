@@ -10,18 +10,32 @@ function CommandSection() {
     const [automated, setDrivingMethod] = useState(false);
     const [speed, setSpeed] = useState("regular");
 
-    function sendData() {
+    function sendAngle() {
         if(automated) {
             alert("The rover is in automated driving mode. Press 'Stop' to quit automated driving mode.");
         } else {
-            if(document.getElementById('angle').value === '' || document.getElementById('distance').value === '') {
-                alert('please enter values');
+            if(document.getElementById('angle').value === '') {
+                alert('please enter angle');
             } else {
                 var enteredAngle = document.getElementById('angle').value;
-                var enteredDistance = document.getElementById('distance').value;
-                Socket.emit("AngleDistance", [enteredAngle, enteredDistance]);
+                Socket.emit("Angle", enteredAngle);
                 // eslint-disable-next-line
-                alert('Data sent.' + ' Angle: ' + enteredAngle + ' degrees, Distance: ' + enteredDistance + ' mm');
+                alert('Angle sent.' + ' Angle: ' + enteredAngle + ' degrees');
+            }
+        }
+    }
+
+    function sendDistance() {
+        if(automated) {
+            alert("The rover is in automated driving mode. Press 'Stop' to quit automated driving mode.");
+        } else {
+            if(document.getElementById('distance').value === '') {
+                alert('please enter distance');
+            } else {
+                var enteredDistance = document.getElementById('distance').value;
+                Socket.emit("Distance", enteredDistance);
+                // eslint-disable-next-line
+                alert('Distance sent.' + 'Distance: ' + enteredDistance + ' mm');
             }
         }
     }
@@ -43,35 +57,35 @@ function CommandSection() {
     }
     function veryfast() {
         if(speed !== "veryfast") {
-            Socket.emit("Speed", "veryfast");
+            Socket.emit("Speed", "A");
             setSpeed("veryfast");
             alert("New speed: very fast");
         }
     }
     function fast() {
         if(speed !== "fast") {
-            Socket.emit("Speed", "fast");
+            Socket.emit("Speed", "B");
             setSpeed("fast");
             alert("New speed: fast");
         }
     }
     function regular() {
         if(speed !== "regular") {
-            Socket.emit("Speed", "regular");
+            Socket.emit("Speed", "C");
             setSpeed("regular");
             alert("New speed: regular");
         }
     }
     function slow() {
         if(speed !== "slow") {
-            Socket.emit("Speed", "slow");
+            Socket.emit("Speed", "D");
             setSpeed("slow");
             alert("New speed: slow");
         }
     }
     function veryslow() {
         if(speed !== "veryslow") {
-            Socket.emit("Speed", "veryslow");
+            Socket.emit("Speed", "E");
             setSpeed("veryslow");
             alert("New speed: very slow");
         }
@@ -110,8 +124,13 @@ function CommandSection() {
                 <input type='number' id='angle' name='angle' className='angleBox'/>
                 <label for='distance' name='distance' className='distanceLabel'>Distance [mm]: </label>
                 <input type='number' id='distance' name='distance' className='distanceBox'/>
-                <div className='send'>
-                    <Button name="button" className='btns' buttonStyle='btn-outline' buttonSize='btn--medium' onClick={sendData}>
+                <div className='sendAngle'>
+                    <Button name="button" className='btns' buttonStyle='btn-outline' buttonSize='btn--medium' onClick={sendAngle}>
+                        Send
+                    </Button>
+                </div>
+                <div className='sendDistance'>
+                    <Button name="button" className='btns' buttonStyle='btn-outline' buttonSize='btn--medium' onClick={sendDistance}>
                         Send
                     </Button>
                 </div>
