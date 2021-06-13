@@ -90,8 +90,6 @@ function App() {
   }, []);
 
   [roverPath, global_angle, currPos] = paths(roverPath, global_angle, angleDistanceSet, currPos, "grey");
-  setAngleDistance([0,0]);
-  setObstacle(["unknown",[0,0]]);
   return (
     <>
     <Router>

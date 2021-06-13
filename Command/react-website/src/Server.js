@@ -437,7 +437,7 @@ function automatedDriving() {
         }
     }
 }
-
+/*
 var testMap = createMap(30, [[0, 30]]);
 printMap(testMap[0]);
 console.log("blocked?: " + testMap[1]);
@@ -448,6 +448,7 @@ var testStart = testGraph.grid[Math.ceil(testMap[0][0].length/2)-1][0];
 var testEnd = testGraph.grid[Math.ceil(testMap[0][0].length/2)-1][testMap.length-1];
 var testResult = astar.astar.search(testGraph, testStart, testEnd);
 var testCommand = convert2command(testResult);
+*/
 //console.log(testCommand);
 
 // TCP server communicates with the ESP32    
