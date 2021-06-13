@@ -148,38 +148,43 @@ hich must be achieved in order to fulfil this role as outlined below:
 
 \begin{enumerate}
     \item Act as a WiFi Access Point sitting under a router to receive
-    commands from the Command subsystem and send data through socket-level communication.
+    commands from the Command subsystem and send data through 
+    socket-level communication.
     \item Use a relevant hardware-level data transmission protocol to
-    send movement commands to the Drive subsystem and receive data for Command. 
-    \item Use a relevant hardware-level data transmission protocol to receive
-    the Vision subsystem data.
-    \item Connect the Energy subsystem with the rover, sending the relevant data
-    to the Command subsystem.
+    send movement commands to the Drive subsystem and receive data for 
+    Command. 
+    \item Use a relevant hardware-level data transmission protocol to 
+    receive the Vision subsystem data.
+    \item Connect the Energy subsystem with the rover, sending the 
+    relevant data to the Command subsystem.
 \end{enumerate}
 
 Although the hardware is fixed, the solutions to the outlined problems
-above are mostly up to design. It is for this reason that the main challenge
-stems from understanding what works best for communication to each subsystem
-and more importantly, how to integrate it such that the transmission of data
-can be smoothly facilitated through the ESP32.
+above are mostly up to design. It is for this reason that the main 
+challenge stems from understanding what works best for communication 
+to each subsystem and more importantly, how to integrate it such that 
+the transmission of data can be smoothly facilitated through the ESP32.
 
 \subsubsection{Hardware Organisation}
 
 The Control module comprises of two hardware components \cite{BoxContent}: 
-the ESP32, a system on chip microcontroller \cite{ESP32Datasheet}, as well as an Arduino adapter
-board designed to map some of the available GPIO pins on the ESP32 to an Arduino-like
-board \cite{ESP32ArduinoAdapter}.
+the ESP32, a system on chip microcontroller \cite{ESP32Datasheet}, as 
+well as an Arduino adapter board designed to map some of the available 
+GPIO pins on the ESP32 to an Arduino-like board \cite{ESP32ArduinoAdapter}.
 
-This hardware was provided by the project organisers and it immediately limits
-the tools which can be used, however the wide array of functionality which
-this microcontroller can provide through programming the chip allows
+This hardware was provided by the project organisers and it immediately 
+limits the tools which can be used, however the wide array of functionality 
+which this microcontroller can provide through programming the chip allows
 for sufficient freedom and capabilities to complete the required tasks. The
-GPIO pins are highly configurable when compared to an Arduino-Uno \cite{MicrocontrollerComparison}, as they
-are capable of using more data communication through almost any of the pins
-via software configuration \cite{ESP32PinOut}. It is low-cost and low-power, 
-capable of using WiFi capabilities at 2.4GHz and Bluetooth \cite{ESP32Datasheet} to interface wirelessly
-with other devices. Using the Arduino Adapter board \cite{ESP32ArduinoAdapter}, it can sit directly on top of
-an Arduino or device with similar pins to directly interface through physical connections. 
+GPIO pins are highly configurable when compared to an Arduino-Uno 
+\cite{MicrocontrollerComparison}, as they are capable of using more data 
+communication through almost any of the pins via software configuration 
+\cite{ESP32PinOut}. It is low-cost and low-power, capable of using 
+WiFi capabilities at 2.4GHz and Bluetooth \cite{ESP32Datasheet} to 
+interface wirelessly with other devices. Using the Arduino Adapter 
+board \cite{ESP32ArduinoAdapter}, it can sit directly on top of an 
+Arduino or device with similar pins to directly interface through 
+physical connections. 
 
 For wired communications, the ESP32 has limitations for the type of 
 communication peripherals it can pursue with peer microcontrollers. 
