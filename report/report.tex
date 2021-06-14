@@ -933,7 +933,35 @@ end the only connection which remained between Vision and Control was
 the singular UART port designed for collecting Vision data to send to 
 Command for mapping and detecting obstacles.
 
-
+\subsubsection{Integrating Communication}
+ 
+Although the communication between peer devices was successfully set
+up and tested, there was still a small challenge. To be able to
+ncorporate all communication such that it could occur simultaneously and
+effectively, with as limited of a delay as possible. In order to achieve
+this, it was noted that the UART and TCP communication between devices
+are always held within internal buffers and as such there is no need to
+immediately pull out the data as it arrives. A secondary set of buffers
+were created, except these were created to store the next line of data or
+next command depending on the datastream. To understand what was considered
+a line of data or command, there was discussion between the groups. This
+allowed us to dedicate certain characters as “start” and “end” characters
+to differentiate between data sets. Also, certain subsystems would send
+special characters to the ESP32 to designate their status. For example,
+Drive would send an ‘@’ if it was prepared for its next command. Command
+would send a ‘S’ if it required the Drive subsystem to stop it’s current
+command. Unlike a complete path, which had the program collect the data
+from one device and immediately send it to another, this would allow the
+program for a better scheduling of tasks to be able to simultaneously keep
+up data collection. Once a certain buffer had the required contents to be
+sent, a boolean would evaluate to true, activating the sending loop to
+transmit the contents of the buffer and then clear it. In the end, this
+would allow for staggered sending and receiving between subsystems, giving
+the illusion that communication is simultaneous even when all subsystems
+are transmitting across the ESP32. For ease of understanding in what order
+the processes were occurring, the UART dedicated to Energy was used as a
+debugging tool, sending data to the Serial Monitor to understand how the
+data was flowing to and from the ESP32.
 
 \subsection{Command}
 
