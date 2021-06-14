@@ -374,6 +374,28 @@ core requirements that are listed below:
     forwarding to Command for display on the web client.
 \end{enumerate}
 
+\paragraph*{Hardware Organisation}
+
+The Vision module comprises of two main hardware elements: 
+    the Terasic DE10-Lite, a cost-effective Intel MAX 10 based FPGA board 
+    \cite{TerasicDE10Web} 
+    and the Terasic D8M-GPIO camera package \cite{TerasicD8MWeb}
+that interfaces with the FPGA through the onboard GPIO connectors. 
+
+These hardware choices were made by the project organisers, 
+but are also sufficient and capable of carrying out the tasks at hand. 
+As the FPGA's hardware is configurable, 
+it is more flexible than other embedded systems 
+that are limited to a general purpose processor,and 
+is also able to handle both streaming and processing of high resolution images
+without significant compromises on framerate or data speed 
+through the use of concurrent operations and dedicated blocks 
+for signal processing applications like multiplication.
+This particular FPGA is also equipped with a 4-bit VGA output 
+which is useful for debugging object detection live, 
+and also has a connector for an Arduino Uno R3 shield, \cite{TerasicDE10Web} 
+which can be used to interface with the ESP32 used for control.  
+
 \paragraph*{Initial Design Choices}
 
 There are several common approaches to object detection, with the two most 
@@ -815,6 +837,8 @@ increase the maximum input voltage.
 %End of energy functional section
 
 %End of funtional section
+
+
 
 \section{Implementation}
 
@@ -1293,31 +1317,25 @@ Regarding the Current Controller, it was not tuned because the voltage controlle
 
 
 
-\subsection{Integration}
 
 \subsection{Vision}
 
-\subsubsection{Hardware Organisation}
+The purpose of the Vision module as aforementioned was to find different coloured
+ping-pong balls and draw bounding boxes around them to find their estimated location, 
+the desired outcome is shown in Figure \ref{fig:DesiredVisionResult}. The following 
+section is organised in order of the video processing stream: first the raw data to 
+RGB data, then the transformation to the HSV colour space, followed by the object 
+detection, then finally the calculation for the estimated distance of each ball. 
 
-The Vision module comprises of two main hardware elements: 
-    the Terasic DE10-Lite, a cost-effective Intel MAX 10 based FPGA board 
-    \cite{TerasicDE10Web} 
-    and the Terasic D8M-GPIO camera package \cite{TerasicD8MWeb}
-that interfaces with the FPGA through the onboard GPIO connectors. 
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[scale = 0.5]{./images/AnnotatedBalls.png}
+		\caption{Desired Outcome of Image Processing applied in Vision module }
+		\label{fig:DesiredVisionResult}
+	\end{Center}
+\end{figure}
 
-These hardware choices were made by the project organisers, 
-but are also sufficient and capable of carrying out the tasks at hand. 
-As the FPGA's hardware is configurable, 
-it is more flexible than other embedded systems 
-that are limited to a general purpose processor,and 
-is also able to handle both streaming and processing of high resolution images
-without significant compromises on framerate or data speed 
-through the use of concurrent operations and dedicated blocks 
-for signal processing applications like multiplication.
-This particular FPGA is also equipped with a 4-bit VGA output 
-which is useful for debugging object detection live, 
-and also has a connector for an Arduino Uno R3 shield, \cite{TerasicDE10Web} 
-which can be used to interface with the ESP32 used for control.  
+
 
  
 
@@ -1376,6 +1394,13 @@ Although the inclusion of a divide operation was undesirable as it does not
 translate well to hardware implementations, it was unavoidable with hue being 
 obtained by dividing the difference of two components by the chroma value. 
 
+The YUV colour space was also considered as a option for conversion as it also
+separates colour into 3 components - one for luma and two chrominance components.
+This would also make it invariant to illumination changes. The transform from RGB
+to HSV is also more suited to hardware as it is a linear transform requiring only
+multiplication. However, as it cannot represent the full RGB spectrum and is 
+limited in what colours it can represent, the decision was made to use the HSV. 
+
 \paragraph*{SystemVerilog Implementation}
 The division in this case has a 16 bit numerator and an 8 bit denominator, which
 would negatively affect the critical path if implemented as a single cycle/combinatorial
@@ -1398,12 +1423,7 @@ values \(C \) for each input for 6 cycles, to ensure that the data being used fo
 comparison and output is correct. 
 
 
-The YUV colour space was also considered as a option for conversion as it also
-separates colour into 3 components - one for luma and two chrominance components.
-This would also make it invariant to illumination changes. The transform from RGB
-to HSV is also more suited to hardware as it is a linear transform requiring only
-multiplication. However, as it cannot represent the full RGB spectrum and is 
-limited in what colours it can represent, the decision was made not to use it.    
+   
 
 
 \subsubsection{Image Object Detection Algorithm}
@@ -1494,6 +1514,8 @@ would be inaccurate due to it's inability to take into account objects on the re
 world z-axis (i.e. the height of an object relative to the plane).
 
 
+
+\subsection{Integration}
 
 
 %Start of energy implementation
