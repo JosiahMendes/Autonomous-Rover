@@ -824,14 +824,6 @@ increase the maximum input voltage.
 
 \subsection{Drive}
 
-\begin{center}
-\textbf{Abstract}
-\end{center}
-The purpose of the driving module is to make an accurate movable rover that can 
-move forward, backward, rotate clockwise and anticlockwise at the desired speed.
-Also, to process coordinates and send them back to the control module in order 
-the rover to map the area.
-
 \textbf{General Specifications}
 
 Initially, the main goal of the driving subsystem was to make a movable rover. 
@@ -1167,8 +1159,8 @@ These findings can be confirmed by the graph shown in Figure ~\ref{graph:PIDCont
 \begin{figure}[H]
    \centering
    \includegraphics[scale=0.3]{./media/initialvsfinal.eps}
-   \caption{Output Voltage vs Time}
-   \label{graph:PIDController}
+   \caption{Initial vs Final PI controller}
+   \label{graph:Initial vs Final PI controller}
 \end{figure}
 \end{comment}
 
@@ -1177,8 +1169,8 @@ These findings can be confirmed by the graph shown in Figure ~\ref{graph:PIDCont
     \begin{minipage}{.4\textwidth}
         \centering
         \includegraphics[scale=0.178]{./media/initialvsfinal.eps}
-        \caption{Output Voltage vs Time}
-        \label{graph:PIDController}
+        \caption{Initial vs Final PI controller}
+        \label{graph:Initial vs Final PI controller}
     \end{minipage}%
     \begin{minipage}{.6\textwidth}
         \centering
@@ -1232,7 +1224,7 @@ The table below is showing the performance of the two PI controllers:
 
 
 
-As it can be seen in Figure \ref{graph:Output Voltages}, using the previous PI values the system 
+As it can be seen in Figure \ref{graph:Initial vs Final PI controller}, using the previous PI values the system 
 responds perfectly for all the reference voltages. Also, in the table below are 
 given the steady state error for every voltage value. It is really important 
 that the system after it has reached its reference value, it does not fluctuate. 
