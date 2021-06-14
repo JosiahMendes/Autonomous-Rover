@@ -18,9 +18,9 @@ const char * host = "ENTER_IP_HERE"; //IP to connect to (can be private or publi
 
 char Command[32]; //storage for the actual command
 char DriveMsg[32]; //storage for drive's message
-char VisionMsg[32]; //storage for vision's message
+char VisionMsg[64]; //storage for vision's message
 
-bool driveready = false; //bool which checks whether drive is ready for receiving command
+bool driveready = true; //bool which checks whether drive is ready for receiving command
 bool drivemsgready = false; //bool which checks whether drive's message is ready for sending
 bool visionmsgready = false; //bool which checks whether vision's message is ready for sending
 bool commandready = false; //bool which checks whether command is ready for sending command
@@ -102,11 +102,14 @@ void loop() {
     //Checks if there is any data on the UART Vision datastream
     if(Serial1.available()) {
       // read the bytes incoming from the UART Port:
+      for(int i = 0; i < 64; i++){
+        VisionMsg[i] = ' ';
+      }
       char Visioninit = Serial1.read();
-      if(visionmsgready){ // so that it constantly checks for terminal input when receives ready signal from driving
+      if(!visionmsgready){ // so that it constantly checks for terminal input when receives ready signal from driving
         VisionMsg[0] = '[';
         VisionMsg[1] = Visioninit;
-        int i = 0;
+        int i = 2;
         while(Serial1.available()){
           char Visionchar = Serial1.read();
           if(Visionchar != '\n'){
@@ -114,14 +117,13 @@ void loop() {
             i++;
           }else{
             Serial.println("The message from Vision has been recorded");
-            visionmsgready = true;
             VisionMsg[i] = ']';
             break;
           }
         }
       }
     }
-    
+
     //Checks if there is any data on the UART Drive datastream
     if(Serial2.available()) {
       // read the bytes incoming from the UART Port:
@@ -129,6 +131,7 @@ void loop() {
       if(Driveinit == '@' && !driveready){ // so that it constantly checks for terminal input when receives ready signal from driving
         Serial.println("Drive is ready to receive a command");
         driveready = true;
+        visionmsgready = true;
       }else if(Driveinit == 'D' && !drivemsgready){
         int i = 0;
         while(Serial2.available()){
@@ -217,13 +220,12 @@ void loop() {
     //Checks if vision has a message for command
     if(visionmsgready){
       Serial.print("Sending message to command: ");
-      for(int i = 0; i < 32; i++){
+      for(int i = 0; i < 64; i++){
         Serial.write(VisionMsg[i]);
         client.write(VisionMsg[i]);
         VisionMsg[i] = ' ';
       }
       Serial.println();
-      client.write('\n');
       visionmsgready = false;
     }
   }
