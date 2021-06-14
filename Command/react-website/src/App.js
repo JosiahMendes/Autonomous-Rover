@@ -16,6 +16,11 @@ var currPos_backend = [0,0];
 var roverPath = [];
 var obstacleSet = [];
 
+var stageX = 0;
+var stageY = 0;
+var stageWidth = window.innerWidth;
+var stageHeight = window.innerHeight*3/4;
+
 function paths(roverPath, totalAngle, angleDistance, pos, color) {
   //var scale = 5;
   //var height = angleDistance[1]/scale;
@@ -90,6 +95,18 @@ function App() {
   }, []);
 
   [roverPath, global_angle, currPos] = paths(roverPath, global_angle, angleDistanceSet, currPos, "grey");
+  if(currPos[0] < -stageX) {
+    stageX = stageX - currPos[0] + 100;
+    stageWidth = stageWidth - currPos[0] + 100;
+  } else if(currPos[0] > stageWidth + stageX) {
+    stageWidth = currPos[0] + 100;
+  }
+  if(currPos[1] < -stageY) {
+    stageY = stageY - currPos[1] + 100;
+    stageHeight = stageHeight - currPos[1] + 100;
+  } else if(currPos[1] > stageHeight + stageY) {
+    stageHeight = currPos[1] + 100;
+  }
   return (
     <>
     <Router>
@@ -99,7 +116,7 @@ function App() {
           <Home {...props} batteryLevel={(batteryLevel[0]+batteryLevel[1]+batteryLevel[2]+batteryLevel[3])/4}/>
         )} />
         <Route path='/view' render={(props) => (
-          <View {...props} path={roverPath} pos={currPos} obstacle={obstacleSet}/>
+          <View {...props} path={roverPath} pos={currPos} obstacle={obstacleSet} stage={[stageX,stageY,stageWidth,stageHeight]}/>
         )} />
         <Route path='/command' render={(props) => (
           <Command {...props} />

@@ -6,7 +6,7 @@ var stageY = 0;
 var stageWidth = window.innerWidth;
 var stageHeight = window.innerHeight*3/4;
 
-export default function Map({roverPath, pos, obstacle}) {
+export default function Map({roverPath, pos, obstacle, stage}) {
     var roverWidth = 25;
     var basePos = [window.innerWidth/2 - roverWidth/2, window.innerHeight/2];
     if(pos[0] < -stageX) {
@@ -22,7 +22,7 @@ export default function Map({roverPath, pos, obstacle}) {
         stageHeight = pos[1] + 100;
     }
     return (
-        <Stage x={stageX} y={stageY} width={stageWidth} height={stageHeight}>
+        <Stage x={stage[0]} y={stage[1]} width={stage[2]} height={stage[3]}>
             <Layer>
                 {roverPath}
                 <Text x={40} y={20} text="* Red star: the current location of the rover" fontSize={18} />
