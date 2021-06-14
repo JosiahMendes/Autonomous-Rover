@@ -130,18 +130,6 @@
 
 \section{Introduction}
 
-The aim of the Mars Rover Project as outlined by our organisers is as 
-follows: “to design and build an autonomous rover system that could be 
-used in a remote location without direct  supervision”.  To fulfill this 
-broad goal, the design and development of the rover will be separated into 
-six distinct subsystems, each of which will be assigned to a team member 
-who is in charge of them. These groups will work semi-independently to 
-achieve the functional requirements as defined by the problem and 
-eventually integrate their findings and goals to achieve the specification 
-at hand. We will work under the main consideration that our rover is meant 
-to be a proof of concept for one that can function on Mars. This report 
-contains our design process for the rover and how it was implemented.
-
 \section{Structural Design}
 
 \section{Functional Design}
@@ -271,7 +259,7 @@ dedicated to sending any data between the ESP32 and the FPGA.
 
 \subsection{Command}
 
-\subsubsection{Purpose of the module}
+\subsubsection{Requirements}
 
 The Command module has three main purposes within the system of the rover:
 
@@ -281,34 +269,74 @@ The Command module has three main purposes within the system of the rover:
     \item Calculate paths for the rover to follow based on the commands given by the users
 \end{enumerate}
 
-In order to achieve the aforementioned goals, it was important to establish connection between the Command 
-module as a server, and other subsystems as clients. The ESP32 of the Control module is the main client 
-that constantly communicates with the server to exchange commands and status of the rover. The energy module 
-is another client and regularly sends data related to the battery of the rover. The received data are presented 
-on a web application where users can check the current status of the rover and command the rover. In order to 
-smoothly handle incoming data and render components that form the web application, the web application was divided 
-into the server-side, backend, and the presentation side, front end, written in Node js and React respectively.
+In order to achieve the aforementioned goals, it was important to establish 
+connection between the Command module as a server, and other subsystems as 
+clients. The ESP32 of the Control module is the main client that constantly 
+communicates with the server to exchange commands and status of the rover. 
+The energy module is another client and regularly sends data related to the 
+battery of the rover. The received data are presented on a web application 
+where users can check the current status of the rover and command the rover. 
+In order to smoothly handle incoming data and render components that form the 
+web application, the web application was divided into the server-side: backend, 
+and the presentation side: frontend, written in Node js and React respectively.
 
-\subsubsection{Communication with Control}
+\subsubsection{Hardware Organisation}
 
-\subsubsection{Communication with Energy}
-Similar to the connection with the Control module, the Command module communicates with the Energy module over 
-the TCP protocol. 
+Unlike the other subsystems of the rover, the Command module does not require any 
+hardware components except a laptop on which the web application would be running. 
+Therefore, the main focus was put on choices of tools for building the web application 
+and communication methods between the other submodules and the backend, and between the 
+backend and the frontend of the web application. 
 
-\subsubsection{Communication between Backend and Frontend}
-A reliable connection between the backend and the frontend during the rover's operation is necessary for the web 
-application because users would interact with the frontend only while path calculations and communication with 
-the rover would be done on the backend. For this reason, certain data have to be shared between the server 
-and application side. There are multiple communication protocols available and although the HTTP protocol was used 
-in the beginning of the project, WebSocket was considered to be more suitable and advantageous as the project 
-progressed. 
+\subsubsection{Initial Design Choices}
 
-The HTTP protocol is uni-directional. This means that the connection can be established only from one side between the 
-server and clients. In case of the frontend-backend connection, the backend could send data to the frontend as a response 
-only when it received a request from the frontend. This aspect of the HTTP protocol was not so convenient when the 
-backend 
+For building a website, the Hypertext Markup Language (HTML) and Cascading Style Sheets (CSS) would 
+be used. The two technologies are chosen because the HTML allows programmers to describe the structure 
+of the website in the form of document while CSS offers tools to style the individual components of 
+the website. With CSS, it would also be possible to create graphics which may visualise data in a more 
+sophisticated way. React js, the language in which the frontend of the website is written, allows rendering 
+of HTML pages which will form the web application. The website will consist of various graphical user 
+interface in order to enhance the usability. 
 
-\subsubsection{A* Algorithm}
+The backend and the frontend of the web application are written in different languages 
+and are separated. Therefore, a reliable connection between the backend and the frontend during the rover's 
+operation is necessary for the web application. On the web application, users would 
+interact with the frontend only while path calculations and communication with 
+the rover would be done on the backend. For this reason, certain data have to be 
+shared between the server and application side. Since the web application directly interacts 
+with users, an application layer protocol is suitable for communication between the 
+backend and the frontend. There are multiple application layer protocols available 
+for this purpose such as the Hypertext Transfer Protocol (HTTP), File Transfer Protocol (FTP), 
+and Telecommunication Network (TELNET). Since the HTTP protocol allows clients to send 
+a request to the server and get data as a response, it was considered sufficient for 
+implementing the connection between the backend and the frontend. With the web server that 
+establishes connection with the web browser over the HTTP protocol and with the ESP32 over 
+the TCP protocol, it would be possible for the Control module to know the user's input on 
+the web application. 
+
+For the type of commands users can send through the web application, we decided to have 
+'Automated driving' and 'Manual driving'. With the 'Manual driving', the users would be able 
+to directly command the rover to rotate by a specific angle or move a specific distance. For 
+this command, the web server would need to securely pass the values from the website to the ESP32. 
+With the 'Automated driving', the rover would be driven to find all the obstacles (5 ping pong 
+balls of different colour) without direct supervision. In order to make this happen while 
+preventing the rover from hitting any obstacle, it would be essential for the Command module 
+to have access to data from the Vision module. Therefore, paths of the 'Automated driving' 
+command would need to be calculated on the backend of the web application. It was decided for 
+the website to have a page for commands where users can find text boxes to type in angle or distance 
+value, and buttons to send the values for manual driving or command the rover to explore the area 
+and look for obstacles. 
+
+While the rover moves according to the commands sent by the Command module, it would be convenient for 
+users to see visualisation of the rover's movement and the position of any obstacles detected 
+on the way. As a way to visualise these data, it was decided to display a map of the working area on 
+the website. In order to do this, the map would need to be constructed as the rover moves and checks 
+for any obstacles ahead of it. As there are no strict requirements on how to display the map, 
+this functionality is up to design. The map was designed to be a giant canvas which consists of a large 
+number of pixels. Then the rover's movement, the position of the rover and the obstacles would be expressed 
+on the map by painting pixels following the x,y coordinates of the rover's position. Besides, the 
+map can possibly be stored in the form of array which keeps track of pixels to be painted. Therefore, the 
+website would have a page for the map as well. 
 
 \subsection{Vision}
 The purpose of the Vision module is threefold:
@@ -325,10 +353,10 @@ The purpose of the Vision module is threefold:
 \subsection{Drive}
 \subsubsection{The purpose of the Driving module is the following:}
 \begin{enumerate}
-  \item Make the rover able to move forward, backward, rotate clockwise and anticlockwise.
-  \item Measure the distance that the rover has covered. 
-  \item Program the rover to move or rotate for a specific distance or angle, respectively.
-  \item Regulate the voltage and the current that the SMPS generates to the DC motors in order to control the speed of the rover.
+  \item1) Make the rover able to move forward, backward, rotate clockwise and anticlockwise.
+  \item2) Measure the distance that the rover has covered. 
+  \item3) Program the rover to move or rotate for a specific distance or angle, respectively.
+  \item4) Regulate the voltage and the current that the SMPS generates to the DC motors in order to control the speed of the rover.
 \end{enumerate}
 \subsubsection{Initial Design}
 
@@ -340,84 +368,80 @@ The purpose of the Vision module is threefold:
 %Start of functional energy section
 \subsection{Energy}
 \subsubsection{Requirements}
-The energy submodule must:
-\begin{enumerate}
-    \item Design a battery pack and charge it using solar power.
-    \item Track SOC data and use it to estimate the range of the rover.
-    \item Track SOH data and complete necessary SOH maintenance.
-    \item Integrate into the main data mailbox.
-    \item Consider how to physically integrate with the rest of the rover.
-\end{enumerate}
+
+The main goal of the energy sub-module is to design a battery pack for the 
+rover and charge it using solar power. With this goal in mind, the energy 
+sub-module must develop a battery management system which allows the tracking 
+of battery SOC and SOH, and if necessary perform SOH maintenance.         
+
 
 \subsubsection{Characterising Components}
-The energy system consists of three main components: the battery cells, the 
-PV panels and the SMPS. To ensure that appropriate design choices are made 
-it is necessary to determine the behaviour and limitations of these components.
+When designing a system it is necessary to know the behaviour and limitations of its
+constituent components. There are three main components that make up the energy 
+subsystem: the battery cells, the PV panels and the SMPS.
 
 \paragraph*{Battery Cells}
-To determine their behaviour, each cell was tracked through a full charge/discharge 
-cycle using the provided “Battery\_Charge\_Cycle\_Logged\_V1.1.ino” 
-code\cite{chargeCode}. Plotting the obtained data, all cells were found to 
-have similar graphs for voltage versus time. Figure~\ref{fig:charge_cycle} 
-shows the voltage evolution of a battery cell for a full discharge/charge cycle.
+To determine the behaviour of the battery cells they were all tracked through a full charge/discharge 
+cycle using the provided “Battery\_Charge\_Cycle\_Logged\_V1.1.ino” code\cite{chargeCode}. 
+Every cell behaved similarly in terms of the cell voltage compared to time. 
+The cell voltage of cell 1 over a full discharge/charge cycle is shown in Figure~\ref{fig:charge_cycle}:
 
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.22]{Charge_Cycle2.png}
-    \caption{The voltage evolution of a battery cell through a full discharge/charge cycle. The
-    cell is fully charged at 200 s and 16000s and fully discharged at 8000s.}
+    \includegraphics[scale=0.18]{charge_cycle.png}
+    \caption{The voltage evolution of cell 1 through a full discharge/charge cycle.}
     \label{fig:charge_cycle}
 \end{figure}
 
-In addition to logging the cell voltage, the provided charging algorithm also 
-logs the charging current. By integrating said current for a full charge or 
-discharge section we can determine a cells capacity in mAh. The results from 
-performing this analysis on each cell are shown in table \ref{table:1}:
+Note the following important points on the graph. At 200 s the cell is done charging and
+enters an idle state for 30 s after which it starts discharging. At ~8000 s the cell is fully
+discharges and enters an idle state for 30s after which it starts charging. Finally, at 18800 s the cell is once 
+again fully charged and the charge cycle is completed.
 
-\vspace{5pt}
-\begin{table}[h!]
-    \centering
+The provided charging algorithm also logs the current into the cell.
+By integrating said current for a full charge or discharge section
+we can determine the cell capacity in mAh. The results of this analysis is 
+presented in the table below:
+
+\begin{center}
     \begin{tabular}{||c| c c c c c||} 
-        \hline
-        Cell Number& 1 & 2 & 3 & 4 & 5 \\ [0.5ex] 
-        \hline
-        Capacity (mAh) & 542.7	& 526.1	& 519.5	& 530.1	& 543.7\\ [1ex] 
-        \hline
+    \hline
+    Cell Number& 1 & 2 & 3 & 4 & 5 \\ [0.5ex] 
+    \hline
+    Capacity (mAh) & 542.7	& 526.1	& 519.5	& 530.1	& 543.7\\ [1ex] 
+    \hline
     \end{tabular}
-    \caption{Cell capacities}
-    \label{table:1}
-\end{table}
+    \end{center}
 
-As expected from the datasheet\cite{batteryDatasheet} all cells have a capacity of about 500 mAh. However, some cells 
-have a higher capacity than others, which may have implications for the 
-performance for certain battery configurations.
+
+As expected all cells have a capacity somewhere around 500 mAh. However, some cells
+are have a higher capacity than others which may have implications for the performance
+of certain battery cell configurations.
 
 \paragraph*{PV panels}
-The PV panels are rated for a maximum power of 1.15 W at a voltage of 
-5.0 V and current 230 mA. Away from the maximum power point the performance 
-of the panels can be determined from their IV curves. To find the IV 
-curves, each panel was connected on the B-side of the SMPS operating 
-in non-synchronous boost. They were then lit by the lamp and the duty 
-cycle of the SMPS was swept while measurements of panel current and 
-voltage were taken. The resulting data was processed and is plotted 
-in Figure~\ref{fig:IV_curve}.
+The provided PV panels are rated for a maximum power of 1.15 W at a voltage 
+of 5.0 V and current 230 mA. Away from the maximum power point the performance of 
+the panels can be determined from their I-V curves. To find the I-V curves each 
+panel was connected to the B-inputs of the SMPS operating in non-synchronous boost.
+They were then lit by the lamp and the duty cycle of the SMPS was varied while measurements 
+of panel current and voltage were taken. After processing the resulting data
+is plotted in Figure~\ref{fig:IV_curve}.
 
-\begin{figure}[H]
+    \begin{figure}[H]
     \centering
     \includegraphics[scale=0.18]{Panel1.png}
     \includegraphics[scale=0.18]{Panel2.png}
     \includegraphics[scale=0.18]{Panel3.png}
     \includegraphics[scale=0.18]{Panel4.png}
-    \caption{IV curves for the PV panels.}
+    \caption{I-V curves for the PV panels.}
     \label{fig:IV_curve}
-\end{figure}
+    \end{figure}
 
-Even though the data is noisy, it is clear that all panels exhibit the 
-standard IV characteristics of a PV cell. That is, they behave as 
-non-ideal current sources with a nearly constant current at low 
-voltages and a rapid current reduction at high voltages\cite{green}. 
-Moreover, it is clear that the provided lamp activates the panels poorly 
-as the peak power for each of the panels is only $\sim$0.5 W.
+Though the data is noisy, it is clear that all panels exhibit the standard 
+I-V characteristics of a PV cell. That is, they behave as non-ideal current 
+sources with a nearly constant current at low voltages and a rapid current 
+reduction at high voltages\cite{green}. Moreover, we see that the provided lamp activates 
+the panels poorly as the peak power for each of the panels is only ~0.5 W.
 
 \paragraph*{SMPS}
 \begin{wrapfigure}[16]{r}[0pt]{0.5\textwidth}
@@ -426,19 +450,18 @@ as the peak power for each of the panels is only $\sim$0.5 W.
         \includegraphics[width=0.48\textwidth]{Boost_efficiency_wduty.png}
     }%
     \vspace{0pt}
-    \caption{SMPS efficiency versus output current with input voltage 5V\cite{powerLogbook}}
+    \caption{SMPS efficiency versus output current with input voltage 5V [reference to logbook]}
     \label{fig:efficiency}
 \end{wrapfigure}
-The SMPS is rated for 10 W throughput with a maximum boost output voltage 
-of 35 V and maximum output current of 10 A\cite{SMPS_lab}. These ratings 
-are far higher than what is needed to charge the battery and are not 
-expected to impose limitations on the design of the energy module. 
+The provided SMPS is rated for 10 W throughput with a maximum boost output voltage of 35 V 
+and maximum output current of 10 A\cite{SMPS_lab}. All these ratings are far higher 
+than needed and neither is expected to impose limitations on the design of the energy module. 
 
 The many characteristics of the SMPS have been thoroughly examined in 
-2nd year labs. However, for the energy submodule the most important 
-characteristic will be the SMPS efficiency during non-synchronous 
-boost operation. A graph of efficiency versus output current is shown 
-in Figure~\ref{fig:efficiency}.
+2nd year labs. However, for the energy submodule the most important characteristics 
+will be the SMPS efficiency during non-synchronous boost operation. A graph of 
+efficiency versus output current is shown in Figure~\ref{fig:efficiency}.
+
 
 \subsubsection{Initial Design}
 
@@ -795,6 +818,8 @@ provided while simultaneously powering the rover.
 \subsection{Control}
 
 \subsection{Command}
+
+
 
 \subsection{Drive}
 
