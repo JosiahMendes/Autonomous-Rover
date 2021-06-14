@@ -866,6 +866,36 @@ configured to echo back all messages. Through this simple system, the
 connection was successfully implemented by debugging the connection and 
 the messages being sent back and forth.
 
+\subsubsection{Drive Communication}
+
+As the first physical connection between the ESP32 and a peer 
+microcontroller, it was decided that the best course of action would 
+be to completely test communication with the simplest of devices. Since 
+the Arduino has an extensive and well-documented library for UART 
+communication, Drive was the best subsystem to test out initial 
+communication. When testing out the UART communication, two methods 
+documented through the Arduino IDE were used. SoftwareSerial, which uses 
+code to imitate a UART connection allowing you to map the peripheral to 
+any GPIO pin, or directly assigning the pins through hardware assignment. 
+Initially the former was utilised, but it was quickly realised that the 
+multiplexing feature of the ESP32 chip allows for hardware configuration 
+to most of the GPIO pins of your own choice. However, an interesting 
+interaction that was recorded was that the 3 UART connections that are 
+available to the ESP32 aren’t completely unused. One of the UART 
+connections is used to communicate with the laptop when connected via USB. 
+This UART connection by default is assigned to pins 0\_RX and 1\_TX on the 
+Arduino Adapter Board. As a result, mapping a secondary UART on these 
+same pins and serially writing to your laptop would also write to the 
+peripheral connected to 0\_RX and 1\_TX. Once this was determined, these 
+two pins were discarded as options for communication. UART between Drive 
+and Control was tested with some movement functionality on Drive and test 
+code on the ESP32 allowing for commands to be sent by the terminal of the 
+Serial Monitor through the UART connection between the laptop and the 
+ESP32. This was then forwarded to Drive. This allowed for imitating the 
+entire chain of communication from Command to Drive, but by only using the 
+Control subsystem and ESP32 as a testing device.
+
+
 \subsection{Command}
 
 \subsection{Drive}
