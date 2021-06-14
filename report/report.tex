@@ -895,6 +895,45 @@ ESP32. This was then forwarded to Drive. This allowed for imitating the
 entire chain of communication from Command to Drive, but by only using the 
 Control subsystem and ESP32 as a testing device.
 
+\subsubsection{Vision Communication}
+
+As described in the functional requirements for Control, the initial 
+design was to set up two SPI connections with the FPGA due to the 
+overabundance of pins between the two devices. SPI as a peripheral was 
+superior as well since it would take less overhead for the FPGA and 
+would be a faster method for communication when compared to UART. 
+Alongside this, due to the ESP32 being dual-core, a task scheduler could 
+be used to simultaneously support image transfer while standard data was 
+being transferred. Initially, to test out the SPI capabilities of the 
+ESP32, the ESP32 was set up as an SPI controller, while an Arduino was set 
+up as an SPI peripheral. Through SPI.h, a library designed for the ESP32 
+and ESP8266, this was accomplished and communication between the two 
+devices was successful. It was discovered that the FPGA only supported 
+acting as an SPI controller and as such it would force the ESP32 to act 
+as an SPI peripheral. This, however, proved to be much more problematic 
+than expected. Although there is an immense amount of support for the 
+ESP32 on the Arduino, when it comes to acting as an SPI peripheral, this 
+has yet to be implemented from the Espressif documentation in C. Although 
+SPI peripheral libraries have been created for the older ESP8266, this 
+unfortunately has not extended to the ESP32. There have been some projects 
+which attempted to develop and use their own SPI peripheral functionality. 
+This is done by translating and porting over the libraries from the 
+original Espressif documentation into Arduino, setting them up as Arduino 
+libraries. After attempting to rework these libraries so that they could 
+support the functionality we needed, it was eventually discarded as an 
+option. Even if the ESP32 could function successfully as an SPI 
+controller, it wouldn’t matter since the FPGA had the same limitation 
+as it only had SPI controller functionality. Eventually it was agreed 
+that this would have to change to UART for standard data transmission. 
+As for image transfer, since this was meant to be done through SPI, a 
+framework for the ESP32 acting as an SPI controller to transfer these 
+images was created. However, as it proved too difficult to use the FPGA 
+as a functioning SPI peripheral, this also had to be scrapped. In the 
+end the only connection which remained between Vision and Control was 
+the singular UART port designed for collecting Vision data to send to 
+Command for mapping and detecting obstacles.
+
+
 
 \subsection{Command}
 
