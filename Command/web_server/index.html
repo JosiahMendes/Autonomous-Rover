@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+
+<head>
+    <title>My Website</title>
+    <style>
+        *,
+        html {
+            margin: 0;
+            padding: 0;
+            border: 0;
+        }
+
+        html {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-color: rgb(217, 179, 210); <!-- website has orange back ground color -->
+        }
+
+        .center {
+            width: 100%;
+            height: 50%;
+            margin: 0;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white; <!-- all the text will appear white -->
+            font-family: "Trebuchet MS", Helvetica, sans-serif;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 144px;
+        }
+
+        p {
+            font-size: 64px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="center">
+        <h1>Hello!</h1>
+        <p>DO NOT PRESS ANY BUTTON</p>
+        <form action="" method="post">
+            <label for="command">Type something: </label>
+            <input type="text" id="command" name="command"><br><br>
+        </form>
+        <form action="" method="post">
+            <button name="button" value='1'>button1</button>
+            <button name="button" value='2'>button2</button>
+        </form>
+    </div>
+</body>
+
+</html>
