@@ -1610,7 +1610,11 @@ The calculations for how far away the object is and it's relative position in
 comparison to the camera module was are done on the Nios II processor. 
 
 There are multiple ways to calculate the location of a 3D object in space on a plane
-with some ways being more precise than others. 
+with some ways being more precise than others. Some methods rely on using the 
+size of a known object and comparing it's relative size in the camera, but the 
+decision was made not to use this type of measurement as it was not possible to 
+always guarantee that the size of the bounding box would enclose the entire ball, 
+making the location calculation inaccurate. 
 As the testing environment for the rover was ideal with the camera in a fixed 
 position and the testing surface being completely level, the algorithm 
 for the mapping between pixel coordinates and real world x-y coordinates relative
@@ -1677,8 +1681,8 @@ The Nios\textsuperscript{\textregistered} II processor does not include floating
 this algorithm requires floating point calculations as some of the coefficients 
 tend to be very small, and this algorithm is run for each set of colours, it was
 prudent to include hardware support for single precision floating point adds 
-and multiplications. This was done by adding a module from Intel's IP catalogue 
-for custom floating point instructions, this reduces the amount of cycles 
+and multiplications. This was done by adding the Nios II Custom Floating Point Instruction module from Intel's IP catalogue 
+for custom floating point instructions, which reduces the amount of cycles 
 necessary to carry out a floating point multiplication to 4 cycles using a single
 instruction and a floating point add to 5 cycles\cite{NiosIICustomInstruction}.
 If this hardware was not used, it would be implemented using software, and hence
@@ -1689,6 +1693,28 @@ but if tested on a surface with changing gradients or elevated objects, this alg
 would be inaccurate due to it's inability to take into account objects on the real
 world z-axis (i.e. the height of an object relative to the plane).
 
+\subsubsection{Image Transfer over SPI}
+
+To be able to send an image to the Command view for the user to view is an essential
+part of a Mars Rover's mission, thus it was one of our goals to do this as well. However,
+due to time limitations and other operations that took priority, there was not enough time
+ to and memory available on the FPGA to implement it fully. 
+
+In order to facilitate this function, a custom SystemVerilog module was designed specifically 
+for sending an image via SPI. The image parameters as aforementioned are \(640 *480\) at 60fps 
+with 8 bits of colour for each channel. This requires 921,600 bytes per frame which is just 
+under a 1kb per frame. Usually, for sending image data, before the data transfer happens, 
+compression is applied on the sender's side before compression, but as memory and processing
+power is limited, it is not possible to implement any sort of encoding onboard the FPGA and the
+only option is to offload it to either the ESP32 or the webserver for encoding and display. 
+
+The module's structure is shown in Figure ... It acts as an SPI peripheral that provides 
+data whenever it is read from by an SPI controller, with pixel values being stored in a FIFO 
+buffer that is written into by the image processing module. 26 bits are stored within the FIFO
+with the first two bytes used to indicate a start of frame or an empty FIFO, this indicates to the 
+SPI controller the position of the image and also when to stop asserting the sck to indicate that 
+transmission should stop. The FIFO used is a dual-clock FIFO that uses the main clock as the input
+clock and the sck provided by the SPI controller is used as the clock for the read.  
 
 
 \subsection{Integration}
@@ -1733,8 +1759,8 @@ usually be higher than 4 V and can therefore not directly be measured by the Ard
 In power labs this issue was overcome through the use of a divide by 3 voltage divider\cite{powerLogbook}.
 Using the voltage divider the maximum voltage that can be measured is 12 V, which is still
 lower than the expected output voltages when charging the battery. To further divide
-the output voltage Vpd further divided by 5/3 using a voltage divider consisting of a 10k
-and a 15k resistor. The voltage at this second voltage divider should then be Vout/5, 
+the output voltage \(V_{pd}\) further divided by 5/3 using a voltage divider consisting of a 10k
+and a 15k resistor. The voltage at this second voltage divider should then be \(V_{out}/5\), 
 which permits the Arduino to measure voltages up to 20 V. The
 resistors in the second voltage divider were large, so as to not interfere with the divider
 ratio of the first voltage divider. This did however cause a problem as the Arduino draws
