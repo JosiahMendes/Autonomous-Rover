@@ -132,10 +132,10 @@
 
 The aim of the Mars Rover Project as outlined by our organisers is as 
 follows: “to design and build an autonomous rover system that could be 
-used in a remote location without direct  supervision”.  To fulfill this 
-broad goal, the design and development of the rover will be separated into 
-six distinct subsystems, each of which will be assigned to a team member 
-who is in charge of them. These groups will work semi-independently to 
+used in a remote location without direct  supervision”\cite{MarsRoverSpec}.  
+To fulfil this broad goal, the design and development of the rover is separated into 
+six distinct subsystems: \textbf{Command, Control, Drive, Energy, Integration and Vision},
+each of which will be led by a single team member. These modules will work semi-independently to 
 achieve the functional requirements as defined by the problem and 
 eventually integrate their findings and goals to achieve the specification 
 at hand. We will work under the main consideration that our rover is meant 
@@ -421,8 +421,8 @@ A lot of previous work on the subject is also on FPGAs being used as accelerator
 CNNs running on hard cores rather than standalone embedded systems as seen in \cite{DBLP:journals/corr/abs-1806-01683}
 , which is the use case here. The only possible neural network that could be applied in this period of time
 would be a non-convolutional one that just acted based on the individual colours of each pixel
-and possibly the temporal location, but there are other more straightforward methods for object
-detection in this format. 
+and possibly the temporal location, but there are other more straightforward methods 
+and equally effective methods for object detection at a pixel level. 
 These challenges are also faced when trying to implement popular traditional computer vision 
 algorithms on the FPGA, as the access of pixels is limited, and the number of pixels that can be
 stored is also limited by memory constraints on the FPGA. 
@@ -486,7 +486,7 @@ Finally, there was a thought of designing a program that could assist the rover 
 
 %Start of functional energy section
 \subsection{Energy}
-\subsubsection{Requirements}
+
 The energy submodule must:
 \begin{enumerate}
     \item Design a battery pack and charge it using solar power.
@@ -692,7 +692,7 @@ pack it is still deemed the best option.
 
 \paragraph*{PV Array Configuration}
 There are four ways in which the four PV panels can feasibly be connected. 
-The possible arrangements are shown in figure~\ref{fig:arrayConfigurations}.
+The possible arrangements are shown in Figure~\ref{fig:arrayConfigurations}.
 
 \begin{figure}[H]
     \centering
@@ -850,7 +850,7 @@ increase the maximum input voltage.
 
 \section{Implementation}
 
-\subsection{Control}
+\subsection{Control} 
 
 \subsubsection{Command Communication}
 
@@ -1444,7 +1444,7 @@ Regarding the Current Controller, it was not tuned because the voltage controlle
 
 
 
-
+\pagebreak
 \subsection{Vision}
 
 The purpose of the Vision module as aforementioned was to find different coloured
@@ -1519,7 +1519,8 @@ algorithm for conversion from 8-bit RGB integers is presented mathematically:
 
 Although the inclusion of a divide operation was undesirable as it does not 
 translate well to hardware implementations, it was unavoidable with hue being 
-obtained by dividing the difference of two components by the chroma value. 
+obtained by dividing the difference of two components by the chroma value. This 
+is a result of HSV being a non-linear transform from HSV. 
 
 The YUV colour space was also considered as a option for conversion as it also
 separates colour into 3 components - one for luma and two chrominance components.
@@ -1528,7 +1529,7 @@ to HSV is also more suited to hardware as it is a linear transform requiring onl
 multiplication. However, as it cannot represent the full RGB spectrum and is 
 limited in what colours it can represent, the decision was made to use the HSV. 
 
-\paragraph*{SystemVerilog Implementation}
+\paragraph*{SystemVerilog Implementation} 
 The division in this case has a 16 bit numerator and an 8 bit denominator, which
 would negatively affect the critical path if implemented as a single cycle/combinatorial
 divider, causing timing failures in the image processing stream as the processor 
@@ -1547,7 +1548,12 @@ In order to maintain the video stream and process one pixel per cycle, this oper
 was implemented with a 6 stage cycle that took in a new RGB value every cycle and
 produced a new HSV value every cycle. This included storing the maximum RGB value \( M \) and difference
 values \(C \) for each input for 6 cycles, to ensure that the data being used for 
-comparison and output is correct. 
+comparison and output is correct. In order to use the pipeline, 12 separate dividers
+were instantiated, 6 for each type. Although this would have used a lot of logic 
+elements and hardware, it comes at the benefit of being able to maintain the clock 
+speed and optimise the processor for speed. 
+
+
 
 
    
@@ -1555,28 +1561,69 @@ comparison and output is correct.
 
 \subsubsection{Image Object Detection Algorithm}
 
+The object detection algorithm was designed using a colour segmentation method, as 
+the processor receives each RGB pixel from the image processing stream, it converts the 
+RGB values to HSV values. After the HSV value is obtained, each of the components 
+are compared with a set of values that describe the HSV colour components of the objects 
+that are being looked for. If a pixel meets the criteria for 1 of the 5 colours, it's 
+location is recorded and marked out as a candidate pixel to be part of the object and 
+it's bounding box. 
+
+\paragraph*{Colour Threshold Determination}
+
+In order to determine the colour thresholds for detecting each of the different 
+coloured balls, images from the camera were taken after adjusting the camera settings
+for gain, exposure and white balance to maximise the difference between the balls 
+and the background as well as the balls and each other. 
+
+An image was then obtained from the camera by taking an image from the output VGA 
+port. This image was then imported into a MATLAB tool from the Image Processing toolbox - 
+the Colour Thresholder App. This application allows colour images to be segmented by changing
+thresholds in different colour channels, supporting RGB, HSV, YCbCR and L*a*b*. An example of 
+the user interface for this tool is shown in Figure .......
+
+As can be seen in the figure, the tool provides an accurate way to select the values 
+for each of the HSV channels, as the binary mode can be used to ensure that the regions
+of interest are maximised and the other regions are ignored. 
+
+However, the accuracy of the colour threshold is not perfect for several reasons.
+Firstly, even though the HSV colour scheme is used to reduce the effect of illumination, 
+the differences in light as the rover approaches the table-tennis balls from different angles
+can vary by a large amount, causing differences in the H and S channels, 
+hence multiple pictures have to be used for this calibration step. 
+Secondly, as the pictures being used for calibration are from the 4-bit VGA output, 
+the output image's colour spectrum is reduced compared to the colour that can be
+ ``seen'' by the camera is the full 24-bit colour, that has much more depth and 
+a wider range of colours than what is perceived in the output image. Additionally, 
+as the data is obtained from the VGA output and captured using an application on 
+a computer, there may be some processing that is carried out on the image, meaning 
+that the image's data may be different in terms of RGB values from the raw RGB values
+that the camera is capturing. 
+
+
 
 \subsubsection{Object Location Calculations}
 
 With the bounding boxes obtained from the Verilog module, the coordinates of the
-bounding box for each colour is sent to the NIOS II processor using a FIFO buffer.
+bounding box for each colour is sent to the Nios II processor using a FIFO buffer.
 The calculations for how far away the object is and it's relative position in 
-comparison to the camera module was are done on the NIOS II processor. 
+comparison to the camera module was are done on the Nios II processor. 
 
 There are multiple ways to calculate the location of a 3D object in space on a plane
 with some ways being more precise than others. 
-
-%TODO!! Add survey of other potential algorithms and why this one was chosen. 
-
 As the testing environment for the rover was ideal with the camera in a fixed 
 position and the testing surface being completely level, the algorithm 
 for the mapping between pixel coordinates and real world x-y coordinates relative
 to the camera was based on the following form: \begin{align*}
     x & = A_x m^2 + B_x n^2 + C_x mn + D_x m + E_x n + F_x \\
     y & = A_y m^2 + B_y n^2 + C_y mn + D_y m + E_y n + F_y  
-\end{align*} By taking a picture of multiple balls in different locations and 
-measuring the actual corresponding mapping distance and the pixel locations, the
-coefficients can be found by solving the matrix equation: $$
+\end{align*} This is a relatively simple quadratic mapping between the pixel coordinates 
+and the real world coordinate system which is a good choice for this system as the 
+Nios II is limited in both processing power and available memory. 
+By taking a picture of multiple balls in different locations and 
+measuring the actual corresponding mapping distance and the pixel locations with
+a set of at least 6 measurements, 
+the coefficients can be found by solving the matrix equation: $$
     \begin{bmatrix}
         m^2_1 & n^2_1 & m_1n_1 & m_1 & n_1 & 1 \\
         m^2_2 & n^2_2 & m_2n_2 & m_2 & n_2 & 1 \\
@@ -1616,13 +1663,15 @@ These calculations for the coefficients were carried out in MATLAB, and then
 implemented in C to be run on the Nios\textsuperscript{\textregistered} II processor. 
 
 This method is satisfactory in its performance, with a worst case error of \(\pm5\unit{cm}\)
-in difference between calculated position and actual position. For the rover's 
-path finding algorithm, this is a value that is easily taken into account and as
+in difference between calculated position and actual position when the bounding box is accurately detected. 
+For the rover's path finding algorithm, this is a value that is easily taken into account and as
 multiple measurements of the ball are taken, the actual position can be refined 
 and more accurately determined by taking the average of multiple readings in the 
 Command module in the server. This also solves the problem of when a ball is not 
-fully in the frame of the camera, as the rover is moving, all objects should eventually
-come into frame fully and not be cut off by the sides of the view. 
+fully in the frame of the camera or not fully detected by the object detector,
+as the rover is moving, all objects should eventually come into frame fully and 
+not be cut off by the sides of the view or receive a better view of the object 
+leading to a better bounding box and hence distance calculation. 
 
 The Nios\textsuperscript{\textregistered} II processor does not include floating point hardware by default, but as 
 this algorithm requires floating point calculations as some of the coefficients 
@@ -1644,6 +1693,11 @@ world z-axis (i.e. the height of an object relative to the plane).
 
 \subsection{Integration}
 
+\begin{comment}
+    Could write about how we had to tune data for different lighting conditions, 
+    taking pictures from different angles to compare how the objects looked in 
+    different lighting, and changing the threshold values. 
+\end{comment}
 
 %Start of energy implementation
 \subsection{Energy}
