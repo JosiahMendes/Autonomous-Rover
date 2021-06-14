@@ -50,14 +50,14 @@ int ADNS3080_SROM_LOAD      =       0x60;
 
 int ADNS3080_PRODUCT_ID_VAL  =      0x17;
 
-float total_x = 0;
+double total_x = 0;
 
-float total_y = 0;
+double total_y = 0;
 
 
-float total_x1 = 0;
+double total_x1 = 0;
 
-float total_y1 = 0;
+double total_y1 = 0;
 
 
 int x=0;

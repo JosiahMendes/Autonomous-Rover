@@ -325,10 +325,10 @@ The purpose of the Vision module is threefold:
 \subsection{Drive}
 \subsubsection{The purpose of the Driving module is the following:}
 \begin{enumerate}
-  \item1) Make the rover able to move forward, backward, rotate clockwise and anticlockwise.
-  \item2) Measure the distance that the rover has covered. 
-  \item3) Program the rover to move or rotate for a specific distance or angle, respectively.
-  \item4) Regulate the voltage and the current that the SMPS generates to the DC motors in order to control the speed of the rover.
+  \item Make the rover able to move forward, backward, rotate clockwise and anticlockwise.
+  \item Measure the distance that the rover has covered. 
+  \item Program the rover to move or rotate for a specific distance or angle, respectively.
+  \item Regulate the voltage and the current that the SMPS generates to the DC motors in order to control the speed of the rover.
 \end{enumerate}
 \subsubsection{Initial Design}
 
@@ -340,80 +340,84 @@ The purpose of the Vision module is threefold:
 %Start of functional energy section
 \subsection{Energy}
 \subsubsection{Requirements}
-
-The main goal of the energy sub-module is to design a battery pack for the 
-rover and charge it using solar power. With this goal in mind, the energy 
-sub-module must develop a battery management system which allows the tracking 
-of battery SOC and SOH, and if necessary perform SOH maintenance.         
-
+The energy submodule must:
+\begin{enumerate}
+    \item Design a battery pack and charge it using solar power.
+    \item Track SOC data and use it to estimate the range of the rover.
+    \item Track SOH data and complete necessary SOH maintenance.
+    \item Integrate into the main data mailbox.
+    \item Consider how to physically integrate with the rest of the rover.
+\end{enumerate}
 
 \subsubsection{Characterising Components}
-When designing a system it is necessary to know the behaviour and limitations of its
-constituent components. There are three main components that make up the energy 
-subsystem: the battery cells, the PV panels and the SMPS.
+The energy system consists of three main components: the battery cells, the 
+PV panels and the SMPS. To ensure that appropriate design choices are made 
+it is necessary to determine the behaviour and limitations of these components.
 
 \paragraph*{Battery Cells}
-To determine the behaviour of the battery cells they were all tracked through a full charge/discharge 
-cycle using the provided “Battery\_Charge\_Cycle\_Logged\_V1.1.ino” code\cite{chargeCode}. 
-Every cell behaved similarly in terms of the cell voltage compared to time. 
-The cell voltage of cell 1 over a full discharge/charge cycle is shown in Figure~\ref{fig:charge_cycle}:
+To determine their behaviour, each cell was tracked through a full charge/discharge 
+cycle using the provided “Battery\_Charge\_Cycle\_Logged\_V1.1.ino” 
+code\cite{chargeCode}. Plotting the obtained data, all cells were found to 
+have similar graphs for voltage versus time. Figure~\ref{fig:charge_cycle} 
+shows the voltage evolution of a battery cell for a full discharge/charge cycle.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.18]{charge_cycle.png}
-    \caption{The voltage evolution of cell 1 through a full discharge/charge cycle.}
+    \includegraphics[scale=0.22]{Charge_Cycle2.png}
+    \caption{The voltage evolution of a battery cell through a full discharge/charge cycle. The
+    cell is fully charged at 200 s and 16000s and fully discharged at 8000s.}
     \label{fig:charge_cycle}
 \end{figure}
 
-Note the following important points on the graph. At 200 s the cell is done charging and
-enters an idle state for 30 s after which it starts discharging. At ~8000 s the cell is fully
-discharges and enters an idle state for 30s after which it starts charging. Finally, at 18800 s the cell is once 
-again fully charged and the charge cycle is completed.
+In addition to logging the cell voltage, the provided charging algorithm also 
+logs the charging current. By integrating said current for a full charge or 
+discharge section we can determine a cells capacity in mAh. The results from 
+performing this analysis on each cell are shown in table \ref{table:1}:
 
-The provided charging algorithm also logs the current into the cell.
-By integrating said current for a full charge or discharge section
-we can determine the cell capacity in mAh. The results of this analysis is 
-presented in the table below:
-
-\begin{center}
+\vspace{5pt}
+\begin{table}[h!]
+    \centering
     \begin{tabular}{||c| c c c c c||} 
-    \hline
-    Cell Number& 1 & 2 & 3 & 4 & 5 \\ [0.5ex] 
-    \hline
-    Capacity (mAh) & 542.7	& 526.1	& 519.5	& 530.1	& 543.7\\ [1ex] 
-    \hline
+        \hline
+        Cell Number& 1 & 2 & 3 & 4 & 5 \\ [0.5ex] 
+        \hline
+        Capacity (mAh) & 542.7	& 526.1	& 519.5	& 530.1	& 543.7\\ [1ex] 
+        \hline
     \end{tabular}
-    \end{center}
+    \caption{Cell capacities}
+    \label{table:1}
+\end{table}
 
-
-As expected all cells have a capacity somewhere around 500 mAh. However, some cells
-are have a higher capacity than others which may have implications for the performance
-of certain battery cell configurations.
+As expected from the datasheet\cite{batteryDatasheet} all cells have a capacity of about 500 mAh. However, some cells 
+have a higher capacity than others, which may have implications for the 
+performance for certain battery configurations.
 
 \paragraph*{PV panels}
-The provided PV panels are rated for a maximum power of 1.15 W at a voltage 
-of 5.0 V and current 230 mA. Away from the maximum power point the performance of 
-the panels can be determined from their I-V curves. To find the I-V curves each 
-panel was connected to the B-inputs of the SMPS operating in non-synchronous boost.
-They were then lit by the lamp and the duty cycle of the SMPS was varied while measurements 
-of panel current and voltage were taken. After processing the resulting data
-is plotted in Figure~\ref{fig:IV_curve}.
+The PV panels are rated for a maximum power of 1.15 W at a voltage of 
+5.0 V and current 230 mA. Away from the maximum power point the performance 
+of the panels can be determined from their IV curves. To find the IV 
+curves, each panel was connected on the B-side of the SMPS operating 
+in non-synchronous boost. They were then lit by the lamp and the duty 
+cycle of the SMPS was swept while measurements of panel current and 
+voltage were taken. The resulting data was processed and is plotted 
+in Figure~\ref{fig:IV_curve}.
 
-    \begin{figure}[H]
+\begin{figure}[H]
     \centering
     \includegraphics[scale=0.18]{Panel1.png}
     \includegraphics[scale=0.18]{Panel2.png}
     \includegraphics[scale=0.18]{Panel3.png}
     \includegraphics[scale=0.18]{Panel4.png}
-    \caption{I-V curves for the PV panels.}
+    \caption{IV curves for the PV panels.}
     \label{fig:IV_curve}
-    \end{figure}
+\end{figure}
 
-Though the data is noisy, it is clear that all panels exhibit the standard 
-I-V characteristics of a PV cell. That is, they behave as non-ideal current 
-sources with a nearly constant current at low voltages and a rapid current 
-reduction at high voltages\cite{green}. Moreover, we see that the provided lamp activates 
-the panels poorly as the peak power for each of the panels is only ~0.5 W.
+Even though the data is noisy, it is clear that all panels exhibit the 
+standard IV characteristics of a PV cell. That is, they behave as 
+non-ideal current sources with a nearly constant current at low 
+voltages and a rapid current reduction at high voltages\cite{green}. 
+Moreover, it is clear that the provided lamp activates the panels poorly 
+as the peak power for each of the panels is only $\sim$0.5 W.
 
 \paragraph*{SMPS}
 \begin{wrapfigure}[16]{r}[0pt]{0.5\textwidth}
@@ -422,18 +426,19 @@ the panels poorly as the peak power for each of the panels is only ~0.5 W.
         \includegraphics[width=0.48\textwidth]{Boost_efficiency_wduty.png}
     }%
     \vspace{0pt}
-    \caption{SMPS efficiency versus output current with input voltage 5V [reference to logbook]}
+    \caption{SMPS efficiency versus output current with input voltage 5V\cite{powerLogbook}}
     \label{fig:efficiency}
 \end{wrapfigure}
-The provided SMPS is rated for 10 W throughput with a maximum boost output voltage of 35 V 
-and maximum output current of 10 A\cite{SMPS_lab}. All these ratings are far higher 
-than needed and neither is expected to impose limitations on the design of the energy module. 
+The SMPS is rated for 10 W throughput with a maximum boost output voltage 
+of 35 V and maximum output current of 10 A\cite{SMPS_lab}. These ratings 
+are far higher than what is needed to charge the battery and are not 
+expected to impose limitations on the design of the energy module. 
 
 The many characteristics of the SMPS have been thoroughly examined in 
-2nd year labs. However, for the energy submodule the most important characteristics 
-will be the SMPS efficiency during non-synchronous boost operation. A graph of 
-efficiency versus output current is shown in Figure~\ref{fig:efficiency}.
-
+2nd year labs. However, for the energy submodule the most important 
+characteristic will be the SMPS efficiency during non-synchronous 
+boost operation. A graph of efficiency versus output current is shown 
+in Figure~\ref{fig:efficiency}.
 
 \subsubsection{Initial Design}
 

@@ -52,18 +52,70 @@ y4 = y4(uidx,:);
 
 
 figure
+set(gca,'FontSize',14)
 hold on;
-xlabel('Panel Voltage [V]');
+xlabel('Panel Voltage [V]','fontSize',16);
 xlim([0,6]);
-title('Characteristics - Panel 1','fontSize',14);
+title('Characteristics - Panel 1','fontSize',16);
 yyaxis left
-ylabel('Panel Current [A]');
+ylabel('Panel Current [A]','fontSize',16);
 ylim([0,0.12]);
 plot(x1, y1, 'b' ,'LineWidth',2)
 yyaxis right
-ylabel('Panel Power [W]');
+ylabel('Panel Power [W]','fontSize',16);
+ylim([0,0.55]);
 plot(x1, y1.*x1, 'r' ,'LineWidth',2)
 grid
+
+
+figure
+set(gca,'FontSize',14)
+hold on;
+xlabel('Panel Voltage [V]','fontSize',16);
+xlim([0,6]);
+title('Characteristics - Panel 2','fontSize',16);
+yyaxis left
+ylabel('Panel Current [A]','fontSize',16);
+ylim([0,0.12]);
+plot(x2, y2, 'b' ,'LineWidth',2)
+yyaxis right
+ylabel('Panel Power [W]','fontSize',16);
+ylim([0,0.55]);
+plot(x2, y2.*x2, 'r' ,'LineWidth',2)
+grid
+
+figure
+set(gca,'FontSize',14)
+hold on;
+xlabel('Panel Voltage [V]','fontSize',16);
+xlim([0,6]);
+title('Characteristics - Panel 3','fontSize',16);
+yyaxis left
+ylabel('Panel Current [A]','fontSize',16);
+ylim([0,0.12]);
+plot(x3, y3, 'b' ,'LineWidth',2)
+yyaxis right
+ylabel('Panel Power [W]','fontSize',16);
+ylim([0,0.55]);
+plot(x3, y3.*x3, 'r' ,'LineWidth',2)
+grid
+
+figure
+set(gca,'FontSize',14)
+hold on;
+xlabel('Panel Voltage [V]','fontSize',16);
+xlim([0,6]);
+title('Characteristics - Panel 4','fontSize',16);
+yyaxis left
+ylabel('Panel Current [A]','fontSize',16);
+ylim([0,0.12]);
+plot(x4, y4, 'b' ,'LineWidth',2)
+yyaxis right
+ylabel('Panel Power [W]','fontSize',16);
+ylim([0,0.55]);
+plot(x4, y4.*x4, 'r' ,'LineWidth',2)
+grid
+
 
 figure
 hold on;
