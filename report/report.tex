@@ -470,6 +470,14 @@ a more capable general purpose processor and a higher bandwidth limit.
   \item Regulate the voltage and the current that the SMPS generates to the DC motors in order to control the speed of the rover.
 \end{enumerate}
 \subsubsection{Initial Design}
+First and foremost, the most important was to make the rover able to move. Thus, one of the main tasks was to find a way to regulate the voltages that are being delivered to the DC motors. In other words, find a way to control the speed of the rover. Initially, the idea of controlling the speed using numbers from 1-10 came up. This was controversial, because for low and high speeds this would work perfectly, but for intermediate speeds this might have been confusing. For example, if 3/10 was sent to the rover as a speed, then the user would not exactly know how fast the rover would move. One other, idea was to use km/h or mph but for the low speeds that the rover is moving is again confusing. That is why the idea of the 5 speed levels was found, that can be seen in the implementation part analytically. 
+
+Moreover, one more potential problem was how to make the rover rotate clockwise and anticlockwise accurately for a specific angle. One potential solution was to convert the cartesian coordinates that the optical flow sensor measures to polar coordinates. The issue with that solution was that some angles had the same tangent, or it did not exist at all. 
+
+In addition, the need for voltage regulation was important. Specifically, the rover has to “generate” the desired voltage for every command (forward, backward, rotation) and also keep the voltage stable in order to maintain the speed and the direction that the rover is moving. For that reason, the PID controller had to be tuned perfectly in order to achieve the accuracy of the rover.
+
+Finally, there was a thought of designing a program that could assist the rover if it diverged from its path, but by having a very good voltage regulation and by programming the optical flow sensor to measure the distance covered, precisely, it was not needed. 
+
 
 
 \subsection{Integration}
