@@ -156,7 +156,7 @@ the relevant data where it is required to allow for the rover to integrate
 as a whole \cite{MarsRoverSpec}.  These functional requirements can be 
 obtained from the Functional Design diagram for control, outlining all the 
 data flow for the Control subsystem. There are a couple of core objectives 
-hich must be achieved in order to fulfil this role as outlined below:
+which must be achieved in order to fulfil this role as outlined below:
 
 \begin{enumerate}
     \item Act as a WiFi Access Point sitting under a router to receive
@@ -351,15 +351,92 @@ map can possibly be stored in the form of array which keeps track of pixels to b
 website would have a page for the map as well. 
 
 \subsection{Vision}
-The purpose of the Vision module is threefold:
-    1. Capture data from camera module;
-    2. Detect objects of interest within the current view, namely 5 different
-    coloured table-tennis balls and 
-    send their location to the Control module; and
-    3. Send image data to Control for streaming to Command. 
+\paragraph*{Core Requirements}
+
+Within the context of the rover, the Vision module's main purpose is to \textbf{capture 
+object data using the camera and relay the data to the Command module}. This involves 
+taking the raw data from the camera sensor, converting from the Bayer pattern image to 
+a readable RGB format and performing image processing to detect objects of interest and
+carrying out calculations to determine information about those objects and pass on 
+that data to the Command module via Control. Therefore, this can be broken down into a few
+core requirements that are listed below:
+
+\begin{enumerate}
+    \item Capture Raw Data from Camera hardware module connected via GPIO and convert 
+    it to RGB format for streaming
+    \item Detect objects of interest within the current frame, and draw a bounding box around them, 
+    namely 5 different coloured table tennis balls in a digital hardware system.
+    \item Send the pixel coordinates of the bounding boxes to a soft core for processing.
+    \item Calculate the location of objects relative to the FPGA camera based on the 
+    pixels of the bounding box. 
+    \item Send the location data to the Control module for forwarding to the Command Module. 
+    \item Send images at regular intervals of the live view of the camera over to Control for
+    forwarding to Command for display on the web client.
+\end{enumerate}
+
+\paragraph*{Initial Design Choices}
+
+There are several common approaches to object detection, with the two most 
+prominent being the use of classic Computer Vision algorithms like the Canny edge-
+detection technique and Hough transforms or the more recent use of convolutional
+neural networks (CNN) and deep learning to perform object detection through a 
+combination of layers that perform convolution, pooling and fully connected layers. 
+According to \cite{DBLP:journals/corr/abs-1806-01683}, CNNs have in recent years 
+become the de-facto standard for machine vision applications such as object 
+classification, object detection and object segmentation; but as there is a desire 
+for more performant and power- efficient systems, there has been a shift to 
+using dedicated hardware tailored to the operations used for CNNs. There was a 
+deep interest from the technical lead for the Vision module on this and attempts
+were made to implement this on the FPGA using various tools such as Intel's High 
+Level Synthesis Compiler \cite{IntelHLS} and hls4ml - a python package for machine learning 
+optimised high level synthesis \cite{HLS4ML} as well as a manual implementation of neurons using
+multiply-accumulate operations in SystemVerilog. 
+However, there were far too many challenges for implementing a CNN within the 
+current project with key issues being the system is a real-time system that 
+processes video data pixel-by-pixel in a fixed order and in contrast, most CNNs for object 
+detection working with multiple pixels in different locations simultaneously. 
+A lot of previous work on the subject is also on FPGAs being used as accelerators for 
+CNNs running on hard cores rather than standalone embedded systems as seen in \cite{DBLP:journals/corr/abs-1806-01683}
+, which is the use case here. The only possible neural network that could be applied in this period of time
+would be a non-convolutional one that just acted based on the individual colours of each pixel
+and possibly the temporal location, but there are other more straightforward methods for object
+detection in this format. 
+These challenges are also faced when trying to implement popular traditional computer vision 
+algorithms on the FPGA, as the access of pixels is limited, and the number of pixels that can be
+stored is also limited by memory constraints on the FPGA. 
+
+It was therefore decided that a pixel by pixel approach would be taken, using techniques
+based on thresholding methods from approaches to image segmentation. This would
+involve setting thresholds for each desired colour of the ping-pong ball and detecting large 
+areas that met the threshold to differentiate a ball from its surroundings. 
+
+The provided ping-pong balls came in 5 different colours - pink, orange, light 
+blue, grey and green. As these colours cover a wide range of the colour spectrum
+and even overlap with each other (orange and pink, blue and grey), it was thought 
+to be necessary to do some preprocessing on the incoming image from the camera 
+to ensure optimal colour detection for object detection.  
+As the colour overlap in the RGB spectrum was significant, the decision was made to apply
+a transform from the RGB (Red, Green, Blue) colour space to the HSV (Hue, 
+Saturation, Value) colour space.  HSV has been shown to be a theoretically better colour space
+for image processing tasks like colour segmentation in road sign detection for 
+autonomous driving as it is invariant to illumination changes unlike the RGB 
+space.\cite{ali2013performance} 
+
+In order to perform general purpose operations like
+    calculating the location of the detected objects,
+    configure camera settings,
+    and to provide a debugging interface,
+the decision was made to instantiate a Nios\textsuperscript{\textregistered} II/f ``Fast'' soft core on the FPGA. 
+This would also allow for a quicker development cycle as the compilation of Quartus projects
+is upwards of 6 minutes, but C files can be changed and compiled in seconds. 
+Alternatively, to implement more advanced image processing algorithms
+or to reduce other hardware components in the system like the multiple Arduinos, 
+a FPGA with a hard core connected via PCIe, 
+known as a FPGA System-On-Chip (FPGA SoC) \cite{FPGASoC} could be used, 
+which would provide both the advantages of having reconfigurable hardware,
+a more capable general purpose processor and a higher bandwidth limit.
 
 
-\subsubsection{Initial Design Choices}
 
 
 \subsection{Drive}
@@ -830,8 +907,6 @@ provided while simultaneously powering the rover.
 
 \section{Implementation}
 
-\subsection{Vision}
-
 \subsection{Control}
 
 \subsection{Command}
@@ -1045,12 +1120,9 @@ RPM is almost linear. This is confirmed in Figure \ref{graph: Output Voltage vs 
 
  \begin{figure}[H]
     \centering
-    \begin{minipage}{.3\textwidth}
-      \centering
-      \includegraphics[scale=0.22]{./media/voltagevsrpm.eps}
+      \includegraphics[scale=0.4]{./media/voltagevsrpm.eps}
    \caption{Output Voltage vs RPM}
    \label{graph: Output Voltage vs RPM}
-    \end{minipage}%
     %\begin{minipage}{.7\textwidth}
       %\centering
       %\includegraphics[scale=0.25]{./media/forward.png}
@@ -1320,6 +1392,206 @@ Regarding the Current Controller, it was not tuned because the voltage controlle
 
 \subsection{Integration}
 
+\subsection{Vision}
+
+\subsubsection{Hardware Organisation}
+
+The Vision module comprises of two main hardware elements: 
+    the Terasic DE10-Lite, a cost-effective Intel MAX 10 based FPGA board 
+    \cite{TerasicDE10Web} 
+    and the Terasic D8M-GPIO camera package \cite{TerasicD8MWeb}
+that interfaces with the FPGA through the onboard GPIO connectors. 
+
+These hardware choices were made by the project organisers, 
+but are also sufficient and capable of carrying out the tasks at hand. 
+As the FPGA's hardware is configurable, 
+it is more flexible than other embedded systems 
+that are limited to a general purpose processor,and 
+is also able to handle both streaming and processing of high resolution images
+without significant compromises on framerate or data speed 
+through the use of concurrent operations and dedicated blocks 
+for signal processing applications like multiplication.
+This particular FPGA is also equipped with a 4-bit VGA output 
+which is useful for debugging object detection live, 
+and also has a connector for an Arduino Uno R3 shield, \cite{TerasicDE10Web} 
+which can be used to interface with the ESP32 used for control.  
+
+ 
+
+\subsubsection{Image Capture \& Processing Stream}
+
+The image capture and buffering is based on a starter project provided
+by Terasic Inc for the D8M Camera module that was modified by Dr Edward Stott 
+\cite{EEE2Rover} and provided to us for this project. The system makes use of 
+several IP components from the Intel Video and Image Processing Suite,
+namely the Clocked Video Output and Frame Buffer Core. The system is compromised
+of several modules, that take the raw data from the camera in Bayer filter form\cite{TerasicD8MWeb},
+transform it into RGB video packets, buffer the frames to allow camera and output
+to run at different frame rates, process the image data and convert the video 
+data to serial data for output over VGA.\cite{EEE2Rover} As this system and its 
+corresponding documentation is openly available, the implementation outside of 
+the image processor will not be described in more depth, interested readers can 
+consult the referenced repository and starter project for more information. 
+
+\subsubsection{Image Pre-Processing Module - RGB to HSV Conversion} 
+
+
+HSV is traditionally expressed as three values ranging between 0-360\degree\  
+for hue, and two values between 0 and 1 for saturation and value.\cite{10.1145/965139.807361}
+As floating point calculations in SystemVerilog are computationally expensive, 
+and also introduce a layer of unnecessary complexity, the conversion was adjusted
+to express all three values in terms of an 8 bit integer ranging from 0-255. The
+algorithm for conversion from 8-bit RGB integers is presented mathematically:
+
+\begin{multicols}{3}
+    \noindent
+    \begin{align*}
+        M &= \max(R, G, B) \\ \\
+        m &= \min(R, G, B) \\ \\
+        C &= M-m 
+    \end{align*}
+    \begin{equation*}
+        H = \begin{cases}
+            M = R, & 0 + \frac{43 \times (G-B)}{C} \\
+            M = G, & 85 + \frac{43 \times (B-R)}{C} \\
+            M = B, & 171 + \frac{43 \times (R-G)}{C} \\
+            M = 0, & 0 \\
+            C = 0, & 0
+        \end{cases} 
+    \end{equation*}
+    \begin{align*}
+        S &= \begin{cases}
+            M = 0, & 0 \\ C = 0, & 0 \\ \text{else} & \frac{255\times C}{V}
+        \end{cases} & \\ \\
+         V &= M  
+    \end{align*}
+\end{multicols}
+
+
+
+Although the inclusion of a divide operation was undesirable as it does not 
+translate well to hardware implementations, it was unavoidable with hue being 
+obtained by dividing the difference of two components by the chroma value. 
+
+\paragraph*{SystemVerilog Implementation}
+The division in this case has a 16 bit numerator and an 8 bit denominator, which
+would negatively affect the critical path if implemented as a single cycle/combinatorial
+divider, causing timing failures in the image processing stream as the processor 
+would not be able to keep up with the input speed of the camera and the
+output speed necessary to produce a VGA output. As the provided Intel LPM Division FPGA 
+IP Core has a configurable pipeline latency, the decision was taken to pipeline this division
+process in order to maintain the clock speed. By gradually increase the pipeline 
+and testing the critical path delay, the decision was made to use a 5 cycle latency
+for the divider, which allowed the FPGA's image processing module to run at 100MHz. 
+
+As there are two divide operations for each HSV calculation, one for H and one for S,
+two dividers were instantiated with different parameters to account for the differences 
+in the calculations as H values require signed values and S values do not. 
+
+In order to maintain the video stream and process one pixel per cycle, this operation 
+was implemented with a 6 stage cycle that took in a new RGB value every cycle and
+produced a new HSV value every cycle. This included storing the maximum RGB value \( M \) and difference
+values \(C \) for each input for 6 cycles, to ensure that the data being used for 
+comparison and output is correct. 
+
+
+The YUV colour space was also considered as a option for conversion as it also
+separates colour into 3 components - one for luma and two chrominance components.
+This would also make it invariant to illumination changes. The transform from RGB
+to HSV is also more suited to hardware as it is a linear transform requiring only
+multiplication. However, as it cannot represent the full RGB spectrum and is 
+limited in what colours it can represent, the decision was made not to use it.    
+
+
+\subsubsection{Image Object Detection Algorithm}
+
+
+\subsubsection{Object Location Calculations}
+
+With the bounding boxes obtained from the Verilog module, the coordinates of the
+bounding box for each colour is sent to the NIOS II processor using a FIFO buffer.
+The calculations for how far away the object is and it's relative position in 
+comparison to the camera module was are done on the NIOS II processor. 
+
+There are multiple ways to calculate the location of a 3D object in space on a plane
+with some ways being more precise than others. 
+
+%TODO!! Add survey of other potential algorithms and why this one was chosen. 
+
+As the testing environment for the rover was ideal with the camera in a fixed 
+position and the testing surface being completely level, the algorithm 
+for the mapping between pixel coordinates and real world x-y coordinates relative
+to the camera was based on the following form: \begin{align*}
+    x & = A_x m^2 + B_x n^2 + C_x mn + D_x m + E_x n + F_x \\
+    y & = A_y m^2 + B_y n^2 + C_y mn + D_y m + E_y n + F_y  
+\end{align*} By taking a picture of multiple balls in different locations and 
+measuring the actual corresponding mapping distance and the pixel locations, the
+coefficients can be found by solving the matrix equation: $$
+    \begin{bmatrix}
+        m^2_1 & n^2_1 & m_1n_1 & m_1 & n_1 & 1 \\
+        m^2_2 & n^2_2 & m_2n_2 & m_2 & n_2 & 1 \\
+        .     & .     &    .   &  .  & .   & . \\
+        m^2_i & n^2_i & m_in_i & m_i & n_i & 1 \\  
+        .     & .     &    .   &  .  & .   & . \\
+        m^2_N & n^2_N & m_Nn_N & m_N & n_N & 1  
+    \end{bmatrix}
+    \cdot
+    \begin{bmatrix}
+        A_x & A_y \\
+        B_x & B_y \\
+        C_x & C_y \\
+        D_x & D_y \\
+        E_x & E_y \\
+        F_x & F_y
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        x_1 & y_1 \\
+        x_2 & x_2 \\
+        . & . \\
+        x_i & y_i \\
+        . & . \\
+        x_N & y_N
+    \end{bmatrix}
+$$ where the pixel locations are represented by \((m,n)\) and the physical locations on
+the plane are represented by \((x,y)\). Initially 6 samples were taken to calculate 
+the coefficients, but as more measurements were taken to verify the method, they
+were also added to the list of samples to improve the accuracy of the algorithm.
+It was noted during initial testing that balls at a further distance were located
+more accurately than balls closer together, the cause of this problem was because
+the calibration data had more data points at a further away distance, causing the mapping
+to prioritise accuracy there, this was then fixed by adding more data points for 
+balls that were closer to the camera. 
+These calculations for the coefficients were carried out in MATLAB, and then 
+implemented in C to be run on the Nios\textsuperscript{\textregistered} II processor. 
+
+This method is satisfactory in its performance, with a worst case error of \(\pm5\unit{cm}\)
+in difference between calculated position and actual position. For the rover's 
+path finding algorithm, this is a value that is easily taken into account and as
+multiple measurements of the ball are taken, the actual position can be refined 
+and more accurately determined by taking the average of multiple readings in the 
+Command module in the server. This also solves the problem of when a ball is not 
+fully in the frame of the camera, as the rover is moving, all objects should eventually
+come into frame fully and not be cut off by the sides of the view. 
+
+The Nios\textsuperscript{\textregistered} II processor does not include floating point hardware by default, but as 
+this algorithm requires floating point calculations as some of the coefficients 
+tend to be very small, and this algorithm is run for each set of colours, it was
+prudent to include hardware support for single precision floating point adds 
+and multiplications. This was done by adding a module from Intel's IP catalogue 
+for custom floating point instructions, this reduces the amount of cycles 
+necessary to carry out a floating point multiplication to 4 cycles using a single
+instruction and a floating point add to 5 cycles\cite{NiosIICustomInstruction}.
+If this hardware was not used, it would be implemented using software, and hence
+would take multiple instructions and more hence more cycles. 
+
+This algorithm's performance is satisfactory in the current testing environment, 
+but if tested on a surface with changing gradients or elevated objects, this algorithm
+would be inaccurate due to it's inability to take into account objects on the real
+world z-axis (i.e. the height of an object relative to the plane).
+
+
+
 
 %Start of energy implementation
 \subsection{Energy}
@@ -1580,233 +1852,7 @@ approximation even after many battery cycles as the battery performance starts t
 
 \subsection{Comms}
 
-\subsection{Vision}
 
-
-\subsubsection{Hardware Organisation}
-
-The Vision module comprises of two main hardware elements: 
-    the Terasic DE10-Lite, a cost-effective Intel MAX 10 based FPGA board 
-    \cite{TerasicDE10Web} 
-    and the Terasic D8M-GPIO camera package \cite{TerasicD8MWeb}
-that interfaces with the FPGA through the onboard GPIO connectors. 
-
-These hardware choices were made by the project organisers, 
-but are also sufficient and capable of carrying out the tasks at hand. 
-As the FPGA's hardware is configurable, 
-it is more flexible than other embedded systems 
-that are limited to a general purpose processor,and 
-is also able to handle both streaming and processing of high resolution images
-without significant compromises on framerate or data speed 
-through the use of concurrent operations and dedicated blocks 
-for signal processing applications like multiplication.
-This particular FPGA is also equipped with a 4-bit VGA output 
-which is useful for debugging object detection live, 
-and also has a connector for an Arduino Uno R3 shield, \cite{TerasicDE10Web} 
-which can be used to interface with the ESP32 used for control.  
-
-In order to perform general purpose operations like
-    to configure camera settings
-    and to provide a debugging interface,
-a Nios\textsuperscript{\textregistered} II/f "Fast" soft core was instantiated on the FPGA. 
-Alternatively, to implement more advanced image processing algorithms
-or to reduce other hardware components in the system like the multiple Arduinos, 
-a FPGA with a hard core connected via PCIe, 
-known as a FPGA System-On-Chip (FPGA SoC) \cite{FPGASoC} could be used, 
-which would provide both the advantages of having reconfigurable hardware,
-a more capable general purpose processor and a higher bandwidth limit. 
-
-\subsubsection{Image Capture \& Processing Stream}
-
-The image capture and buffering is based on a starter project provided
-by Terasic Inc for the D8M Camera module that was modified by Dr Edward Stott 
-\cite{EEE2Rover} and provided to us for this project. The system makes use of 
-several IP components from the Intel Video and Image Processing Suite,
-namely the Clocked Video Output and Frame Buffer Core. The system is compromised
-of several modules, that take the raw data from the camera in Bayer filter form\cite{TerasicD8MWeb},
-transform it into RGB video packets, buffer the frames to allow camera and output
-to run at different frame rates, process the image data and convert the video 
-data to serial data for output over VGA.\cite{EEE2Rover} As this system and its 
-corresponding documentation is openly available, the implementation outside of 
-the image processor will not be described in more depth, interested readers can 
-consult the provided repository and starter project for reference. 
-
-\subsubsection{Image Pre-Processing Module}
-
-The challenge for this rover was to detect different coloured ping-pong balls as
-obstacles and relay the information about these obstacles to the control module. 
-The provided ping-pong balls came in 5 different colours - pink, orange, light 
-blue, grey and green. As these colours cover a wide range of the colour spectrum
-and even overlap with each other (orange and pink, blue and grey), it was thought 
-to be necessary to do some preprocessing on the incoming image from the camera 
-to ensure optimal colour detection for object detection.  
- 
-%Maybe add Image of all the balls here. 
-
-
-The initial design and implementation of this image processing algorithm involved
-a transform from the RGB (Red, Green, Blue) colour space to the HSV (Hue, 
-Saturation, Value) colour space, and pixel based classification to detect large
-areas of the necessary colours.  HSV has been shown to be a better colour space
-for image processing tasks like colour segmentation in road sign detection for 
-autonomous driving as it is invariant to illumination changes unlike the RGB 
-space.\cite{ali2013performance} As the task at hand here is similar, a transformation
-from the RGB space to the HSV space is applied. 
-
-HSV is traditionally expressed as three values ranging between 0-360\degree\  
-for hue, and two values between 0 and 1 for saturation and value.\cite{10.1145/965139.807361}
-As floating point calculations in SystemVerilog are computationally expensive, 
-and also introduce a layer of unnecessary complexity, the conversion was adjusted
-to express all three values in terms of an 8 bit integer ranging from 0-255. The
-algorithm for conversion from 8-bit RGB integers is presented mathematically:
-
-\begin{multicols}{3}
-    \noindent
-    \begin{align*}
-        M &= \max(R, G, B) \\ \\
-        m &= \min(R, G, B) \\ \\
-        C &= M-m 
-    \end{align*}
-    \begin{equation*}
-        H = \begin{cases}
-            M = R, & 0 + \frac{43 \times (G-B)}{C} \\
-            M = G, & 85 + \frac{43 \times (B-R)}{C} \\
-            M = B, & 171 + \frac{43 \times (R-G)}{C} \\
-            M = 0, & 0 \\
-            C = 0, & 0
-        \end{cases} 
-    \end{equation*}
-    \begin{align*}
-        S &= \begin{cases}
-            M = 0, & 0 \\ C = 0, & 0 \\ \text{else} & \frac{255\times C}{V}
-        \end{cases} & \\ \\
-         V &= M  
-    \end{align*}
-\end{multicols}
-
-
-
-Although the inclusion of a divide operation was undesirable as it does not 
-translate well to hardware implementations, it was unavoidable with hue being 
-obtained by dividing the difference of two components by the chroma value. This 
-module was then implemented using two pipelined 3 cycle divider from the Intel IP
-megafunction library for the hue and saturation value calculations.  
-
-The YUV colour space was also considered as a option for conversion as it also
-separates colour into 3 components - one for luma and two chrominance components.
-This would also make it invariant to illumination changes. The transform from RGB
-to HSV is also more suited to hardware as it is a linear transform requiring only
-multiplication. However, as it cannot represent the full RGB spectrum and is 
-limited in what colours it can represent, the decision was made not to use it.    
-
-
-\subsubsection{Image Object Detection Algorithm}
-
-There are several common approaches to object detection, with the two most 
-prominent being the use of classic Computer Vision algorithms like the Canny edge-
-detection technique and Hough transforms or the more recent use of convolutional
-neural networks (CNN) and deep learning to perform object detection through a 
-combination of layers that perform convolution, pooling and fully connected layers. 
-According to \cite{DBLP:journals/corr/abs-1806-01683}, CNNs have in recent years 
-become the de-facto standard for machine vision applications such as object 
-classification, object detection and object segmentation; but as there is a desire 
-for more performant and power- efficient systems, there has been a shift to 
-using dedicated hardware tailored to the operations used for CNNs. There was a 
-deep interest from the technical lead for the Vision module for this and he spent 
-a bit too much time researching this field, and was left with less time for the 
-project. There were far too many challenges for implementing a CNN within the 
-current project with key issues being the system is a real-time system that 
-processes video data pixel-by-pixel in a fixed order with most CNNs for object 
-detection working with multiple pixels in different locations Simultaneously and
-a lot of previous work on the subject is on FPGAs being used as accelerators for 
-CNNs running on hard cores rather than standalone embedded systems as seen in \cite{DBLP:journals/corr/abs-1806-01683}
-. This was also a challenge for implementing traditional computer vision 
-algorithms on the FPGA,  the same problem of not being able to access random 
-pixels exists. 
-
-
-\subsubsection{Object Location Calculations}
-
-With the bounding boxes obtained from the Verilog module, the coordinates of the
-bounding box for each colour is sent to the NIOS II processor using a FIFO buffer.
-The calculations for how far away the object is and it's relative position in 
-comparison to the camera module was are done on the NIOS II processor. 
-
-There are multiple ways to calculate the location of a 3D object in space on a plane
-with some ways being more precise than others. 
-
-%TODO!! Add survey of other potential algorithms and why this one was chosen. 
-
-As the testing environment for the rover was ideal with the camera in a fixed 
-position and the testing surface being completely level, the initial algorithm 
-for the mapping between pixel coordinates and real world x-y coordinates relative
-to the camera was based on the following form: \begin{align*}
-    x & = A_x m^2 + B_x n^2 + C_x mn + D_x m + E_x n + F_x \\
-    y & = A_y m^2 + B_y n^2 + C_y mn + D_y m + E_y n + F_y  
-\end{align*} By taking a picture of multiple balls in different locations and 
-measuring the actual corresponding mapping distance and the pixel locations, the
-coefficients can be found by solving the matrix equation: $$
-    \begin{bmatrix}
-        m^2_1 & n^2_1 & m_1n_1 & m_1 & n_1 & 1 \\
-        m^2_2 & n^2_2 & m_2n_2 & m_2 & n_2 & 1 \\
-        .     & .     &    .   &  .  & .   & . \\
-        m^2_i & n^2_i & m_in_i & m_i & n_i & 1 \\  
-        .     & .     &    .   &  .  & .   & . \\
-        m^2_N & n^2_N & m_Nn_N & m_N & n_N & 1  
-    \end{bmatrix}
-    \cdot
-    \begin{bmatrix}
-        A_x & A_y \\
-        B_x & B_y \\
-        C_x & C_y \\
-        D_x & D_y \\
-        E_x & E_y \\
-        F_x & F_y
-    \end{bmatrix}
-    =
-    \begin{bmatrix}
-        x_1 & y_1 \\
-        x_2 & x_2 \\
-        . & . \\
-        x_i & y_i \\
-        . & . \\
-        x_N & y_N
-    \end{bmatrix}
-$$ where the pixel locations are represented by \((m,n)\) and the physical locations on
-the plane are represented by \((x,y)\). Initially 6 samples were taken to calculate 
-the coefficients, but as more measurements were taken to verify the method, they
-were also added to the list of samples to improve the accuracy of the algorithm.
-These calculations for the coefficients were carried out in MATLAB, and then 
-implemented in C on the Nios\textsuperscript{\textregistered} II processor. 
-
-This method is satisfactory in its performance, with a worst case error of \(\pm5\unit{cm}\)
-in difference between calculated position and actual position. For the rover's 
-path finding algorithm, this is a value that is easily taken into account and as
-multiple measurements of the ball are taken, the actual position can be refined 
-and accurately determined by taking the average of multiple readings in the 
-Command module in the server. 
-
-The Nios\textsuperscript{\textregistered} II processor does not include floating point hardware by default, but as 
-this algorithm requires floating point calculations as some of the coefficients 
-tend to be very small, and this algorithm is run for each set of colours, it was
-prudent to include hardware support for single precision floating point adds 
-and multiplications. This was done by adding a module from Intel's IP catalogue 
-for custom floating point instructions, this reduces the amount of cycles 
-necessary to carry out a floating point multiplication to 4 cycles using a single
-instruction and a floating point add to 5 cycles\cite{NiosIICustomInstruction}.
-If this hardware was not used, it would be implemented using software, and hence
-would take multiple instructions and more hence more cycles. 
-
-This algorithm's performance is satisfactory in the current testing environment, 
-but if tested on a surface with changing gradients or elevated objects, this algorithm
-would be inaccurate due to it's inability to take into account objects on the real
-world z-axis (i.e. the height of an object relative to the plane).  
-
-
-the best implement an algorithm that could take into account the location 
-and shape of the ball, as a purely colour based algorithm would be unable to 
-differentiate other objects in view of the camera and confuse them with the ball, 
-for example, the sky and the light blue ball would be seen as one object.
 
 
 \section{Evaluation and Conclusion}
