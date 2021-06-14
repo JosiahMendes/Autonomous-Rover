@@ -844,6 +844,28 @@ increase the maximum input voltage.
 
 \subsection{Control}
 
+\subsubsection{Command Communication}
+
+The first connection that had to be established was the one between Command 
+and Control. From the requirements set out, it was clear that the ESP32 
+had to use it’s WiFi capabilities to interface with Command. The two 
+options available to the ESP32 are as follows: to act as either it's own 
+router through the Access Point mode or it's own station under an existing 
+router through the Stationary mode. As the Access Point mode would mean 
+that the rover is not connected to the internet, since it would create a 
+private inaccessible network, instead the stationary mode was opted for. 
+Having the capability to communicate with the rover through an existing 
+router allows for communication from anywhere in the world through WiFi. 
+This would be much more flexible and representative of communicating with 
+a rover on Mars. A working prototype for communication was built using 
+TCP. In order to test whether it was functioning, since Command was still 
+in very early stages, a python-based TCP server was created. When running, 
+it would take the text put into the terminal and send it to the ESP32 
+while displaying the messages incoming from the ESP32. The ESP32 was 
+configured to echo back all messages. Through this simple system, the 
+connection was successfully implemented by debugging the connection and 
+the messages being sent back and forth.
+
 \subsection{Command}
 
 \subsection{Drive}
