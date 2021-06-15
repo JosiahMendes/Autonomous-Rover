@@ -395,7 +395,7 @@ website would have a page for the map as well.
 
 \subsection{Vision}
 \paragraph*{Core Requirements}
-
+\vspace{-6pt}
 Within the context of the rover, the Vision module's main purpose is to \textbf{capture 
 object data using the camera and relay the data to the Command module}. This involves 
 taking the raw data from the camera sensor, converting from the Bayer pattern image to 
@@ -418,7 +418,7 @@ core requirements that are listed below:
 \end{enumerate}
 
 \paragraph*{Hardware Organisation}
-
+\vspace{-6pt}
 The Vision module is comprised of two main hardware elements: 
     the Terasic DE10-Lite, a cost-effective Intel MAX 10 based FPGA board 
     \cite{TerasicDE10Web} 
@@ -441,7 +441,7 @@ which can be used to interface with the ESP32 used for Control.
 
 
 \paragraph*{Initial Design Choices}
-
+\vspace{-6pt}
 There are several common approaches to object detection, with the two most 
 prominent being the use of classic Computer Vision algorithms like the Canny edge
 detection technique and Hough transforms or the more recent use of convolutional
@@ -555,6 +555,7 @@ As the characteristics of the SMPS have already been thoroughly studied in
 the Power lab\cite{powerLogbook}, they will not be reexamined here.
 
 \paragraph*{Battery Cells}
+\vspace{-6pt}
 To determine their behaviour, each cell was tracked through a full charge/discharge 
 cycle using the provided “Battery\_Charge\_Cycle\_Logged\_V1.1.ino” 
 code\cite{chargeCode}. Plotting the obtained data, all cells were found to 
@@ -593,6 +594,7 @@ have a higher capacity than others, which may have implications for the
 performance for certain battery configurations.
 
 \paragraph*{PV panels}
+\vspace{-6pt}
 The PV panels are rated for a maximum power of 1.15 W at a voltage of 
 5.0 V and current 230 mA. Away from the maximum power point, the performance 
 of the panels can be determined from their IV curves. To find the IV 
@@ -622,6 +624,7 @@ as the peak power for each of the panels is only $\sim$0.5 W.
 \subsubsection{Initial Design}
 
 \paragraph*{Battery Configuration}
+\vspace{-6pt}
 When designing the battery pack there are two principal choices that need to be 
 made. Firstly, how many cells should be in the battery pack and secondly, in 
 what manner should these cells be connected? 
@@ -723,6 +726,7 @@ large drawback, that despite the disadvantages of a series battery
 pack it is still deemed the best option.
 
 \paragraph*{PV Array Configuration}
+\vspace{-6pt}
 There are four ways in which the four PV panels can feasibly be connected. 
 The possible arrangements are shown in Figure~\ref{fig:arrayConfigurations}.
 
@@ -754,6 +758,7 @@ configuration. This leaves a purely parallel connected PV array as
 the only viable option, which is why it has been chosen. 
 
 \paragraph*{Maximum Power Point Tracking}
+\vspace{-6pt}
 The energy submodule only has access to a single SMPS device. At any time it 
 will therefore only be possible to either perform MPPT or have the PV power 
 be outputted at the correct current/voltage. This is not a problem, as the 
@@ -789,6 +794,7 @@ output current if the PV panels are operating in the region to the right of the
 maximum power point. Thus this is the region one would want the panels to operate in. 
 
 \paragraph*{State of Charge}
+\vspace{-6pt}
 The state of charge (SOC) of a battery is defined as the remaining usable charge 
 given as a percentage of the battery’s total charge capacity\cite{DICKINSON2009452}. There are many 
 methods for  estimating the SOC of a battery, the most common of which rely on 
@@ -820,6 +826,7 @@ are far more complex both computationally and in implementation. As such,
 Coulomb counting was deemed the best option for SOC estimation. 
 
 \paragraph*{State of Health}
+\vspace{-6pt}
 The state of health of a battery is a measure of its current condition and 
 performance compared to when it was new\cite{mpower}. Indicators of a battery’s 
 state of health include battery charge capacity, energy capacity, cell voltage 
@@ -842,6 +849,7 @@ battery is charged more or as charge current is reduced towards the end of a
 charge cycle.
 
 \paragraph*{Integration of the Energy Submodule}
+\vspace{-6pt}
 It is not necessary to physically integrate the energy module with 
 the full rover. However, if it were, the energy module could either 
 be integrated as a charging station or be mounted directly on the 
@@ -1463,7 +1471,7 @@ RPM is almost linear. This is confirmed in Figure \ref{graph: Output Voltage vs 
 
 %%%%%%%%%%%%%%%%Graph2 ends here%%%%%%%%%%%%%%%%%%%%%%%%
 \paragraph*{Commands}
-
+\vspace{-6pt}
 
 After finding the specifications the next step was to make a movable rover. 
 Initially, one crucial task to do was to simplify and ``connect''  the two 
@@ -1551,7 +1559,7 @@ accurate.
 
 
 \paragraph*{Controller}
-
+\vspace{-6pt}
 The voltage controller had some pre-set values. Using the trial and error method, 
 initially,  only one of the three variables of the PID controller was changed at 
 a time while the others remained set. Regarding the derivative controller, it 
@@ -1804,7 +1812,8 @@ to HSV is also more suited to hardware as it is a linear transform requiring onl
 multiplication. However, as it cannot represent the full RGB spectrum and is 
 limited in what colours it can represent, the decision was made to use the HSV. 
 
-\paragraph*{SystemVerilog Implementation} 
+\paragraph*{SystemVerilog Implementation}
+\vspace{-6pt}
 The division in this case has a 16 bit numerator and an 8 bit denominator, which
 would negatively affect the critical path if implemented as a single cycle/combinatorial
 divider, causing timing failures in the image processing stream as the processor 
@@ -1843,6 +1852,7 @@ location is recorded and marked out as a candidate pixel to be part of the objec
 it's bounding box. 
 
 \paragraph*{Colour Threshold Determination}
+\vspace{-6pt}
 
 In order to determine the colour thresholds for detecting each of the different 
 coloured balls, images from the camera were taken after adjusting the camera settings
@@ -1892,6 +1902,7 @@ that the image's data may be different in terms of RGB values from the raw RGB v
 that the camera is capturing.
 
 \paragraph*{Use of Pixel Location for Filtering}
+\vspace{-6pt}
 
 A purely colour based pixel approach to object detection has significant flaws unless
 the difference between the environment's colours and the object of interest's colours 
@@ -2177,6 +2188,7 @@ Lastly, to allow for flexibility of commands, a stop functionality was added whe
     \label{fig:circuitDiagram}
 \end{figure}
 \paragraph*{SMPS Configuration}
+\vspace{-6pt}
 The voltage of the series battery pack is higher than the voltage of 
 the parallel connected PV panels. The voltage of the PV array must 
 therefore be stepped up before it can be used for charging. The SMPS 
@@ -2188,6 +2200,7 @@ to emph{off} such that all power comes from the PV array and not
 from the USB connection powering the Arduino.
 
 \paragraph*{Measurements}
+\vspace{-6pt}
 Measurements of the circuit currents and voltages are used to track the 
 operation of the subsystem. During charging, the most important measurements 
 are the output voltage, the cell voltages, and the battery current.
@@ -2247,6 +2260,7 @@ big. Unfortunately, it was not possible to test this due to the ban
 on working with batteries.  
 
 \paragraph*{Controlling the SMPS}
+\vspace{-6pt}
 The dual loop controller from the sample charging code\cite{chargeCode} was 
 used as the starting point for the controller design. However, some 
 changes were necessary to accommodate other design choices. As previously 
@@ -2315,6 +2329,7 @@ is done and the state machine enters an idle state.
 \end{figure}
 
 \paragraph*{SOH and Cell Balancing}
+\vspace{-6pt}
 To monitor the battery’s SOH the charge capacity, energy capacity, 
 cell voltage balance, and the number of completed charge/discharge 
 cycles are all tracked. To retain the data between sessions, it was 
@@ -2354,6 +2369,7 @@ voltage difference of 200 mV, the balancing only takes about
 \end{figure}
 
 \paragraph*{MPPT}
+\vspace{-6pt}
 As previously discussed, the PV array should be operated in the region 
 where the current is lower than at the maximum power point. To ensure 
 this, the following algorithm was used. First, the duty cycle was set 
@@ -2420,6 +2436,7 @@ the remaining energy in the battery. The lookup table data is plotted
 in Figure~\ref{fig:lookup}.
 
 \paragraph*{Discharging}
+\vspace{-6pt}
 The energy module is also tasked with keeping track of the SOC and SOH 
 during discharging. This was done using the same algorithms as 
 during charging. In addition the battery power was continually 
@@ -2433,6 +2450,7 @@ array will be a good approximation even after many battery cycles
 as the battery performance starts to deteriorate.
 
 \paragraph*{Communicating with Other Modules}
+\vspace{-6pt}
 Though it is not necessary to fully integrate the energy module with 
 the rest of the rover, other submodules, specifically command, needs 
 access data such as the battery SOH, SOC and remaining energy. For 
