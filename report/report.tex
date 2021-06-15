@@ -180,7 +180,7 @@ The Control module within the context of the rover has one main goal:
 \textbf{to act as the communication hub between all the subsystems, delivering
 the relevant data where it is required to allow for the rover to integrate
 as a whole} \cite{MarsRoverSpec}.  These functional requirements can be 
-obtained from the Functional Design diagram for control, see Figure \ref{fig:ControlFunctional}, outlining all the 
+obtained from the functional design diagram for control, see Figure \ref{fig:ControlFunctionalDiagram}, outlining all the 
 data flow for the Control subsystem. There are a couple of core objectives 
 which must be achieved in order to fulfil this role as outlined below:
 
@@ -251,7 +251,7 @@ instantiate communication with one another as controllers.
 \subsubsection{Initial Design Choices} 
 
 There are many options available for programming the ESP32. Due to the 
-lax requirements with regards to communication, it was quickly determined 
+relaxed requirements with regards to communication, it was quickly determined 
 that the Arduino IDE and supporting libraries for the ESP32 would be 
 enough for developing what is necessary. As there are stringent practices 
 for the base Arduino Libraries and ESP8266 Libraries, this was extended 
@@ -288,14 +288,14 @@ ensuring the data does reach its destination. Speed by comparison is a
 less stringent requirement and as such, UDP was discarded as a choice
 \cite{TCPvsUDP}.
 
-For both Drive and Energy, the Arduino Nano Everything provided by the 
+For both Drive and Energy, the Arduino Nano Every provided by the 
 project organisers had it’s UART ports exposed through the specific 
 hardware and it’s connections. As such, there was little need for 
 deliberation over the protocol being used \cite{ArduinoSerial}. The 
 peripheral chosen for both these groups was UART. For the Energy 
 submodule specifically, since it can’t be integrated into the Rover 
 physically, it was decided that any necessary data would be transmitted 
-directly to Command. This is through the UART USB connection from the 
+directly to Command. This is done through the UART USB connection from the 
 Arduino to the computer, which would then communicate with Command over 
 TCP. However, to ensure Energy can be integrated if necessary, one UART 
 port for the ESP32 was set aside for Energy.
@@ -419,7 +419,7 @@ core requirements that are listed below:
 
 \paragraph*{Hardware Organisation}
 
-The Vision module comprises of two main hardware elements: 
+The Vision module is comprised of two main hardware elements: 
     the Terasic DE10-Lite, a cost-effective Intel MAX 10 based FPGA board 
     \cite{TerasicDE10Web} 
     and the Terasic D8M-GPIO camera package that has a OV8865 image sensor \cite{TerasicD8MWeb}
@@ -549,7 +549,7 @@ The energy submodule must:
 
 \subsubsection{Characterising Components}
 The energy system consists of three main components: the battery cells, the 
-PV panels and the SMPS. To ensure that appropriate design choices are made 
+PV panels and the SMPS. To ensure that appropriate design choices are made, 
 it is necessary to determine the behaviour and limitations of these components.
 
 \paragraph*{Battery Cells}
@@ -563,13 +563,13 @@ shows the voltage evolution of a battery cell for a full discharge/charge cycle.
     \centering
     \includegraphics[scale=0.22]{Charge_Cycle2.png}
     \caption{The voltage evolution of a battery cell through a full discharge/charge cycle. The
-    cell is fully charged at 200 s and 16000s and fully discharged at 8000s.}
+    cell is fully charged at 200s and 16000s and fully discharged at 8000s.}
     \label{fig:charge_cycle}
 \end{figure}
 
 In addition to logging the cell voltage, the provided charging algorithm also 
 logs the charging current. By integrating said current for a full charge or 
-discharge section we can determine a cells capacity in mAh. The results from 
+discharge section we can determine a cell's capacity in mAh. The results from 
 performing this analysis on each cell are shown in table \ref{table:1}:
 
 \vspace{5pt}
@@ -592,7 +592,7 @@ performance for certain battery configurations.
 
 \paragraph*{PV panels}
 The PV panels are rated for a maximum power of 1.15 W at a voltage of 
-5.0 V and current 230 mA. Away from the maximum power point the performance 
+5.0 V and current 230 mA. Away from the maximum power point, the performance 
 of the panels can be determined from their IV curves. To find the IV 
 curves, each panel was connected on the B-side of the SMPS operating 
 in non-synchronous boost. They were then lit by the lamp and the duty 
@@ -618,20 +618,17 @@ Moreover, it is clear that the provided lamp activates the panels poorly
 as the peak power for each of the panels is only $\sim$0.5 W.
 
 \paragraph*{SMPS}
-\begin{wrapfigure}[12]{r}[0pt]{0.5\textwidth}
-    \centering
-    \raisebox{0pt}[\dimexpr\height-3\baselineskip\relax]{%
-        \includegraphics[trim=0pt 0pt 0pt 0pt,width=0.48\textwidth]{Boost_efficiency_wduty.png}
-    }%
-    \vspace{-5pt}
-    \caption{SMPS efficiency versus output current with input voltage of 5V\cite{powerLogbook}}
-    \label{fig:efficiency}
-\end{wrapfigure}
+
 The SMPS is rated for 10 W throughput with a maximum boost output voltage 
 of 35 V and maximum output current of 10 A\cite{SMPS_lab}. These ratings 
 are far higher than what is needed to charge the battery and are not 
 expected to impose limitations on the design of the energy module. 
-
+\begin{wrapfigure}{r}{0.5\textwidth}
+    \centering
+    \includegraphics[width=0.48\textwidth]{Boost_efficiency_wduty.png}
+    \caption{SMPS efficiency versus output current with input voltage of 5V\cite{powerLogbook}}
+    \label{fig:efficiency}
+\end{wrapfigure}
 The many characteristics of the SMPS have been thoroughly examined in 
 2nd year labs. However, for the energy submodule the most important 
 characteristic will be the SMPS efficiency during non-synchronous 
@@ -922,13 +919,13 @@ Command was still in very early stages, a python-based TCP server was created.
 When running, it would take the text put into the terminal and send it 
 to the ESP32 while displaying the messages incoming from the ESP32. 
 The ESP32 was configured to echo back all messages. Through this 
-simple system, the connection was successfully implemented by debugging
- the connection and the messages being sent back and forth. Once the 
- Command Web server was nearing completion, this process was tested, 
- with commands being sent from the server and data being sent from the 
- ESP32. As prior individual testing on either side was extremely 
- effective, there was little to no extra fixes required for this 
- connection to function as intended.
+simple system, the connection was successfully implemented by debugging 
+the connection and the messages being sent back and forth. Once the 
+Command web server was nearing completion, this process was tested, 
+with commands being sent from the server and data being sent from the 
+ESP32. As prior individual testing on either side was extremely 
+effective, there was little to no extra fixes required for this 
+connection to function as intended.
 
 \subsubsection{Drive Communication}
 
@@ -1067,7 +1064,7 @@ client could initialise communication.
 
 \begin{figure}[H]
 	\begin{Center}
-		\includegraphics[width = \linewidth]{./images/WebSocket.png}
+		\includegraphics[width = 0.7\linewidth]{./images/WebSocket.png}
 		\caption{Backend WebSocket code}
         \label{fig:websocketServer}
 	\end{Center}
@@ -1075,7 +1072,7 @@ client could initialise communication.
 
 \begin{figure}[H]
 	\begin{Center}
-		\includegraphics[width = \linewidth]{./images/SocketClient.png}
+		\includegraphics[width = 0.7\linewidth]{./images/SocketClient.png}
 		\caption{Frontend WebSocket code}
         \label{fig:websocketClient}
 	\end{Center}
@@ -1169,7 +1166,7 @@ by drawing grey rectangles on the map.
 
 \begin{figure}[H]
 	\begin{Center}
-		\includegraphics[width = \linewidth]{./images/DrawObstacle.png}
+		\includegraphics[width = 0.4\linewidth]{./images/DrawObstacle.png}
 		\caption{Code for Drawing Obstacles on the Map}
         \label{fig:drawobstaclecode}
 	\end{Center}
@@ -1225,20 +1222,24 @@ base.
 \subsubsection{Automated Driving}
 
 \begin{figure}[H]
-	\begin{Center}
-		\includegraphics[width = \linewidth]{./images/DeterministicPath.png}
+    \centering
+    \begin{minipage}{.3\textwidth}
+      \centering
+      \includegraphics[width = 0.7\linewidth]{./images/DeterministicPath.png}
 		\caption{Deterministic Path for Automated Driving}
         \label{fig:deterministicpath}
-	\end{Center}
-\end{figure}
-
-\begin{figure}[H]
-	\begin{Center}
-		\includegraphics[width = \linewidth]{./images/AutomatedDriving.png}
+    \end{minipage}\hfill
+%%%%%%%%%%%%%%%%%%%% Figure/Image No: 3 starts here %%%%%%%%%%%%%%%%%%%%
+    \begin{minipage}{.7\textwidth}
+      \centering
+      \includegraphics[width = 0.7\linewidth]{./images/AutomatedDriving.png}
 		\caption{Automated Driving code}
         \label{fig:automateddriving}
-	\end{Center}
+    \end{minipage}
 \end{figure}
+
+
+
 
 Generally, the web server would command the rover to follow a deterministic path until it finds all the obstacles. The deterministic 
 path is shown in Figure ~\ref{fig:deterministicpath}, the red circle indicates the starting position of the rover and the arrows represent the rover’s movement. 
@@ -2072,7 +2073,7 @@ The good communication and will to work hard that was shared by all the team mem
 \subsubsection{Drive}
 Having an accurate and reliable driving system was the first important milestone for this project as it is the means of the Rover to navigate its environment.
 The first test done to ensure that was measuring fixed distances traversed by the Rover and calibrating the optical flow sensor using the sample code. The testing procedure was fairly simple but produces consistent results.
-By using some fixed tiles on the floor that have a dimension of \(25cm\times 25cm\). By using these I could measure how accurate the Rover moves and rotates and also minimizing human errors that would arise if the reference distance and angle was not in place. 
+By using some fixed tiles on the floor that have a dimension of \(25cm\times 25cm\), I could measure how accurate the Rover moves and rotates and also minimizing human errors that would arise if the reference distance and angle was not in place. 
 The first problem that arose was an error in distances greater than \(20cm\) where there was a sudden sign change  in the measured distance of the sensor.
 \begin{figure}[H]
     \centering
@@ -2083,7 +2084,7 @@ The first problem that arose was an error in distances greater than \(20cm\) whe
 As it can be seen in Figure \ref{image:Overflow of Distance} the distance measured went from \(201mm\) to \(-207mm\) which indicated a bug. I communicated my findings with the member that 
 was in charge of Driving and we concluded that it is an overflow caused by the multiplication operations of the code which can be easily fixed by prioritising divisions.
 
-After having received the fixed code and continuing testing it was concluded that the floor material affects the optical flow sensor's accuracy greatly. Trial and Error showed that the best floor material in the area of testing operations was wood which gave the most reliable readings.
+After having received the fixed code and continuing testing, it was concluded that the floor material affects the optical flow sensor's accuracy greatly. Trial and Error showed that the best floor material in the area of testing operations was wood which gave the most reliable readings.
 Having a proof of concept is crucial when deciding to move to more complex operations for the system and during the initial testing of the Drive module, it was concluded that it had a good accuracy that would be essential for the later stage of mapping the balls.
 
 When trying to measure considerably bigger distances with the Rover, it was identified that the strain from the cables connected could impose some considerable torques on the system which could result in inaccuracies.
@@ -2116,7 +2117,7 @@ After ensuring UART functionality, a more complex program was implemented to all
     \centering
     \includegraphics[scale=0.3]{./images/Command_decoder.png}
     \caption{Command decoder}
-    \label{image:Code flashed on Arduino}
+    \label{image:CommandDecoder}
  \end{figure}
  The command structure was fairly simple and not resource heavy. The Rover does a series of rotations and movements. The starting character of a command is \("["\) which allows the system to identify the start of a command being transmitted by Control. To move the Rover a transmitted character should be \(M\) and after that the speed should be identified using a character between \("A-E"\) with \("A"\) being the fastest available option and \("E"\) the slowest.
 Because rotations are the only other option, an arbitrary character can be used accompanied with the angle of rotation. The code also handles signs denoting direction of rotation and movement.
@@ -2126,7 +2127,7 @@ Lastly, to allow for flexibility of commands, a stop functionality was added whe
     \centering
     \includegraphics[scale=0.5]{./images/Stop_functionality.png}
     \caption{Stop functionality}
-    \label{image:Code flashed on Arduino}
+    \label{image:Stopfunctionality}
  \end{figure}
 
  \subsubsection{Vision}
@@ -2137,7 +2138,7 @@ Lastly, to allow for flexibility of commands, a stop functionality was added whe
     was tinted yellow and there was no way of adjusting for that. 
 
     After researching the camera, and going through the OV8865's datasheet, \cite{OV8865DataSheet} it was discovered
-    that white balance - the gains of the Red, Green and Blue pixels could be individual manipulated
+    that white balance - the gains of the Red, Green and Blue pixels could be individually manipulated
     and manually calibrated. By testing these values with trial and error in conjunction with the 
     MATLAB Colour Threshold Tool, a set of gains were found that maximised the colour detection and
     reduced the number of false positives in the bounding box detection. This fixed the problem that 
@@ -2146,7 +2147,7 @@ Lastly, to allow for flexibility of commands, a stop functionality was added whe
     It was also noted in 
     initial testing that the corners of the camera were darker and dimmer than the rest 
     of the image, leading to difficulties in detecting objects that were in the corner
-    of the frame due to different HSV values. This is a commonly seen phenomenon known as vignetting
+    of the frame due to different HSV values. This is a commonly seen phenomenon known as vignetting.
     Although to the human eye, this may seem
     like a minor problem, for a computer vision algorithm, it can have highly detrimental 
     effects. \cite{zheng2008single} While also looking through the camera datasheet, 
@@ -2158,7 +2159,7 @@ Lastly, to allow for flexibility of commands, a stop functionality was added whe
     of the frame. Due to time constraints, the algorithm was not manually tuned to achieve
     the best results. 
     
-    During Integration testing, it was realised that because of the lengthy procedures the sunlight was affecting the testing environment differently
+    During Integration testing, it was realised that because of the lengthy procedures, the sunlight was affecting the testing environment differently
     throughout the day. To accommodate for that, many calibrations were done based on how dark or lit the testing environment was.
     \begin{figure}[H]
         \centering
@@ -2167,13 +2168,13 @@ Lastly, to allow for flexibility of commands, a stop functionality was added whe
         \vspace{-10pt}
         \caption{From left to right: sunlight example, room lighting.}
         \vspace{-10pt}
-        \label{image:UART}
+        \label{image:sunlight}
     \end{figure}
     One more important measurement done during Integration testing was an accurate measurement of the distances of balls from the camera. This was done 
     so that these values could be used to tune a model that approximates the \(x\) and \(y\) distances of the balls relative to the camera. An accurate method 
     of measurement is using a flat surface with a reference straight line which is used to accurately place two pieces of red tape to represent the \(x\) and \(y\) axis. 
     Then, the rover is placed directly in the middle and the camera is set at a perfect 90 degree angle relative to the floor which is done by using 2 triangles, one to ensure that the y axis is aligned with the camera len's center, and one more to align the camera with the x axis.
-    After ensuring that, the x and y components of the balls are projected to the red tapes and then are measured. The measurements combined with the raw image of the camera were given to the Vision module. This procedure was done multiple times and was improved upon throughout the course of the project, and due to the good communication with the Vision team member, an accurate model of distance approximation was made as shown in the video demo.
+    After ensuring that, the x and y components of the balls' position are projected to the red tapes and then are measured. The measurements combined with the raw image of the camera were given to the Vision module. This procedure was done multiple times and was improved upon throughout the course of the project, and due to the good communication with the Vision team member, an accurate model of distance approximation was made as shown in the video demo.
     \begin{figure}[H]
         \centering
         \includegraphics[scale=0.08]{./images/Ball_measurement.jpg}
@@ -2494,7 +2495,7 @@ especially when trying to track down the origin of a bug and what caused it.
 
 There were different structures for communication during the designing phase 
 and testing phase of the product. During the designing phase, there was a lot 
-of one-on-one communication with other subteams to try to determine the functional 
+of one-on-one communication with other sub teams to try to determine the functional 
 requirements and design aspects which involved more than one subsystem. This 
 was vital to try to limit time spent on researching topics which had been 
 researched by other team members while establishing a framework for the project 
