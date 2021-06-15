@@ -151,7 +151,7 @@ contains our design process for the rover, how it was implemented and challenges
 		
         \label{fig:StructuralDesignDiagram}
 	\end{Center}
-\end{figure}
+\end{figure} 
 
 The structural design of the Rover as shown in Figure \ref{fig:StructuralDesignDiagram}, shows
 the 5 main subsystems of the rover together with their main hardware components. 
@@ -168,7 +168,7 @@ implementation.
 
 \begin{figure}[H]
 	\begin{Center}
-		\includegraphics[width = \linewidth]{./media/ControlFunctional.pdf}
+		\includegraphics[width = 0.7\linewidth]{./media/ControlFunctional.pdf}
 		\caption[Functional Design Diagram showing Dataflow for Control Subsystem]{\protect\raggedright Functional Design Diagram showing Dataflow for Control Subsystem}
         \label{fig:ControlFunctionalDiagram}
 	\end{Center}
@@ -1050,18 +1050,13 @@ client could initialise communication.
 \begin{figure}[H]
 	\begin{Center}
 		\includegraphics[width = 0.7\linewidth]{./images/WebSocket.png}
-		\caption{Backend WebSocket code}
+        \includegraphics[width = 0.7\linewidth]{./images/SocketClient.png}
+		\caption{WebSocket code with Server Side on Top and Client Side Below}
         \label{fig:websocketServer}
 	\end{Center}
 \end{figure}
 
-\begin{figure}[H]
-	\begin{Center}
-		\includegraphics[width = 0.7\linewidth]{./images/SocketClient.png}
-		\caption{Frontend WebSocket code}
-        \label{fig:websocketClient}
-	\end{Center}
-\end{figure}
+
 
 Figure ~\ref{fig:websocketServer} shows how WebSocket was implemented on the server 
 side by using the “socket-io” Javascript module. \cite{WebSocketAPI} The server function is triggered 
@@ -1078,7 +1073,7 @@ it was important to ensure that it is securely connected to the backend through 
 the entire usage time of the web application and that it reacts to incoming data from the server 
 instantly and updates the webpages. Therefore, a const variable “Socket” which connects to the 
 backend was exported to App which was a function rendered to show the website. The client side WebSocket implementation 
-is shown in Figure ~\ref{fig:websocketClient}. App decided which 
+is shown in Figure ~\ref{fig:websocketServer}. App decided which 
 components are shown on each webpage so as the frontend receives data through WebSocket, App could 
 pass the received data to a webpage where the data was visualised. 
 
@@ -1149,13 +1144,13 @@ by drawing grey rectangles on the map.
 	\end{Center}
 \end{figure}
 
-\begin{figure}[H]
+\begin{wrapfigure}{r}{0.5\textwidth}
 	\begin{Center}
-		\includegraphics[width = 0.4\linewidth]{./images/DrawObstacle.png}
+		\includegraphics[width = 0.9\linewidth]{./images/DrawObstacle.png}
 		\caption{Code for Drawing Obstacles on the Map}
         \label{fig:drawobstaclecode}
 	\end{Center}
-\end{figure}
+\end{wrapfigure}
 
 Figure ~\ref{fig:drawpathcode} shows the function used to draw the grey rectangles and represent the 
 rover’s movement. To accurately represent the rover’s movement on the map, several global variables that represent the 
@@ -1275,13 +1270,22 @@ the following formula was used: \( RPM=\frac{60}{T} \)
 %%%%%%%%%%%%%%%%%%%% Figure/Image No: 1 starts here %%%%%%%%%%%%%%%%%%%%
 
 \begin{figure}[H]
-\begin{Center}
-\advance\leftskip 0.23in		
-    \includegraphics[width=5.06in,height=2.02in]{./media/image2.png}
-	\caption{Shows the spikes that correspond to a period(T)}
-		\label{Shows the spikes that correspond to a period(T)}
-\end{Center}
+    \centering
+    \begin{minipage}{.55\textwidth}
+        \centering
+        \includegraphics[height=1.4in]{./media/image2.png}
+        \caption{Shows the spikes that correspond to a \\period(T)}
+        \label{Shows the spikes that correspond to a period(T)}
+    \end{minipage}\hfill
+    \begin{minipage}{.35\textwidth}
+        \centering
+        \includegraphics[height=1.7in]{./media/image1.jpeg}
+		\caption{Equipment Setup for \\ Measuring RPM}
+		\label{figDuring_the_process_of_recording}
+    \end{minipage}
 \end{figure}
+
+
 
 
 %%%%%%%%%%%%%%%%%%%% Figure/Image No: 1 Ends here %%%%%%%%%%%%%%%%%%%%
@@ -1291,13 +1295,6 @@ the following formula was used: \( RPM=\frac{60}{T} \)
 
 %%%%%%%%%%%%%%%%%%%% Figure/Image No: 2 starts here %%%%%%%%%%%%%%%%%%%%
 
-\begin{figure}[H]
-	\begin{Center}
-		\includegraphics[width=2.16in,height=3.15in]{./media/image1.jpeg}
-		\caption{Equipment Setup for Measuring RPM}
-		\label{figDuring_the_process_of_recording}
-	\end{Center}
-\end{figure}
 
 
 %%%%%%%%%%%%%%%%%%%% Figure/Image No: 2 Ends here %%%%%%%%%%%%%%%%%%%%
