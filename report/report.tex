@@ -901,8 +901,8 @@ Command was still in very early stages, a python-based TCP server was created.
 When running, it would take the text put into the terminal and send it 
 to the ESP32 while displaying the messages incoming from the ESP32. 
 The ESP32 was configured to echo back all messages. Through this 
-simple system, the connection was successfully implemented by d
-ebugging the connection and the messages being sent back and forth.
+simple system, the connection was successfully implemented by debugging
+ the connection and the messages being sent back and forth.
 
 \subsubsection{Drive Communication}
 
@@ -979,7 +979,7 @@ Command for mapping and detecting obstacles.
  
 Although the communication between peer devices was successfully set
 up and tested, there was still a small challenge. To be able to
-ncorporate all communication such that it could occur simultaneously and
+incorporate all communication such that it could occur simultaneously and
 effectively, with as limited of a delay as possible. In order to achieve
 this, it was noted that the UART and TCP communication between devices
 are always held within internal buffers and as such there is no need to
@@ -1052,7 +1052,7 @@ the following formula was used: \( RPM=\frac{60}{T} \)
 \begin{figure}[H]
 	\begin{Center}
 		\includegraphics[width=2.16in,height=3.15in]{./media/image1.jpeg}
-		\caption{During the recording process}
+		\caption{Equipment Setup for Measuring RPM}
 		\label{figDuring_the_process_of_recording}
 	\end{Center}
 \end{figure}
@@ -1640,7 +1640,9 @@ However, the accuracy of the colour threshold is not perfect for several reasons
 Firstly, even though the HSV colour scheme is used to reduce the effect of illumination, 
 the differences in light as the rover approaches the table-tennis balls from different angles
 can vary by a large amount, causing differences in the H and S channels, 
-hence multiple pictures have to be used for this calibration step. 
+hence multiple pictures have to be used for this calibration step. This is also
+because the materials used for the construction of the ping pong balls have a specular 
+reflectance that causes non-uniform colour dependent on the angle of the light. 
 Secondly, as the pictures being used for calibration are from the 4-bit VGA output, 
 the output image's colour spectrum is reduced compared to the colour that can be
  ``seen'' by the camera is the full 24-bit colour, that has much more depth and 
@@ -1745,17 +1747,6 @@ balls that were closer to the camera.
 These calculations for the coefficients were carried out in MATLAB, and then 
 implemented in C to be run on the Nios\textsuperscript{\textregistered} II processor. 
 
-This method is satisfactory in its performance, with a worst case error of \(\pm5\unit{cm}\)
-in difference between calculated position and actual position when the bounding box is accurately detected. 
-For the rover's path finding algorithm, this is a value that is easily taken into account and as
-multiple measurements of the ball are taken, the actual position can be refined 
-and more accurately determined by taking the average of multiple readings in the 
-Command module in the server. This also solves the problem of when a ball is not 
-fully in the frame of the camera or not fully detected by the object detector,
-as the rover is moving, all objects should eventually come into frame fully and 
-not be cut off by the sides of the view or receive a better view of the object 
-leading to a better bounding box and hence distance calculation. 
-
 The Nios\textsuperscript{\textregistered} II processor does not include floating point hardware by default, but as 
 this algorithm requires floating point calculations as some of the coefficients 
 tend to be very small, and this algorithm is run for each set of colours, it was
@@ -1767,10 +1758,24 @@ instruction and a floating point add to 5 cycles\cite{NiosIICustomInstruction}.
 If this hardware was not used, it would be implemented using software, and hence
 would take multiple instructions and more hence more cycles. 
 
-This algorithm's performance is satisfactory in the current testing environment, 
+This method is satisfactory in its performance, with a worst case error of \(\pm5\unit{cm}\)
+in difference between calculated position and actual position when the bounding box is accurately detected. 
+For the rover's path finding algorithm, this is a value that is easily taken into account and as
+multiple measurements of the ball are taken, the actual position can be refined 
+and more accurately determined by taking the average of multiple readings in the 
+Command module in the server. This also solves the problem of when a ball is not 
+fully in the frame of the camera or not fully detected by the object detector,
+as the rover is moving, all objects should eventually come into frame fully and 
+not be cut off by the sides of the view or receive a better view of the object 
+leading to a better bounding box and hence distance calculation. 
+Additionally, this algorithm's performance is ideal in the current testing environment, 
 but if tested on a surface with changing gradients or elevated objects, this algorithm
 would be inaccurate due to it's inability to take into account objects on the real
 world z-axis (i.e. the height of an object relative to the plane).
+
+
+
+
 
 \subsubsection{Image Transfer over SPI}
 
@@ -1796,13 +1801,7 @@ transmission should stop. The FIFO used is a dual-clock FIFO that uses the main 
 clock and the sck provided by the SPI controller is used as the clock for the read.  
 
 
-\subsection{Integration}
 
-\begin{comment}
-    Could write about how we had to tune data for different lighting conditions, 
-    taking pictures from different angles to compare how the objects looked in 
-    different lighting, and changing the threshold values. 
-\end{comment}
 
 %Start of energy implementation
 \subsection{Energy}
@@ -2054,6 +2053,43 @@ sent. What data do we send?
 %End of implementation section
 
 \section{Evaluation and Conclusion}
+\subsection{Testing}
+
+
+    When testing the image processing and the Vision module, the camera had to 
+    be recalibrated to match the testing enviroment. Initially, the only configurable
+    parameters were the HSV thresholds as described in section 4.4.3, the exposure and
+    the gain settings. This resulted in unsatisfactory performance as the testing enviroment
+    was tinted yellow and there was no way of adjusting for that. 
+
+    After researching the camera, and going through the OV8865's datasheet, it was discovered
+    that white balance - the gains of the Red, Green and Blue pixels could be individual manipulated
+    and manually calibrated. By testing these values with trial and error in conjunction with the 
+    MATLAB colour threshold tool, a set of gains were found that maximised the colour detection and
+    reduced the number of false positives in the bounding box detection. This fixed the problem that 
+    had occurred due to the tint of the room. 
+
+    It was also noted in 
+    initial testing that the corners of the camera were darker and dimmer than the rest 
+    of the image, leading to difficulties in detecting objects that were in the corner
+    of the frame due to different HSV values. This is a commonly seen phenomenon known as vignetting
+    Although to the human eye, this may seem
+    like a minor problem, for a computer vision algorithm, it can have highly detrimental 
+    effects. \cite{zheng2008single} While also looking through the camera datasheet, 
+    we realised that the OV8865 had a built in lens correction function that was not initially
+    used. The lens correction algorithm on the OV8665 compensates for the vignetting effect by 
+    calculating a gain for each pixel and correcting each pixel to compensate for the illumination
+    drop off. \cite{OV8865DataSheet} By turning this on and using the default settings, 
+    the problem was reduced and there was better illumination and colour pickup in the corners
+    of the frame. Due to time constraints, the algorithm was not manually tuned to achieve
+    the best results. 
+
+
+\begin{comment}
+    Could write about how we had to tune data for different lighting conditions, 
+    taking pictures from different angles to compare how the objects looked in 
+    different lighting, and changing the threshold values. 
+\end{comment}
 
 \section{Project Management and Organisation}
 %Also had frequent teams meetings and used WhatsApp
