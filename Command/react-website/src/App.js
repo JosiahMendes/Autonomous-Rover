@@ -8,6 +8,7 @@ import Command from './components/pages/Command';
 import Power from './components/pages/Power';
 import Socket from './components/Socket';
 import {Rect, Circle} from 'react-konva';
+import ReactDOM from 'react-dom';
 
 const roverWidth = 25;
 var global_angle = 0;
@@ -21,6 +22,7 @@ var stageY = 0;
 var stageWidth = window.innerWidth;
 var stageHeight = window.innerHeight*3/4;
 
+/*
 function paths(roverPath, totalAngle, angleDistance, pos, color) {
   //var scale = 5;
   //var height = angleDistance[1]/scale;
@@ -36,6 +38,23 @@ function paths(roverPath, totalAngle, angleDistance, pos, color) {
   currPos_backend = [Number(currPos_backend[0]) - Number(angleDistance[1])*sine,
               Number(currPos_backend[1]) + Number(angleDistance[1])*cosine];
   return [roverPath, finalAngle, newPos];
+}
+*/
+
+function paths(angleDistance, color) {
+  var height = Number(roverWidth) + Number(angleDistance[1]);
+  var finalAngle = Number((Number(global_angle)+Number(angleDistance[0]))%360);
+  if(angleDistance[1] !== 0) {
+    roverPath.push(<Rect x={currPos[0]} y={currPos[1]} width={roverWidth} height={height} 
+      fill={color} rotation={finalAngle} offsetX={roverWidth/2} offsetY={roverWidth/2}/>);
+  }
+  var sine = Math.sin(Math.PI/180*finalAngle);
+  var cosine = Math.cos(Math.PI/180*finalAngle);
+  currPos = [Number(currPos[0]) - Number(angleDistance[1])*sine, 
+              Number(currPos[1]) + Number(angleDistance[1])*cosine];
+  currPos_backend = [Number(currPos_backend[0]) - Number(angleDistance[1])*sine,
+              Number(currPos_backend[1]) + Number(angleDistance[1])*cosine];
+  global_angle = Number(finalAngle);
 }
 
 function drawObstacle(obstacle, pos, angle) {
@@ -59,33 +78,56 @@ function drawObstacle(obstacle, pos, angle) {
     default:
       //
   };
-  var xpos = obstacle[1][0]*Math.cos(angle*Math.PI/180) - obstacle[1][1]*Math.sin(angle*Math.PI/180);
-  var ypos = obstacle[1][0]*Math.sin(angle*Math.PI/180) + obstacle[1][1]*Math.cos(angle*Math.PI/180);
-  obstacleSet.push(<Circle x={pos[0]+xpos} y={pos[1]+ypos} radius={2.5} fill={color}/>);
+  var xpos = obstacle[1][0]*Math.cos(angle*Math.PI/180) 
+              - obstacle[1][1]*Math.sin(angle*Math.PI/180);
+  var ypos = obstacle[1][0]*Math.sin(angle*Math.PI/180) 
+              + obstacle[1][1]*Math.cos(angle*Math.PI/180);
+  obstacleSet.push(<Circle x={pos[0]+xpos} y={pos[1]+ypos} 
+                    radius={15} fill={color}/>);
 }
 
 function App() {
   
   const [batteryLevel, setBattery] = useState(["unknown","unknown","unknown","unknown"]);
+  const [energyData1, setEnergyData1] = useState([["unavailable","unavailable","unavailable","unavailable"],"unavailable","unavailable"]);
+  const [energyData2, setEnergyData2] = useState(["unavailable","unavailable","unavailable"]);
   useEffect(() => {
-    Socket.on('BatteryLevel', data => {
-      for(let i = 0; i < data.length; i++) {
-        data[i] = Number(data[i]);
-      }
-      setBattery(data);
+    Socket.on('EnergyData1', data => {
+      setEnergyData1(data);
     });
   }, []);
-  const [angleDistanceSet, setAngleDistance] = useState([0,0]);
+  useEffect(() => {
+    Socket.on('EnergyData2', data => {
+      setEnergyData2(data);
+    });
+  }, []);
+  //const [angleDistanceSet, setAngleDistance] = useState([0,0]);
   useEffect(() => {
     Socket.on('AngleDistance', data => {
-      setAngleDistance(data);
+      console.log("AngleDistance from server: %s", data);
+      //setAngleDistance(data);
+      paths(data, "grey");
+      if(currPos[0] < -stageX) {
+        stageX = stageX - currPos[0] + 100;
+        stageWidth = stageWidth - currPos[0] + 100;
+      } else if(currPos[0] > stageWidth + stageX) {
+        stageWidth = currPos[0] + 100;
+      }
+      if(currPos[1] < -stageY) {
+        stageY = stageY - currPos[1] + 100;
+        stageHeight = stageHeight - currPos[1] + 100;
+      } else if(currPos[1] > stageHeight + stageY) {
+        stageHeight = currPos[1] + 100;
+      }
+      //this.setState({});
     })
   }, []);
   const [obstacle, setObstacle] = useState(["unknown",[0,0]]);
   useEffect(() => {
     Socket.on("Obstacle", data => {
+      console.log("obstacle detected: %s", data);
       setObstacle(data);
-      drawObstacle(obstacle, currPos, global_angle);
+      drawObstacle(data, currPos, global_angle);
     });
   });
   useEffect(() => {
@@ -94,7 +136,8 @@ function App() {
     });
   }, []);
 
-  [roverPath, global_angle, currPos] = paths(roverPath, global_angle, angleDistanceSet, currPos, "grey");
+  //[roverPath, global_angle, currPos] = paths(roverPath, global_angle, angleDistanceSet, currPos, "grey");
+  /*
   if(currPos[0] < -stageX) {
     stageX = stageX - currPos[0] + 100;
     stageWidth = stageWidth - currPos[0] + 100;
@@ -107,6 +150,7 @@ function App() {
   } else if(currPos[1] > stageHeight + stageY) {
     stageHeight = currPos[1] + 100;
   }
+  */
   return (
     <>
     <Router>
@@ -122,7 +166,7 @@ function App() {
           <Command {...props} />
         )} />
         <Route path='/power' render={(props) => (
-          <Power {...props} batteryLevel={batteryLevel}/>
+          <Power {...props} cell={energyData1[0]} energyLeft={energyData1[1]} energyFull={energyData1[2]} chargingCycle={energyData2[0]} currentCapacity={energyData2[1]} maxCapacity={energyData2[2]}/>
         )} />
       </Switch>
     </Router>
