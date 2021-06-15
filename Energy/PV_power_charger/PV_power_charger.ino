@@ -196,9 +196,9 @@ void loop() {
 
       //Sample output and currents 
       I_in =  (ina219.getCurrent_mA()); //Measure input current [mA]
-      V_out = analogRead(A0)*(4096/1023.0)*5/1.08; //Calculate output voltage [mV]
+      V_out = analogRead(A0)*(4096/1023.0)*4.5; //Calculate output voltage [mV]
       I_out = -I_in * (1 - duty_cycle); //Calculate output current [mA]
-      I_bat = I_out - float(V_out/990); //Calculate current through batteries [mA]
+      I_bat = I_out - float(V_out/890); //Calculate current through batteries [mA]
       
       
       //Check whether we should enter an error state
@@ -371,11 +371,15 @@ void loop() {
                 next_state = 0;
               }else if(min_cell < 3600 or I_setpoint > 30){ //If not done balancing stay in balancing state
                 next_state = 2;
-                if (max_cell > 3630 and I_setpoint > 0 or I_setpoint > max_power / V_out){ //If the 
+                balancing(); //Switch on the relevant balancing resistors 
+
+                //Adjust current to keep maximum cell voltage in desired range
+                if (max_cell > 3630 and I_setpoint > 0 or I_setpoint > max_power / V_out){
                   I_setpoint -= 0.5;
                 }else if(max_cell < 3600 and I_setpoint < 250 and I_setpoint < max_power / V_out){
                   I_setpoint += 0.5;
                 }
+                
               }else{ //If done balancing move to charge rest
                 next_state = 3; //Go to charge rest
                 SOH[1]++;//We have now finished a charge cycle so add 1 to SOH[1]
@@ -448,9 +452,9 @@ void loop() {
           current_ref = 0;
         }
         
-        if(int_count == 25){ //Once a second do balancing stuff, only done once a second due to low update frequency of cell voltages
+        /*if(int_count == 25){ //Once a second do balancing stuff, only done once a second due to low update frequency of cell voltages
           balancing();
-        }
+        }*/
   
         break;
       }
@@ -474,8 +478,7 @@ void loop() {
 
 //Balances the cell voltages
 void balancing(){
-
-  //If cell voltage is more than 50 mV larger than cell_min we turn on dis
+  //If cell voltage is too high, set dis input high
   for(int i = 0; i < 4; i++){
     if(V_cell[i] > 3600){
       digitalWrite(dis_order[i],true); //Turn on dis
@@ -499,7 +502,7 @@ void check_for_errors(){ //Check whether we should enter an error state
   }
 
   //Checking for excessive output voltage and currents
-  if (I_out > 650 || V_out > 18000 || I_in < -2000){
+  if (I_out > 650 || V_out > 17000 || I_in < -2000){
     Serial.print("0," +String(I_out) + " , " + String(V_out) + " , " + String(I_in));
     state_num = 4; //go directly to jail
     next_state = 4; // stay in jail
