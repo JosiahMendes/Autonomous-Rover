@@ -23,7 +23,7 @@ export default function konvaBattery(props) {
             <Rect x={props.x} y={fillStart} width={props.width} height={fillHeight} fill={batteryColor} strokeWidth={10} stroke="white"/>
             <Rect x={props.x+props.width/3} y={props.y-props.height/15} width={props.width/3} height={props.height/15} fill="black" />
             <Rect x={props.x} y={props.y} width={props.width} height={props.height} strokeWidth={10} stroke="black" />
-            <Text text={description} fontSize={15} x={props.x + 5} y={props.y+props.height + 30} />
+            <Text text={description} fontSize={15} x={props.x-4} y={props.y+props.height + 30} />
         </>
     )
 }

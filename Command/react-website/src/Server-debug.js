@@ -13,6 +13,8 @@ var globalAngle = 0;
 var speed = 'C';
 var visionReceived = false;
 
+var investigate = false;
+var manualCommand = false;
 function createMap(distance, obstacles) {
     let width = 1; // an element represents 5cm x 5cm box
     let extra = 10; // extra width
@@ -274,17 +276,16 @@ function printMap(map) { // debugging: print 2d array
         console.log();
     }
 }
-
-function automatedDriving() {
-    const step = 27; // 1 step = 27cm
-    var distanceToTravel = step; // will increase every time
-    var distanceToTravelLeft = distanceToTravel;
-    var stage = 0;
-    command = [];
-    var obstaclesFound = [];
-    while(!back && obstaclesFound.length < 5) {
-        while(!visionReceived);
-        visionReceived = false;
+var obstaclesFound = [];
+const step = 27; // 1 step = 27cm
+var distanceToTravel = step; // will increase every time
+var distanceToTravelLeft = distanceToTravel;
+var stage = 0;
+var level = distanceToTravel;
+command = [];
+ function automatedDriving() {
+    console.log("New vision data that is available is : %s", vision.toString());
+    if(!back && obstaclesFound.length < 5) {
         if(vision[0][1] !== 0 && !obstaclesFound.includes("pink")) {
             obstaclesFound.push("pink");
             website.emit("Obstacle", ["pink", vision[0]]);
@@ -309,182 +310,191 @@ function automatedDriving() {
         var graph = new Graph(map[0]);
         var start = graph.grid[Math.ceil(map[0][0].length/2)-1][0];
         var distanceTravelled = 0;
-        if(map[1]) {
+        if(map[1]) { // if destination is blocked
             if(distanceToTravelLeft < map[2]) {
-                distanceTravelled = map[3];
+                distanceTravelled = map[3]; // distance until just before obstacle
             } else {
-                distanceTravelled = map[2];
+                distanceTravelled = map[2]; // distance until right after obstacle
             }
         } else {
             distanceTravelled = step;
         }
-        var end = graph.grid[Math.ceil(map[0][0].length/2)-1][distanceTravelled];
-        command = convert2command(astar.astar.search(graph, start, end));
+         var end = graph.grid[Math.ceil(map[0][0].length/2)-1][distanceTravelled];
+         command = convert2command(astar.astar.search(graph, start, end));
+         
         distanceToTravelLeft -= distanceTravelled;
         if(distanceToTravelLeft < step) {
             command.push([90, 0]); // rotate 90 degrees
             stage++;
+            distanceToTravel = level;
+            distanceToTravelLeft = distanceToTravel;
             if(stage === 2) {
-                distanceToTravel += step;
+                level += step;
+                distanceToTravel = level;
                 distanceToTravelLeft = distanceToTravel;
                 stage = 0;
             }
         }
         while(command.length > 0) {
-            var commandToESP32 = "![";
+            var commandToESP32 = "[";
             if(Number(command[0][0]) !== 0) {
                 commandToESP32 = commandToESP32 + "R" + command[0][0];
                 if(Number(command[0][1]) !== 0) {
-                    commandToESP32 = commandToESP32 + ",MC" + command[0][1];
+                    commandToESP32 = commandToESP32 + ",MC" + command[0][1]+"]";
+                }
+                else{
+                    commandToESP32 = commandToESP32 + "]";
                 }
             } else {
                 if(Number(command[0][1]) !== 0) {
-                    commandToESP32 = commandToESP32 + "MC" + command[0][1];
+                    commandToESP32 = commandToESP32 + "MC" + command[0][1]+"]";
                 }
             }
             esp32.write(commandToESP32);
+            website.emit("AngleDistance", [Number(command[0][0]),Number(command[0][1])]);
+            console.log("Sending command to web: %s", [Number(command[0][0]),Number(command[0][1])]);
             command.shift();
-            website.emit("AngleDistance", [command[0][0],command[0][1]]);
-            while(!visionReceived);
-            visionReceived = false;
+          
+           
         }
-        while(stop); // the rover does not move when stopped
+      //  while(stop); // the rover does not move when stopped
     }
-    // going back to the base
-    website.emit("CurrentPosition", "request");
-    while(CurrentPosition[0] !== "undefined"); // wait for data to arrive
-    distanceToTravel = Math.abs(CurrentPosition[0]);
-    if(CurrentPosition[0] > 0) {
-        var angleToRotate = ((-Number(globalAngle)-90)%360+360)%360;
-        esp32.write("![R" + angleToRotate);
-        website.emit("AngleDistance", [angleToRotate,0]);
-    } else {
-        var angleToRotate = ((90-Number(globalAngle))%360+360)%360;
-        esp32.write("![R" + angleToRotate);
-        website.emit("AngleDistance", [angleToRotate,0]);
-    }
-    while(!visionReceived);
-    visionReceived = false;
-    while(distanceToTravel > step) {
-        var map = createMap(step, vision);
-        var graph = new Graph(map[0]);
-        var start = graph.grid[Math.ceil(map[0][0].length/2)-1][0];
-        var distanceTravelled = 0;
-        if(map[1]) {
-            if(distanceToTravel < map[2]) {
-                distanceTravelled = map[3];
-            } else {
-                distanceTravelled = map[2];
-            }
-        } else {
-            distanceTravelled = step;
-        }
-        var end = graph.grid[Math.ceil(map[0][0].length/2)-1][distanceTravelled];
-        command = convert2command(astar.astar.search(graph, start, end));
-        distanceToTravel -= distanceTravelled;
-        while(command.length > 0) {
-            esp32.write("![R" + command[0][0] + ",MC" + command[0][1]);
-            command.shift();
-            website.emit("AngleDistance", [command[0][0],command[0][1]]);
-            while(!visionReceived);
-            visionReceived = false;
-        }
-    }
-    var distanceLeftX = distanceToTravel;
-    distanceToTravel = Math.abs(CurrentPosition[1]);
-    if(CurrentPosition[1] > 0) {
-        if(CurrentPosition[0] > 0) {
-            esp32.write("![R90");
-            website.emit("AngleDistance", [90,0]);
-        } else {
-            esp32.write("![R-90");
-            website.emit("AngleDistance", [270,0]);
-        }
-    } else {
-        if(CurrentPosition[0] > 0) {
-            esp32.write("![R-90");
-            website.emit("AngleDistance", [270,0]);
-        } else {
-            esp32.write("![R90");
-            website.emit("AngleDistance", [90,0]);
-        }
-    }
-    while(!visionReceived);
-    visionReceived = false;
-    while(distanceToTravel > step) {
-        var map = createMap(step, vision);
-        var graph = new Graph(map[0]);
-        var start = graph.grid[Math.ceil(map[0][0].length/2)-1][0];
-        var distanceTravelled = 0;
-        if(map[1]) {
-            if(distanceToTravel < map[2]) {
-                distanceTravelled = map[3];
-            } else {
-                distanceTravelled = map[2];
-            }
-        } else {
-            distanceTravelled = step;
-        }
-        var end = graph.grid[Math.ceil(map[0][0].length/2)-1][distanceTravelled];
-        command = convert2command(astar.astar.search(graph, start, end));
-        distanceToTravel -= distanceTravelled;
-        while(command.length > 0) {
-            esp32.write("![R" + command[0][0] + ",MC" + command[0][1]);
-            command.shift();
-            website.emit("AngleDistance", [command[0][0],command[0][1]]);
-            while(!visionReceived);
-            visionReceived = false;
-        }
-    }
-    var distanceLeftY = distanceToTravel;
-    if(distanceLeftX !== 0) {
-        if(CurrentPosition[0] > 0) {
-            if(CurrentPosition[1] > 0) {
-                esp32.write("![R-90,MC" + distanceLeftX);
-                website.emit("AngleDistance", [270,distanceLeftX]);
-                if(distanceLeftY !== 0) {
-                    esp32.write("![R90,MC" + distanceLeftY);
-                    website.emit("AngleDistance", [90,distanceLeftY]);
-                }
-            } else {
-                esp32.write("![R90,MC" + distanceLeftX);
-                website.emit("AngleDistance", [90,distanceLeftX]);
-                if(distanceLeftY !== 0) {
-                    esp32.write("![R-90,MC" + distanceLeftY);
-                    website.emit("AngleDistance", [270,distanceLeftY]);
-                }
-            }
-        } else {
-            if(CurrentPosition[1] > 0) {
-                esp32.write("![R90,MC" + distanceLeftX);
-                website.emit("AngleDistance", [90,distanceLeftX]);
-                if(distanceLeftY !== 0) {
-                    esp32.write("![R-90,MC" + distanceLeftY);
-                    website.emit("AngleDistance", [270,distanceLeftY]);
-                }
-            } else {
-                esp32.write("![R-90,MC" + distanceLeftX);
-                website.emit("AngleDistance", [270,distanceLeftX]);
-                if(distanceLeftY !== 0) {
-                    esp32.write("![R90,MC" + distanceLeftY);
-                    website.emit("AngleDistance", [90,distanceLeftY]);
-                }
-            }
-        }
-    }
-}
-/*
-var testMap = createMap(30, [[0, 30]]);
-printMap(testMap[0]);
-console.log("blocked?: " + testMap[1]);
-console.log("Distance after obstacle: " + testMap[2]);
-console.log("Distance before obstacle: " + testMap[3]);
-var testGraph = new Graph(testMap[0], {diagonal: true});
-var testStart = testGraph.grid[Math.ceil(testMap[0][0].length/2)-1][0];
-var testEnd = testGraph.grid[Math.ceil(testMap[0][0].length/2)-1][testMap.length-1];
-var testResult = astar.astar.search(testGraph, testStart, testEnd);
-var testCommand = convert2command(testResult);
-*/
+  //  going back to the base
+    // website.emit("CurrentPosition", "request");
+    // while(CurrentPosition[0] !== "undefined"); // wait for data to arrive
+    // distanceToTravel = Math.abs(CurrentPosition[0]);
+    // if(CurrentPosition[0] > 0) {
+    //     var angleToRotate = ((-Number(globalAngle)-90)%360+360)%360;
+    //     esp32.write("![R" + angleToRotate);
+    //     website.emit("AngleDistance", [angleToRotate,0]);
+    // } else {
+    //     var angleToRotate = ((90-Number(globalAngle))%360+360)%360;
+    //     esp32.write("![R" + angleToRotate);
+    //     website.emit("AngleDistance", [angleToRotate,0]);
+    // }
+    // while(!visionReceived);
+    // visionReceived = false;
+    // while(distanceToTravel > step) {
+    //     var map = createMap(step, vision);
+    //     var graph = new Graph(map[0]);
+    //     var start = graph.grid[Math.ceil(map[0][0].length/2)-1][0];
+    //     var distanceTravelled = 0;
+    //     if(map[1]) {
+    //         if(distanceToTravel < map[2]) {
+    //             distanceTravelled = map[3];
+    //         } else {
+    //             distanceTravelled = map[2];
+    //         }
+    //     } else {
+    //         distanceTravelled = step;
+    //     }
+    //     var end = graph.grid[Math.ceil(map[0][0].length/2)-1][distanceTravelled];
+    //     command = convert2command(astar.astar.search(graph, start, end));
+    //     distanceToTravel -= distanceTravelled;
+    //     while(command.length > 0) {
+    //         esp32.write("![R" + command[0][0] + ",MC" + command[0][1]);
+    //         command.shift();
+    //         website.emit("AngleDistance", [command[0][0],command[0][1]]);
+    //         while(!visionReceived);
+    //         visionReceived = false;
+    //     }
+    // }
+    // var distanceLeftX = distanceToTravel;
+    // distanceToTravel = Math.abs(CurrentPosition[1]);
+    // if(CurrentPosition[1] > 0) {
+    //     if(CurrentPosition[0] > 0) {
+    //         esp32.write("![R90");
+    //         website.emit("AngleDistance", [90,0]);
+    //     } else {
+    //         esp32.write("![R-90");
+    //         website.emit("AngleDistance", [270,0]);
+    //     }
+    // } else {
+    //     if(CurrentPosition[0] > 0) {
+    //         esp32.write("![R-90");
+    //         website.emit("AngleDistance", [270,0]);
+    //     } else {
+    //         esp32.write("![R90");
+    //         website.emit("AngleDistance", [90,0]);
+    //     }
+    // }
+    // while(!visionReceived);
+    // visionReceived = false;
+    // while(distanceToTravel > step) {
+    //     var map = createMap(step, vision);
+    //     var graph = new Graph(map[0]);
+    //     var start = graph.grid[Math.ceil(map[0][0].length/2)-1][0];
+    //     var distanceTravelled = 0;
+    //     if(map[1]) {
+    //         if(distanceToTravel < map[2]) {
+    //             distanceTravelled = map[3];
+    //         } else {
+    //             distanceTravelled = map[2];
+    //         }
+    //     } else {
+    //         distanceTravelled = step;
+    //     }
+    //     var end = graph.grid[Math.ceil(map[0][0].length/2)-1][distanceTravelled];
+    //     command = convert2command(astar.astar.search(graph, start, end));
+    //     distanceToTravel -= distanceTravelled;
+    //     while(command.length > 0) {
+    //         esp32.write("![R" + command[0][0] + ",MC" + command[0][1]);
+    //         command.shift();
+    //         website.emit("AngleDistance", [command[0][0],command[0][1]]);
+    //         while(!visionReceived);
+    //         visionReceived = false;
+    //     }
+    // }
+    // var distanceLeftY = distanceToTravel;
+    // if(distanceLeftX !== 0) {
+    //     if(CurrentPosition[0] > 0) {
+    //         if(CurrentPosition[1] > 0) {
+    //             esp32.write("![R-90,MC" + distanceLeftX);
+    //             website.emit("AngleDistance", [270,distanceLeftX]);
+    //             if(distanceLeftY !== 0) {
+    //                 esp32.write("![R90,MC" + distanceLeftY);
+    //                 website.emit("AngleDistance", [90,distanceLeftY]);
+    //             }
+    //         } else {
+    //             esp32.write("![R90,MC" + distanceLeftX);
+    //             website.emit("AngleDistance", [90,distanceLeftX]);
+    //             if(distanceLeftY !== 0) {
+    //                 esp32.write("![R-90,MC" + distanceLeftY);
+    //                 website.emit("AngleDistance", [270,distanceLeftY]);
+    //             }
+    //         }
+    //     } else {
+    //         if(CurrentPosition[1] > 0) {
+    //             esp32.write("![R90,MC" + distanceLeftX);
+    //             website.emit("AngleDistance", [90,distanceLeftX]);
+    //             if(distanceLeftY !== 0) {
+    //                 esp32.write("![R-90,MC" + distanceLeftY);
+    //                 website.emit("AngleDistance", [270,distanceLeftY]);
+    //             }
+    //         } else {
+    //             esp32.write("![R-90,MC" + distanceLeftX);
+    //             website.emit("AngleDistance", [270,distanceLeftX]);
+    //             if(distanceLeftY !== 0) {
+    //                 esp32.write("![R90,MC" + distanceLeftY);
+    //                 website.emit("AngleDistance", [90,distanceLeftY]);
+    //             }
+    //         }
+    //     }
+    // }
+    
+ }
+// /*
+// var testMap = createMap(30, [[0, 30]]);
+// printMap(testMap[0]);
+// console.log("blocked?: " + testMap[1]);
+// console.log("Distance after obstacle: " + testMap[2]);
+// console.log("Distance before obstacle: " + testMap[3]);
+// var testGraph = new Graph(testMap[0], {diagonal: true});
+// var testStart = testGraph.grid[Math.ceil(testMap[0][0].length/2)-1][0];
+// var testEnd = testGraph.grid[Math.ceil(testMap[0][0].length/2)-1][testMap.length-1];
+// var testResult = astar.astar.search(testGraph, testStart, testEnd);
+// var testCommand = convert2command(testResult);
+
 //console.log(testCommand);
 
 // TCP server communicates with the ESP32    
@@ -493,7 +503,7 @@ var tcpserver = net.createServer();
 var esp32 = "undefined";
 tcpserver.on('connection', handleConnection);
 const tcphost = '0.0.0.0'; // localhost
-const tcpport = 9000;
+const tcpport = 1800;
 tcpserver.listen(tcpport, tcphost, function() {
     console.log('Server is listening to %j', tcpserver.address());
 });
@@ -509,26 +519,55 @@ function handleConnection(socket) {
   socket.on('error', onConnError);
   function onDataReceived(data) {  
     console.log('connection data from %s: %j', remoteAddress, data.toString());
-    if(data.toString().charAt(0) === '1') {
-        var energyData1 = data.toString().split(",");
-        website.emit("EnergyData1", [[energyData1[7],energyData1[8],energyData1[9],energyData1[10]],energyData1[13],energyData1[14]]);
-    } else if(data.toString().charAt(0) === '2') {
-        var energyData2 = data.toString().split(",");
-        website.emit("EnergyData2", [energyData2[2],energyData2[3],energyData2[4]]);
-        console.log("ENERGYDATA2 sent: %s", [energyData2[2],energyData2[3],energyData2[4]]);
-    }
-    if(data.toString().charAt(0) === '$') {
-        website.emit("Obstacle", ["pink", [2,10]]);
-    }
+    website.emit("BatteryLevel", [Number(data.toString()),100,100,100]);
     if(data.toString().charAt(0) === '[') { // special starting character for vision data
-        var visionData = data.toString().substring(1).slice(0, -1).split(";");
-        for(let i = 0; i < visionData.length; i++) {
-            visionData[i] = visionData[i].split(",");
-            visionData[i][0] = Number(visionData[i][0]);
-            visionData[i][1] = Number(visionData[i][1]);
+        var j =0;
+        for(let i=0; i< data.toString().length;++i)
+        {
+           if(data.toString().charAt(i) === ']')
+           {
+               j = i;
+           }
         }
-        vision = visionData;
+        var visionData = data.toString().substring(1).slice(0, j+1).split(";");
+        for(let i = 0; i < 5; i++) {
+            let var_temp = visionData[i].split(",");
+            
+            var_temp[0] = Number(var_temp[0]);
+            var_temp[1] = Number(var_temp[1]);
+            vision[i] = var_temp;
+        }
+      
+        //vision.length-=2;
+        console.log('vision is : %s ',vision.toString());
         visionReceived = true;
+        if(investigate)
+        {
+            automatedDriving();
+        }
+        if(manualCommand) {
+            if(vision[0][1] !== 0 && !obstaclesFound.includes("pink")) {
+                obstaclesFound.push("pink");
+                website.emit("Obstacle", ["pink", vision[0]]);
+            }
+            if(vision[1][1] !== 0 && !obstaclesFound.includes("green")) {
+                obstaclesFound.push("green");
+                website.emit("Obstacle", ["green", vision[1]]);
+            }
+            if(vision[2][1] !== 0 && !obstaclesFound.includes("blue")) {
+                obstaclesFound.push("blue");
+                website.emit("Obstacle", ["blue", vision[2]]);
+            }
+            if(vision[3][1] !== 0 && !obstaclesFound.includes("orange")) {
+                obstaclesFound.push("orange");
+                website.emit("Obstacle", ["orange", vision[3]]);
+            }
+            if(vision[4][1] !== 0 && !obstaclesFound.includes("grey")) {
+                obstaclesFound.push("grey");
+                website.emit("Obstacle", ["grey", vision[4]]);
+            }
+            manualCommand = false;
+        }
     }
     //conn.write(d); send back to client
   }
@@ -563,19 +602,22 @@ io.on('connection', (socket) => {
     socket.once('disconnect', () => {
         console.log('website client disconnected');
     });
+    socket.emit('BatteryLevel', [100,100,100,100]);
     socket.on('Angle', data => {
         console.log("Manual driving. Angle received on server: %s", data);
         if(esp32 !== "undefined") {
-            esp32.write("![R" + data);
+            esp32.write("[R" + data +"]");
         }
         socket.emit('AngleDistance', [data,0]);
+        manualCommand = true;
     });
     socket.on('Distance', data => {
         console.log("Manual driving. Distance received on server: %s", data);
         if(esp32 !== "undefined") {
-            esp32.write("![M" + speed + data);
+            esp32.write("[M" + speed + data+"]");
         }
         socket.emit('AngleDistance', [0,data]);
+        manualCommand = true;
     });
     socket.on('Command', data => {
         console.log("Command from web: %s", data);
@@ -583,6 +625,7 @@ io.on('connection', (socket) => {
             case "investigate":
                 stop = false;
                 back = false;
+                investigate = true;
                 automatedDriving();
                 break
             case "back":

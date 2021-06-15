@@ -1033,6 +1033,236 @@ data was flowing to and from the ESP32.
 
 \subsection{Command}
 
+\subsubsection{Communication with the ESP32}
+For communication with the ESP32, the backend of the web application acts as a 
+host which the ESP32 can connect to via a TCP connection. The connection was implemented 
+using the “net” Javascript module \cite{JavascriptTCP}. Similarly, the Energy module 
+connected to the Command module via the TCP protocol and sent data. 
+
+\subsubsection{Communication between the Frontend and the Backend}
+
+Initially the HTTP protocol was decided to be the communication method between the 
+backend and the frontend of the web application. However, some drawbacks of the HTTP 
+protocol were identified during the implementation of the web application. The HTTP 
+protocol is uni-directional. \cite{HTTPOverview} This means that the communication can only 
+be initialised from one side. And the other side is not able to communicate as long 
+as it does not receive connection incoming. In case of the HTTP protocol, clients, 
+which is the web browser in this project, may establish connection to the web server 
+and initialise communication. Then the web server receives the request coming from the 
+web browser and sends data back as a response. In the initial design of the web application, 
+the frontend could send a HTTP request to the web server when the website is opened by a user. 
+And the web server could send an HTML document back for the frontend to show on the website. 
+Another use of the HTTP protocol was delivering user’s input to the backend. When a button 
+is pressed or a text box is filled by a user, the frontend could notify the backend the 
+value of the user’s input which could lead the web server to send command to the Control 
+module via TCP protocol. However, for the frontend to visualise data from the other subsystems 
+it had to gain access to the data which were available on the backend of the web application. 
+The HTTP protocol was not the best communication method for this case because the server could 
+not send these data without a request from the frontend. Also forwarding specific variables only 
+and not the entire HTML document was very demanding with the HTTP protocol. 
+
+Therefore, it was decided to use WebSocket instead. The biggest advantages of using WebSocket 
+were that the connection between the server and the client was persistent and both server and 
+client could initialise communication. 
+
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[width = \linewidth]{./images/WebSocket.png}
+		\caption{Backend WebSocket code}
+        \label{fig:websocketServer}
+	\end{Center}
+\end{figure}
+
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[width = \linewidth]{./images/SocketClient.png}
+		\caption{Frontend WebSocket code}
+        \label{fig:websocketClient}
+	\end{Center}
+\end{figure}
+
+Figure ~\ref{fig:websocketServer} shows how WebSocket was implemented on the server 
+side by using the “socket-io” Javascript module. \cite{WebSocketAPI} The server function is triggered 
+when a client connects to the server with a parameter “socket” which contains the socket where 
+the server and the connecting client can communicate. Then the socket parameter could trigger 
+functions which only react to specific event name. Figure ~\ref{fig:websocketServer} shows how the server handles the 
+event “Angle” incoming from the frontend with data. The server understands that the incoming 
+data is a command telling the rover to rotate by the given angle and sends the ESP32 of the Control 
+module the corresponding rotation command that the Drive module understands. The variable “esp32” 
+contains the TCP socket used to communicate with the Control module. As there is just one 
+web browser connecting to the server, the socket was stored in a global variable “website” and 
+allowed other parts of the server code to use it to send data to the frontend. On the frontend, 
+it was important to ensure that it is securely connected to the backend through WebSocket throughout 
+the entire usage time of the web application and that it reacts to incoming data from the server 
+instantly and updates the webpages. Therefore, a const variable “Socket” which connects to the 
+backend was exported to App which was a function rendered to show the website. The client side WebSocket implementation 
+is shown in Figure ~\ref{fig:websocketClient}. App decided which 
+components are shown on each webpage so as the frontend receives data through WebSocket, App could 
+pass the received data to a webpage where the data was visualised. 
+
+\subsubsection{Website}
+
+The general structure of the website including the design of home page, navigation bar, and button 
+were taken from a React Website Tutorial \cite{ReactTutorial} as they were considered to be suitable 
+for building the rover’s command system. The home page of the website is shown in Figure ~\ref{fig:homepage}. The 
+navigation bar which can always be found at the top of the website is convenient for the users to 
+move to another page on the website. When one of the buttons on the navigation bar is pressed, the 
+frontend shows the corresponding page. There are four pages on the website which are “Home”, “Power”, 
+“View” and “Command”. Additionally, the “Get started” button directs the Command page when it is pressed. 
+
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[width = \linewidth]{./images/HomePage.png}
+		\caption{Home Page on the website}
+        \label{fig:homepage}
+	\end{Center}
+\end{figure}
+
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[width = \linewidth]{./images/PowerPage.png}
+		\caption{Power Page on the website}
+        \label{fig:powerpage}
+	\end{Center}
+\end{figure}
+
+The Power page shows the rover’s energy status as shown in Figure ~\ref{fig:powerpage}. There are three subsections on this 
+page which show the status, charging and health of the batteries relatively. The data represented are received 
+from the Energy module which regularly sends data to the backend via TCP protocol. Then the data were sent to 
+the frontend via WebSocket.\cite{WebSocketAPI} To enhance the readability of the data represented, a graphic 
+in the form of battery was created. It shows how much energy is left in the batteries with respect to the amount 
+of energy when batteries are fully charged. Additionally for the battery health, the ratio of the current battery 
+pack capacity to the maximum battery pack capacity is shown. The Power page was designed using the “react-konva” 
+Javascript module \cite{ReactKonva} which will be further discussed in the following explanation of the View page. 
+
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[width = \linewidth]{./images/ViewPage.png}
+		\caption{View Page on the website}
+        \label{fig:viewpage}
+	\end{Center}
+\end{figure}
+
+The View page, shown in Figure ~\ref{fig:viewpage} contains a map of the rover’s working area. The map was initially planned to be 
+drawn with pixels as mentioned in the Initial Design Choices section of this report. However, some drawbacks of this 
+method were identified. A map drawn by painting pixels was not the best at representing rotation of the rover. It is 
+possible to represent rotation of angles which are multiples of 90 degrees but the other angles showed difficulties. 
+Therefore, it was decided to draw the map using the “react-konva” Javascript module instead. \cite{ReactKonva} In order 
+to draw the map, various data are required. This includes the positions of discovered obstacles from the Vision module 
+and the commands sent to the Drive module. Figure ~\ref{fig:viewpage} shows an example map where the rover discovered an obstacle (pink 
+pingpong ball) after moving according to a set of commands given to it. As stated on the top left corner of the View 
+page, the red star indicates the current position of the rover while the blue triangle indicates the position of the 
+base which is the starting point of the rover. The set of commands given to the rover was 1) rotate 135 degrees clockwise 
+2) move forward 250 mm 3) rotate 110 degrees anti-clockwise 4) move forward 120 mm. After executing the fourth command, 
+the rover discovered a pink pingpong ball and this vision data was sent to the backend of the Command module through the 
+Control module. The backend informs the frontend about the colour and position of the discovered obstacle via WebSocket 
+and the frontend draws the obstacle on the map according to the vision data. The area passed by the rover is represented 
+by drawing grey rectangles on the map. 
+
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[width = \linewidth]{./images/DrawPaths.png}
+		\caption{Code for Drawing Paths on the Map}
+        \label{fig:drawpathcode}
+	\end{Center}
+\end{figure}
+
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[width = \linewidth]{./images/DrawObstacle.png}
+		\caption{Code for Drawing Obstacles on the Map}
+        \label{fig:drawobstaclecode}
+	\end{Center}
+\end{figure}
+
+Figure ~\ref{fig:drawpathcode} shows the function used to draw the grey rectangles and represent the 
+rover’s movement. To accurately represent the rover’s movement on the map, several global variables that represent the 
+rover’s status were created and updated constantly. Such variables are the current position (an array of length 2 that 
+contains x and y coordinates) of the rover on the map, the angle the rover has rotated relative to the beginning and an 
+array of grey rectangles to be drawn on the map are saved as currPos, global\_angle, roverPath respectively. The ``paths'' 
+function in Figure ~\ref{fig:drawpathcode} is called when the frontend receives a new command data that the rover has completed. The first 
+parameter “angleDistance” is an array that contains an angle and a distance command that the rover has completed. The 
+second parameter “color” determines the grey of the rectangle drawn to represent the rover’s movement and it’s fixed to 
+be “grey” when the function is called. The height of each grey rectangle drawn should accurately represent the distance 
+travelled by the rover. Therefore, it is set to be the sum of the rover’s height and the distance travelled. On the map, 
+the rover is treated as a square so the rover’s width is used for its height. Then the global\_angle is updated by adding 
+the angle command sent to the frontend. Since a rotation of 360 degrees does not make a difference on the map, modulo 360 
+is done. Then if the distance travelled was not zero, the rectangle is created as shown in Figure ~\ref{fig:drawpathcode} with the calculated 
+values and added to ``roverPath''. The offset values are added to make the point of rotation to be the centre of the rover 
+as it was the top left corner of the shape by default. Finally the current position of the rover on the map is updated for 
+the next rectangle. Figure ~\ref{fig:drawobstaclecode} shows the function used to draw discovered obstacles on the map. The first parameter “obstacle” 
+is the vision data from the backend. It is an array where the first element is a string representing the colour of the obstacle 
+and the second element is an array that contains the x,y coordinates of the ball relative to the rover’s camera. The second 
+parameter ``pos'' is the current position of the rover which is used to determine the obstacle’s position on the map since the 
+coordinates of the obstacle given are relative to the rover’s current position. The third parameter ``angle'' is ``global\_angle'' 
+explained in the function that draws rover’s movement. It represents the total angle the rover has rotated since beginning. 
+The function first chooses the correct hex code which determines the colour of the obstacle that would be drawn on the map. 
+Then the function calculates the x,y coordinates of the obstacle with respect to the rover’s current position. The difference 
+between these coordinates to the coordinates given in the parameter ``obstacle'' is that these coordinates take the rotated angle 
+into consideration. This calculation is necessary because even though the obstacle is equally placed 5 cm in front of the rover 
+for example, the position of the ball when the rover is facing south and when the rover is facing east will be different. 
+Finally, with the calculated position, a circle of the chosen colour is added to an array called “obstacleSet”. The arrays 
+``roverPath'' and ``obstacleSet'' are sent to the ``react-konva'' canvas and the added shapes are drawn. 
+
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[width = \linewidth]{./images/CommandPage.png}
+		\caption{Command Page on the website}
+        \label{fig:commandpage}
+	\end{Center}
+\end{figure}
+
+The Command page, shown in Figure ~\ref{fig:commandpage}, contains three sections: Automated Driving, Manual Driving and Rover Speed. Under the Manual 
+Driving section, there are two text boxes where the user can input an angle or a distance and the rover would follow the command 
+when the user presses the send button next to the text box. Under the Rover Speed section, there are five buttons which represent 
+the five speed profiles that the rover has. By default, the rover would start with the regular speed but the user can change the 
+speed by pressing these buttons. When the user presses a button, data corresponding to the button will be sent to the backend via 
+WebSocket and the backend will send command to the ESP32 accordingly. Under the Automated Driving section, there are three buttons: 
+``Investigate’’, ``Back to the base’’ and ``Stop’’. When the user presses the ``Investigate’’ button, the backend will command the 
+rover to drive until it finds all the obstacles. During this operation, the user can command the rover to stop or go back to the 
+base. 
+
+\subsubsection{Automated Driving}
+
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[width = \linewidth]{./images/DeterministicPath.png}
+		\caption{Deterministic Path for Automated Driving}
+        \label{fig:deterministicpath}
+	\end{Center}
+\end{figure}
+
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[width = \linewidth]{./images/AutomatedDriving.png}
+		\caption{Automated Driving code}
+        \label{fig:automateddriving}
+	\end{Center}
+\end{figure}
+
+Generally, the web server would command the rover to follow a deterministic path until it finds all the obstacles. The deterministic 
+path is shown in Figure ~\ref{fig:deterministicpath}, the red circle indicates the starting position of the rover and the arrows represent the rover’s movement. 
+When there are no obstacles on the way, the rover can just follow this path. However, there is a problem when one or more obstacles 
+are blocking the rover’s path since the rover should be able to avoid hitting the obstacles. In order to solve this problem, a pathfinding 
+algorithm A* \cite{astarAlgorithm} was used to find the shortest path to the destination that the rover can follow without hitting the 
+obstacles. The A* algorithm was chosen because it compares estimated cost of path to the destination at every step to find the shortest 
+path and with the help of a heuristic function of the A* algorithm, the pathfinding process can be done efficiently. \cite{astarAlgorithm}
+The A* algorithm was implemented using the ``javascript-astar’’ Javascript module \cite{astarModule}. In order to use this algorithm, it 
+was necessary to create a graph which can indicate positions where the rover can go and cannot go (blocked by obstacles). Figure ~\ref{fig:automateddriving} shows 
+a part of the function used for automated driving. This function is called repeatedly after the rover moves ``one step’’ indicated by an 
+arrow in Figure ~\ref{fig:deterministicpath}. The function creates a map required for the A* algorithm considering the distance until the destination, stored in 
+parameter ``step’’, and the position of any obstacle ahead of the rover. The created map is a 2-dimensional array filled with 1’s for 
+positions where the rover can go and 0’s for positions where the obstacle was blocking. Then the start and end position on the created 
+map were specified. The map was created in a way that the starting position is always the bottom centre on the map. The end position was 
+tricker to determine. If the obstacle is not blocking the destination, which is distance of ``step’’ away from the start point, then the 
+end position can simply be destination. However, if the obstacle is blocking the destination, then a decision should be made whether the 
+rover should stop before the obstacle or pass the obstacle. As shown in Figure ~\ref{fig:automateddriving}, it was implemented so that the rover passes the obstacle 
+if the next command is continuously moving forward (indicated by ``distanceToTravelLeft’’ being bigger than the distance required to pass 
+the obstacle. If the rover’s next command is rotation of 90 degrees, then the rover would move forward and stop just before the obstacle. 
+Since there is a limitation on hardware that the rover cannot identify obstacles which are ahead of the rover by distance less than rover’s 
+width, the rover’s width was added to the obstacle’s width when the function draws a graph for the A* algorithm. This way, the rover can 
+avoid hitting obstacles that are located near it. 
+
 \subsection{Drive}
 
 \textbf{General Specifications}
