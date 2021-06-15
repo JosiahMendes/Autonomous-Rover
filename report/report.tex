@@ -79,7 +79,7 @@
 
 
 \title{Engineering Design Project}
-\author{Georgios Chaimali \and 
+\author{Georgios Chaimalas \and 
         Dimitrios Georgakopoulos \and 
         Edvard J. Skaarberg Holen \and 
         Hyunjoon Jeon \and 
@@ -1810,6 +1810,31 @@ transmission should stop. The FIFO used is a dual-clock FIFO that uses the main 
 clock and the sck provided by the SPI controller is used as the clock for the read.  
 
 
+\subsection{Integration}
+The purpose of Integration is to ensure and test the work of all the subsystems together. The following section is organised in a 
+way that shows the progress of the system and all the testings and measurements done to allow the delivery of this working system. 
+The good communication and will to work hard that was shared by all the team members was a crucial factor that led to the completion of the tasks.
+
+\subsubsection{Drive}
+Having an accurate and reliable driving system was the first important milestone for this project as it is the means of the rover to navigate its environment.
+The first test done to ensure that was measuring fixed distances traversed by the rover and callibrating the optical flow sensor using the sample code. The testing procedure was fairly simple but produces consistent results.
+By using some fixed tiles on the floor that have a dimension of \(25cm\times 25cm\). By using these I could measure how accurate the rover moves and rotates and also minimizing human errors that would arise if the reference distance and angle was not in place. 
+The first problem that arised was an error in distances greater than \(20cm\) where there was a sudden sign change  in the measured distance of the sensor.
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.5]{./images/overflow_example.png}
+    \caption{Serial Monitor output showing overflow}
+    \label{fig:Overflow of Distance}
+ \end{figure}
+As it can be seen in Figure ... the distance measured went from \(201mm\) to \(-207mm\) which indicated a bug. I communicated my foundings with the member that 
+was in charge of Driving and we concluded that it is an overflow caused by the multiplication operations of the code which can be easily fixed by prioritising divisions.
+
+After having received the fixed code and continuing testing it was concluded that the floor material affects the optical flow sensor's accuracy greatly. Trial and Error showed that the best floor material in the area of testing operations was wood which gave the most reliable readings.
+Having a proof of concept is crucial when deciding to move to more complex operations for the system and during the initial testing of the Drive module, it was concluded that it had a good accuracy that would be essential for the later stage of mapping the balls.
+
+When trying to measure considerably bigger distances with the rover, it was identified that the strain from the cables connected could impose some considerable torques on the system which could result in innacuracies.
+This could possibly be solved by implementing a PID that ensures no rotation while moving forward and backward, but after consultation with the appropriate team member it was decided that because the purpose of the cables is for debugging, capturing of data and supplying power, in a real-life scenario it would not affect the rover.
+For the demonstration and all the testing it was also decided that the cables should be placed in positions that would not cause any strain in the system.
 
 
 %Start of energy implementation
