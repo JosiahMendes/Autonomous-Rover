@@ -1874,14 +1874,27 @@ is done and the state machine enters an idle state.
 \end{figure}
 
 \paragraph*{SOH and Cell Balancing}
-As such, the 
-implemented charging algorithm only does balancing during the constant 
-voltage part of charging. The balancing is done using the code shown in 
-Figure~\ref{fig:balancingCode}. During CV charging it is desirable that all cells have a voltage 
-of 3600 mV. If any cell has a voltage which is higher than 3600 mV its 
-voltage is too high and the dissipative resistors are switched on to lower 
-the voltage to the voltage set point. 
+To monitor the battery’s SOH the charge capacity, energy capacity, 
+cell voltage balance, and the number of completed charge/discharge 
+cycles are all tracked. To retain the data between sessions, it was 
+logged in a CSV format to the SD card every 60 seconds. The relevant data 
+was then read in from the SD-card on start up.
 
+To maintain SOH the cell voltages were balanced every charge cycle. 
+As previously explained balancing should only occur at high SOC, 
+which is why balancing is only done in the constant voltage state. 
+The code use for balancing is shown in Figure~\ref{fig:balancingCode}. 
+During CV charging it is desirable that all cells have a voltage of 
+3600 mV. If any cell has a voltage which is higher than 3600 mV, 
+its voltage is too high and the dissipative resistors are switched 
+on to lower the voltage. When used in conjunction with the constant 
+voltage charging algorithm this code was extremely successful at 
+balancing the cells. The balancing is shown in action in 
+Figure~\ref{fig:balancing}. As can be seen, the cell voltages are 
+one by one brought up to and kept at 3600 mV. Even with an initial 
+voltage difference of 200 mV, the balancing only takes about 
+1000 seconds = 17 minutes. 
+ 
 \begin{figure}[H]
     \centering
     \begin{minipage}[b]{0.49\textwidth}
@@ -1894,87 +1907,110 @@ the voltage to the voltage set point.
     \hfill
     \begin{minipage}[b]{0.49\textwidth}
       \includegraphics[width=\textwidth]{balancing.png}
-      \caption{Cell voltages as they are being balanced, ignore voltage spikes at end as they are not related to the balancing.}
+      \caption{Cell voltages as they are being balanced, ignore voltage spikes at the end as they are not related to the balancing.}
       \label{fig:balancing}
     \end{minipage}
 \end{figure}
 
-Alongside the constant voltage charging algorithm this code was extremely 
-successful at balancing the cells. The balancing is shown in action in Figure~\ref{fig:balancing}. 
-One by one, the cell voltages are brought up to and kept at 3600 mV. Even with 
-an initial voltage difference of 200 mV, balancing only takes about 
-1000 seconds = 17 minutes. 
+\paragraph*{MPPT}
+As previously discussed, the PV array should be operated in the region 
+where the current is lower than at the maximum power point. To ensure 
+this, the following algorithm was used. First, the duty cycle was set 
+to 0. This makes the input impedance of the SMPS very high, leading 
+to a near 0 PV array current. The duty cycle is then increased until 
+the output current/voltage reaches its desired value. If the desired 
+operating point requires less power than what the PV array can provide, 
+then an equilibrium should be found as the duty cycle is increased. 
+If however the desired operating point requires more power than the 
+PV panels can provide, then no equilibrium can exist and the duty 
+cycle will increase to 1 without ever reaching the desired operating 
+point. Thus, if the duty cycle ever reaches 1 during operation the 
+charging algorithm must be trying to draw more power from the PV 
+array than is available. Whenever the duty cycle reaches 1, the 
+variable \emph{max\_power}, is reduced by 100 mW and a new current 
+setpoint is found through the 
+formula $i_{setpoint} = max\_power / V_{out}$. The duty cycle 
+is then reset to 0 and the process repeats until an equilibrium 
+is found. When at an equilibrium, the algorithm increases 
+\emph{max\_power} every 60 seconds to see if it is possible to 
+operate at a higher power point than it currently is. If not, 
+the algorithm will simply fall back to the same equilibrium. This 
+algorithm was found to be very successful at tracking the maximum 
+power point of the PV array. It is shown in action in the demo video.
 
-\textbf{MPPT}
-\vspace{10pt} 
-\newline
-To ensure that the PV panels are operating in the correct region, start with a duty
-cycle of 0 and increase it until the output current/voltage is at the desired value.
-If the desired operating point requires less power than what the PV array can provide,
-then an equilibrium should be found as the duty cycle is increased. If however the 
-desired operating point requires more power than the PV panels can provide, then no 
-equilibrium can exist and the duty cycle will increase to 1 without ever reaching the
-desired operating point. Thus, if the duty cycle ever reaches 1 during operation
-the charging algorithm must be trying to draw more power from the SMPS than is 
-possible. If so, the charging algorithm must be told to operate a lower power point. How this
-is implemented is covered in section ....
+\paragraph*{SOC}
+\begin{wrapfigure}[13]{r}[0pt]{0.45\textwidth}
+    \centering
+    \raisebox{0pt}[\dimexpr\height-3\baselineskip\relax]{%
+        \includegraphics[width=0.45\textwidth]{lookup.png}
+    }%
+    \vspace{-10pt}
+    \caption{Lookup table data}
+    \label{fig:lookup}
+\end{wrapfigure}
 
+Implementing the Coulomb counting was done by integrating the current 
+flowing into the battery. The integral value gives how much current 
+has flowed in or out of the battery. The SOC as a percentage can 
+then be found by dividing the net charge into the battery by the charge 
+capacity of the battery and then multiplying by 100. However, due to
+effects such as the Coulombic efficiency of the battery, the 
+integral can start to stray when done over many cycles. As such, 
+the SOC is reset to the maximum capacity every time the battery is 
+fully charged. The maximum capacity will of course reduce over 
+time as the battery degrades. This is why the maximum capacity is 
+measured and updated with every discharge cycle. Moreover, as the 
+Arduino is sometimes switched off before a charging/discharging 
+cycle is complete, it is necessary to know the SOC on startup. 
+As such, the current SOC is continually logged to the SD card during 
+operation. When the Arduino is then switched on again, it simply 
+fetches the SOC data from the SD card and continues at the SOC at 
+which it left off. 
 
-\textbf{SOC}
-\vspace{10pt} 
-\newline
-Got the energy table from CSV file.
-Stored in CSV file, but takes long so only log every 4 seconds.
-Lookup table
+The SOC should be used to estimate the range of the rover. The 
+obvious way of estimating the range is to divide the remaining energy 
+in battery by the power consumption of the rover and multiply by 
+the speed. However, the SOC does not directly give how much energy 
+is in the batteries at any given time. To find the energy in the 
+battery, the total expended energy was logged alongside SOC data 
+for a full discharge of the battery. From this data a 600 element 
+lookup table was created which related the SOC of the battery to 
+the remaining energy in the battery. The lookup table data is plotted 
+in Figure~\ref{fig:lookup}.
 
-SOC is a measure of charge and not energy. It is necessary to estimate 
-the range of the rover. The obvious way of doing this is to track the 
-power consumption and speed of the rover. Dividing the energy left in 
-the batteries by the power and multiplying by the speed gives an estimate 
-of the range under the current operating conditions. The problem however, 
-is that the SOC only gives the usable current and not the usable energy 
-left in the battery. As the SOC of the battery decreases, so too does it 
-voltage, meaning that at lower states of charge each mAh will provide less 
-energy than at higher states of charge. To account for this, during discharging 
-the BMS logs the energy output of the battery alongside the SOC. From this data 
-it is possible to create a lookup table which relates the current SOC to how 
-much energy it is still possible to draw from the battery. This is the method 
-which will be used to find the energy left in the battery.
+\paragraph*{Discharging}
+The energy module is also tasked with keeping track of the SOC and SOH 
+during discharging. This was done using the same algorithms as 
+during charging. In addition the battery power was continually 
+tracked as a function of time and SOC. When the battery is done d
+ischarging, this information is used to update the table relating the 
+SOC of the battery to the remaining usable energy. This is done using 
+the formula 
+\( New~Energy~Array = 0.99*(Old~Energy~Array) + 0.01*(Measured~Energy~Array) \). 
+By having the energy array update itself it is hoped that the energy 
+array will be a good approximation even after many battery cycles 
+as the battery performance starts to deteriorate.
 
-\textbf{Discharging}
-\vspace{10pt} 
-\newline
-The energy module is also tasked with keeping track of the SOC and SOH during discharging.
-This was done using the same algorithms as during charging, with one noteable exception.
-During discharging the battery power was continually tracked as a function of time and
-SOC. When the battery is done discharging, this information is used to update the table
-relating the SOC of the battery to the remaining usable energy. This is done using the
-formula \( New Energy Array = 0.99*(Old Energy Array) + 0.01*(Measured Energy Array) \). 
-By having the energy array update itself it is hoped that the energy array will be a good
-approximation even after many battery cycles as the battery performance starts to deteriorate.
-
-\textbf{Communicating with Other Modules}
-\vspace{10pt} 
-\newline
-Though it is not necessary to fully integrate the energy module with the rest of 
-the rover, other submodules, specifically command, needs access data such as the 
-battery SOH and SOC. For communicating with other modules the Arduino shield has 
-a set of UART ports. However, as group members were not in the same location it 
-was not possible to physically connect the energy module to the rover, which is 
-necessary to use UART. As such, an alternative approach was employed. First the 
-Arduino was connected to a computer via USB. On the computer a Python script was 
-run [8]. At the start the Python script establishes a connection to a server 
-created by running a similar script on the command module [9]. After a 
-connection has been established the Python script starts reading the serial data 
-coming from the Arduino and transmits it using TCP to the command module. Each 
-message coming from the Arduino is in CSV form where the first entry is the 
-message ID, which allows the command script to decode what type of data is being 
-sent. What data do we send? 
+\paragraph*{Communicating with Other Modules}
+Though it is not necessary to fully integrate the energy module with 
+the rest of the rover, other submodules, specifically command, needs 
+access data such as the battery SOH, SOC and remaining energy. For 
+communicating with other modules the Arduino shield has a set of 
+UART ports. However, as group members were not in the same location 
+it was not possible to physically connect the energy module to the 
+rover, which is necessary to use UART. As such, an alternative 
+approach was employed. First the Arduino was connected to a computer 
+via USB. On the computer a Python script was run. At the start, the 
+Python script establishes a connection to a server created by running 
+a similar script on the command module. After a connection has been 
+established the Python script starts reading the serial data coming 
+from the Arduino and transmits it using TCP to the command module. 
+Each message coming from the Arduino is in CSV form where the first 
+entry is the message ID, which allows the command script to decode 
+what type of data is being sent. 
 %End of energy implementation
-
 %End of implementation section
 
-\section{Evaluation and Conclusion}
 
 \section{Project Management and Organisation}
 %Also had frequent teams meetings and used WhatsApp
@@ -2075,15 +2111,12 @@ title={References}
 \begin{appendices}
 
 
-\chapter{Appendix 1: Circuit Diagram of the Energy Submodule}
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth]{Circuit_Diagram.png}
-    \label{fig:circuitDiagram2}
-\end{figure}
-
-
-
+%\chapter{Appendix 1: Circuit Diagram of the Energy Submodule}
+%\begin{figure}[H]
+%    \centering
+%    \includegraphics[width=\textwidth]{Circuit_Diagram.png}
+%    \label{fig:circuitDiagram2}
+%\end{figure}
 
 
 \end{appendices}
