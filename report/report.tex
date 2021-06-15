@@ -910,7 +910,7 @@ simple system, the connection was successfully implemented by debugging
 As the first physical connection between the ESP32 and a peer 
 microcontroller, it was decided that the best course of action would 
 be to completely test communication with the simplest of devices, 
-the Arduino Nano Everything. Since the Arduino has an extensive 
+the Arduino Nano Every. Since the Arduino has an extensive 
 and well-documented library for UART communication, Drive was the 
 best subsystem to test out initial communication. When testing out the 
 UART communication, two methods documented through the Arduino IDE were used. 
@@ -1808,9 +1808,9 @@ way that shows the progress of the system and all the testings and measurements 
 The good communication and will to work hard that was shared by all the team members was a crucial factor that led to the completion of the tasks.
 
 \subsubsection{Drive}
-Having an accurate and reliable driving system was the first important milestone for this project as it is the means of the rover to navigate its environment.
-The first test done to ensure that was measuring fixed distances traversed by the rover and callibrating the optical flow sensor using the sample code. The testing procedure was fairly simple but produces consistent results.
-By using some fixed tiles on the floor that have a dimension of \(25cm\times 25cm\). By using these I could measure how accurate the rover moves and rotates and also minimizing human errors that would arise if the reference distance and angle was not in place. 
+Having an accurate and reliable driving system was the first important milestone for this project as it is the means of the Rover to navigate its environment.
+The first test done to ensure that was measuring fixed distances traversed by the Rover and callibrating the optical flow sensor using the sample code. The testing procedure was fairly simple but produces consistent results.
+By using some fixed tiles on the floor that have a dimension of \(25cm\times 25cm\). By using these I could measure how accurate the Rover moves and rotates and also minimizing human errors that would arise if the reference distance and angle was not in place. 
 The first problem that arised was an error in distances greater than \(20cm\) where there was a sudden sign change  in the measured distance of the sensor.
 \begin{figure}
     \centering
@@ -1824,9 +1824,14 @@ was in charge of Driving and we concluded that it is an overflow caused by the m
 After having received the fixed code and continuing testing it was concluded that the floor material affects the optical flow sensor's accuracy greatly. Trial and Error showed that the best floor material in the area of testing operations was wood which gave the most reliable readings.
 Having a proof of concept is crucial when deciding to move to more complex operations for the system and during the initial testing of the Drive module, it was concluded that it had a good accuracy that would be essential for the later stage of mapping the balls.
 
-When trying to measure considerably bigger distances with the rover, it was identified that the strain from the cables connected could impose some considerable torques on the system which could result in innacuracies.
+When trying to measure considerably bigger distances with the Rover, it was identified that the strain from the cables connected could impose some considerable torques on the system which could result in innacuracies.
 This could possibly be solved by implementing a PID that ensures no rotation while moving forward and backward, but after consultation with the appropriate team member it was decided that because the purpose of the cables is for debugging, capturing of data and supplying power, in a real-life scenario it would not affect the rover.
-For the demonstration and all the testing it was also decided that the cables should be placed in positions that would not cause any strain in the system.
+For the demonstration and all the testing it was also decided that the cables should be placed in positions that would cause minimal strain in the system. 
+
+After ensuring that the navigation of the Rover is accurate enough, the next logical step is to test and implement the communication procedure with the control module.
+\subsubsection{Communications between Drive and Control}
+Knowing that the team member in charge of Control only has the ESP32 board, it was crucial to establish a close contact so that the feedback from the Integration testing is relayed back and used to improve the Control code.
+Having a Rover that can navigate is important, but there needs to be a communications framework that will allow it to receive and execute commands. After researching the different communication protocols, it was concluded that UART is a reliable and good hardware device that allows the transmission and reception of data. After consulting with the team member of Control and receiving the available UART ports of the ESP32, the cable connections were made. 
 
 
 %Start of energy implementation
