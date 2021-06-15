@@ -1812,11 +1812,11 @@ Having an accurate and reliable driving system was the first important milestone
 The first test done to ensure that was measuring fixed distances traversed by the Rover and callibrating the optical flow sensor using the sample code. The testing procedure was fairly simple but produces consistent results.
 By using some fixed tiles on the floor that have a dimension of \(25cm\times 25cm\). By using these I could measure how accurate the Rover moves and rotates and also minimizing human errors that would arise if the reference distance and angle was not in place. 
 The first problem that arised was an error in distances greater than \(20cm\) where there was a sudden sign change  in the measured distance of the sensor.
-\begin{figure}
+\begin{figure}[H]
     \centering
-    \includegraphics[scale=0.5]{./images/overflow_example.png}
-    \caption{Serial Monitor output showing overflow}
-    \label{fig:Overflow of Distance}
+    \includegraphics[scale=0.3]{./images/overflow_example.png}
+    \caption{Serial Monitor output showing the overflow of distance.}
+    \label{image:Overflow of Distance}
  \end{figure}
 As it can be seen in Figure ... the distance measured went from \(201mm\) to \(-207mm\) which indicated a bug. I communicated my foundings with the member that 
 was in charge of Driving and we concluded that it is an overflow caused by the multiplication operations of the code which can be easily fixed by prioritising divisions.
@@ -1831,9 +1831,41 @@ For the demonstration and all the testing it was also decided that the cables sh
 After ensuring that the navigation of the Rover is accurate enough, the next logical step is to test and implement the communication procedure with the control module.
 \subsubsection{Communications between Drive and Control}
 Knowing that the team member in charge of Control only has the ESP32 board, it was crucial to establish a close contact so that the feedback from the Integration testing is relayed back and used to improve the Control code.
-Having a Rover that can navigate is important, but there needs to be a communications framework that will allow it to receive and execute commands. After researching the different communication protocols, it was concluded that UART is a reliable and good hardware device that allows the transmission and reception of data. After consulting with the team member of Control and receiving the available UART ports of the ESP32, the cable connections were made. 
-
-
+Having a Rover that can navigate is important, but there needs to be a communications framework that will allow it to receive and execute commands. When researching the different communication protocols, it was concluded that UART is a reliable and good hardware device that allows the transmission and reception of data. After consulting with the team member of Control and receiving the available UART pins of the ESP32, the cable connections were made. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.05, angle = 180]{./images/ESP32_UART.jpg}
+    \includegraphics[scale=0.05, angle =  180]{./images/Arduino_UART.jpg}
+    \vspace{-10pt}
+    \caption{From left to right: ESP32 cable connection to UART pins,Arduino Nano Every cable connection to UART pins.}
+    \vspace{-10pt}
+    \label{image:UART}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{./images/UART_test.png}
+    \caption{Test code to ensure UART functionality}
+    \label{image:Simple UART test}
+ \end{figure}
+To test the connection, a fairly simple program was made that reads the Serial buffer when it is available. To achieve reliable Integration of the systems, a modular approach is chosen where the testing of even the simplest components is of great importance.
+This is to confirm funcionality and detect faulty hardware without having to debug complex programs that may or may not contain bugs.
+After ensuring UART functionality, a more complex program was implemented to allow driving to receive commands from Control. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.3]{./images/Command_decoder.png}
+    \caption{Command decoder}
+    \label{image:Code flashed on Arduino}
+ \end{figure}
+ The command structure was fairly simple and not resource heavy. The Rover does a series of rotations and movements. The starting character of a command is \("["\) which allows the system to identify the start of a command being transmitted by Control. To move the Rover a transmitted character should be \(M\) and after that the speed should be identified using a character between \("A-E"\) with \("A"\) being the fastest available option and \("E"\) the slowest.
+Because rotations are the only other option, an arbitrary character can be used acompanied with the angle of rotation. The code also handles signs denoting direction of rotation and movement.
+For example, \("[MA300,R-90]"\) is a command that when executed by the Rover will result in a forward movement of \(300mm\) and an anticlockwise rotation of \(90\) degrees.
+Lastly, to allow for flexibility of commands, a stop functionality was added when Control sent the character \("S"\) while executing a movement command which stops the motors and transmitts the distance covered back to Control.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{./images/Stop_functionality.png}
+    \caption{Command decoder}
+    \label{image:Code flashed on Arduino}
+ \end{figure}
 %Start of energy implementation
 \subsection{Energy}
 \vspace{-10pt}
