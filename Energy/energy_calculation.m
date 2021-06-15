@@ -13,11 +13,22 @@ A2 = cellfun(@str2num,A2(1:end-1));
 
 A_sum = 100*(A1 + (A2 - 0.99*A1));
 
-linefit = polyfit(1:600, A_sum, 1);
+%linefit = polyfit(1:600, A_sum, 1);
+
+A_sum = A_sum(1:568);
+
+A_sum = fliplr(A_sum);
 
 figure
+set(gca,'FontSize',14)
 hold on
-plot(1:600,A_sum);
-plot(1:600, polyval(linefit,1:600));
+grid
+plot((1:568)/5.68,A_sum/(10^6),"r","lineWidth",2);
+xlim([0,100])
+xlabel("SOC [%]", "fontSize",16);
+ylabel("Energy in battery [kJ]");
+title("Energy as function of SoC");
+%plot(1:600, polyval(linefit,1:600));
 
-writematrix(A_sum,'CSV-files/round7/ENERGYLU.CSV')
+
+%writematrix(A_sum,'CSV-files/round7/ENERGYLU.CSV')
