@@ -175,7 +175,7 @@ void loop() {
 
       //Sample output and currents
       I_in =  (ina219.getCurrent_mA()); //Measure input current [mA]
-      V_in = 1.12*analogRead(A2)*float(5*4000/1023);
+      V_in =  analogRead(A2)*float(4.5*4000/1023);
       
 
       current_sum += I_in/500; //Calculate the average battery current for the cycle

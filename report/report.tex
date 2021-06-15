@@ -1506,177 +1506,143 @@ world z-axis (i.e. the height of an object relative to the plane).
 
 %Start of energy implementation
 \subsection{Energy}
+\vspace{-10pt}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{Circuit_Diagram.png}
+    \includegraphics[width=0.8\textwidth]{Circuit_Diagram.png}
+    \caption{Circuit diagram of the finished energy system.}
     \label{fig:circuitDiagram}
 \end{figure}
 
-\textbf{SMPS Configuration}
-\vspace{10pt} 
-\newline
-The voltage of the series battery pack is higher than the voltage of the parallel connected
-PV panels. The voltage of the PV array must therefore be stepped up before it can be used
-for charging. The SMPS must then be operated in boost mode with the
-PV panels connected on port B and the battery on port A. Moreover, as the 
-SMPS has a max output voltage of 7 V in synchronous boost mode\cite{powerLogbook}, 
-it must be operated in non-synchronous mode. To operate in non-synchronous mode switch J1
-must be to the left and switch J2 must be to the right. Finally, the on/off switch is 
-set to off such that all power comes from the PV array and not from the USB connection 
-powering the arduino.
+\paragraph*{SMPS Configuration}
+The voltage of the series battery pack is higher than the voltage of 
+the parallel connected PV panels. The voltage of the PV array must 
+therefore be stepped up before it can be used for charging. The SMPS 
+is therefore operated in boost mode with the PV panels connected on 
+port B and the battery on port A. Moreover, as the SMPS has a max 
+output voltage of 7 V in synchronous boost mode\cite{powerLogbook}, 
+non-synchronous mode was used. Finally, the on/off switch was set 
+to emph{off} such that all power comes from the PV array and not 
+from the USB connection powering the Arduino.
 
-\textbf{Measurements}
-\vspace{10pt} 
-\newline
-Measurements of the circuit currents and voltages are used to track the operation of the
-subsystem. When charging the battery the most important measurements are the output voltage,
-the cell voltages, and the battery current.
+\paragraph*{Measurements}
+Measurements of the circuit currents and voltages are used to track the 
+operation of the subsystem. During charging, the most important measurements 
+are the output voltage, the cell voltages, and the battery current.
 
-The Arduino can only measure voltages up to 4 V as this is the voltage of its external
-reference. However, when using the SMPS in a boost configuration the output voltage will
-usually be higher than 4 V and can therefore not directly be measured by the Arduino.
-In power labs this issue was overcome through the use of a divide by 3 voltage divider\cite{powerLogbook}.
-Using the voltage divider the maximum voltage that can be measured is 12 V, which is still
-lower than the expected output voltages when charging the battery. To further divide
-the output voltage Vpd further divided by 5/3 using a voltage divider consisting of a 10k
-and a 15k resistor. The voltage at this second voltage divider should then be Vout/5, 
-which permits the Arduino to measure voltages up to 20 V. The
-resistors in the second voltage divider were large, so as to not interfere with the divider
-ratio of the first voltage divider. This did however cause a problem as the Arduino draws
-some current while sampling, which impacted the operation of the voltage divider. 
-To solve this problem the voltage was buffered using an op-amp 
-from the Circuits lab before being passed to the Arduino.
+The battery voltage is usually in the range 10.0 to 14.4 V. However, 
+the Arduino can only measure voltages up to 4 V. To solve this issue 
+the output voltage was passed through a voltage divider. The voltage 
+divider consist of two parts. Firstly, a 560 $\Omega$ and a 330 $\Omega$ 
+resistor create $V_{pd} \approx 0.37 * V_{out}$. $V_{pd}$ is then reduced 
+even further using a 15 $k\Omega$ resistor and a 10 $k\Omega$ resistor 
+to $\sim 0.22 *V_{out}$, which is then passed to the Arduino. With this 
+voltage divider it should be possible to measure output voltages up to 
+18 V. The second stage uses far large resistors than the first so that 
+the two do not impact one another. However, due to the large resistance 
+values, the current drawn by the Arduino during sampling would cause a 
+significant voltage drop. To prevent this an op-amp from the Circuits lab 
+was used to buffer the voltage before it was connected to the Arduino.
 
-The battery cells are configured in series, meaning that the cell voltages will differ from
-one another. Every cell voltage therefore needs to be measured individually. Luckily,
-the battery boards all have a measurements port specifically for this purpose. By setting
-the \emph{RLY} input of a battery board to \emph{HIGH} the cell voltage will appear at the
-\emph{MEAS} output. By connecting the \emph{MEAS} output to one of the analogue pins
-on the Arduino it is then possible to measure the cell voltage. Note however that when a 
-\emph{RLY} input is \emph{HIGH}, the battery cell will not be connected to its power
-terminal. If even a single cell is not connected in a series battery, then no current
-can flow through the battery. This creates a problem as it means the cells can only 
-ever be measured or charged/discharged at a given time. To have the smallest 
-impact on the operation on the battery cell voltage measurements should therefore 
-be completed as quickly as possible and only be taken when necessary.
+The measurement port on the battery boards is used to measure cell voltages. 
+To use this port the battery board relay is be switched by setting 
+the \emph{RLY} input \emph{HIGH}. While the relay is switched the battery 
+cell will be disconnected from its power terminal. For a series battery 
+pack this means that the cells can only ever be measured or 
+charged/discharged at a given time. To have the smallest impact on 
+operation the measurements are therefore completed as quickly as possible 
+and taken at a low frequency. To measure the voltage of a cell the first 
+step is to set the output current to 0 mA to prevent voltage spikes 
+while the battery is disconnected. The relay is then switched, the 
+voltage is sampled and the relay is switched back. When abiding by the 
+switching times of the relay and giving time for the current/voltage to 
+stabilise this process takes about 40 ms. To minimise the number of 
+Arduino ports needed for measurements, the cell voltages are not measured 
+at the same time. Instead, one cell is measured every second. As there 
+are 4 battery cells this means that each cell is measured with 4 second 
+intervals. Due to the cell voltages changing very slowly the long update 
+time was not found to be a problem.
 
-The following process was found the be appropriate for measuring the voltage 
-of a cell. Firstly, the desired output current is set to 0 mA. If this is not done, 
-switching the relay would cause all output current to flow into the capacitor, 
-causing the output voltage to spike. Testing showed that after 10 ms the current 
-had died down sufficiently for the relay
-to be switched on without any large voltage spike appearing. Switching the relay on
-takes 6 ms\cite{axicom}. The voltage on the Arduino input then needs about 16 ms to
-stabilise after which the voltage can be sampled. Finally the relay can be switched off, which
-takes 4 ms, and the measurement process is complete. In total making a measurement takes
-about 40 ms. 
 
-To reduce the time spent making measurements it is desireable to measure all cell voltages
-at the same time. However, for several reasons this was not found to work in practice. 
-Firstly, the design specification adviced against switching multiple relays at the same
-time as one might inadvertently create short circuits\cite{energyBrief}. Secondly, measuring
-all cells at the same time would take 4 Arduino inputs. Using 4 battery cells the Arduino
-already has limited available ports and using 4 of them for cell voltage measurements is not ideal. 
-To circumvent both of these issues only one cell voltage is measured at a given time.
-The cell voltages do not change very quickly and only need to be measured every couple 
-of seconds. It was found to work well if one cell voltage was measured every one second.
-As there are 4 battery cells this means that each cell is measured with 4 second intervals.
+The current in and out of the battery needs to be tracked to determine 
+the SOC. However, the current sensor is on the wrong side of the SMPS 
+to measure the current flowing into the batteries. Initially this 
+problem was solved by connecting a 0.5 $\Omega$ resistor between the 
+SMPS output and the battery. By measuring the voltage across this 
+resistor the current into the battery could be determined. Initial 
+tests of this solutions gave promising results. However, an excessively 
+complex circuit was needed to ensure the sensor worked for both positive 
+and negative currents. It was determined that a better solution was to 
+simply calculate the output current from the input current using the 
+formula \( I_{out} = (1 - \delta)*I_{in} \). A problem with this solution 
+is that it assumes CCM. At the standard charging current of 250 mA this 
+assumption holds, but for smaller current, below about 150 mA, the SMPS 
+might enter DCM. In this case the calculated current will be somewhat 
+higher than its true value, which might impact SOC tracking. However, 
+as will be discussed, the SOC algorithm has methods for correcting 
+itself and this will hopefully mean that the error does not get too 
+big. Unfortunately, it was not possible to test this due to the ban 
+on working with batteries.  
 
-The current in and out of the battery needs to be tracked to determine the SOC.
-However, with the given SMPS configuration the current sensor is on the wrong side of
-the SMPS to measure the current flowing into the batteries. The initial attempt at solving
-this issue was to connect a 0.5 ohm resistor between the SMPS output and the battery.
-By measuring the voltage across this resistor the current into the battery could be
-determined. Though initial test gave promising results, an excessively complex circuit
-was needed to ensure the sensor worked well for both positive and negative currents.
-It was determined that a better solution was to simply calculate the output current
-from the input current. When operating at the standard charging current of 250 mA,
-the SMPS will be in CCM and the output current can calculated as \( I_{out} = (1 - \delta)*I_{in} \).
-For smaller currents however, below about 150 mA, the SMPS might enter DCM. In this case the calculated 
-current will be somewhat higher than its true value, which might have an impact on the 
-SOC tracking. As such, calculating the output current from the input current is not ideal, 
-but is still considered the best option given the available resources. As is discussed 
-later the SOC algorithms has methods for correcting itself, which should mean that the
-SOC error will not be too large.
+\paragraph*{Controlling the SMPS}
+The dual loop controller from the sample charging code\cite{chargeCode} was 
+used as the starting point for the controller design. However, some 
+changes were necessary to accommodate other design choices. As previously 
+discussed, the current needs to be set to 0 for only a couple of 
+milliseconds when cell voltages are being measured. This is not 
+possible using the 1 Hz Moore machine from the original controller. 
+As such the slow loop was changed to a Mealy machine, where the 
+outputs could change with the clock speed of the fast loop. This had the 
+unfortunate side effect of creating timing issues as the resulting 
+code was too complex for the Arduino to successfully run the fast 
+loop at 1 kHz. For this reason the clock speed of the fast loop was 
+reduced to 500 Hz. It should also be noted that the PI-gains from 
+the sample code were changed as they did not work optimally in boost 
+mode. The new gains were found through trial and error.
 
-\textbf{Controlling the SMPS}
-\vspace{10pt} 
-\newline
-The SMPS is controlled by a dual loop controller, consisting of a fast and a slow loop.
-In the design of this dual loop controller the controller from the sample charging code
-was used as a starting point\cite{chargeCode}. 
-
-The slow loop in the sample controller consists
-of a Moore state machine clocked at 1 Hz, governing the output current. However, as previously
-discussed the current setpoint needs to be set to 0 only for a couple of milliseconds when
-the cell voltages are being measured. This is not possible with a 1 Hz Moore machine and
-as such the slow loop was changed to a Mealy state machine, where the output could change
-with the clockspeed of the fast loop. In addition, the slow loop was expanded to also control
-the maximum power point tracking.
-
-The fast loop in the sample controller is clocked at 1 kHz and consists mainly of a 
-digital PI-controller used to set the duty cycle of the SMPS. As the state machine 
-was changed to a Mealy machine, the fast loop was expanded to determine the outputs in
-each state. This had the unfortunate side effect of creating timing issues as the code
-became more complex than what the Arduino could compute in a millisecond. This issue was
-solved by lowering the fast loop clock speed to 500 Hz. This did appear to impact its
-performance.
-It should also be noted that the PI-gains from the sample code were changed as they did
-not work optimally in boost mode. This was done through trial and error.
-
-\textbf{Safety Mechanisms}
-\vspace{10pt} 
-\newline
-In the energy submodule a lot of equipment is used at the limits of what it was designed for.
-To prevent damage to the equipment a function was run inside the fast control loop
-which every loop checks for abnormal cell voltages and excessive output voltage, input
-current and battery current. If any of the measurements are found to be outside the
-acceptable range, then the function immediately puts the state machine in the error
-state.
-
-\textbf{Charging Algorithm}
-%\vspace{10pt} 
-%\newline
+\paragraph*{Charging Algorithm}
+\vspace{-20pt} 
 \begin{figure}[H]
-	\begin{Center}
-		\includegraphics[scale=0.5]{State_diagram.png}
-		\caption{Charging algorithm state machine}
-	\end{Center}
+	\centering
+    \includegraphics[scale=0.5]{State_diagram.png}
+    \caption{State machine of the charging algorithm.}
 \end{figure}
 \vspace{-20pt}
-The battery cells are designed to be charged first with a constant current and then
-with a constant voltage of 3.6 V\cite{batteryDatasheet}.
-The implemented charging algorithm follows this specification as much as possible. 
-However, some modifications needed to be made to accomodate other design choices.
-When turned on, the state machine starts in state 0 where the output current is set
-to 0. It waits in this state until the OL/CL switch is set to 1 after which it moves 
-to the constant current state. In the constant current state the current is nominally 
+The battery cells are designed to be charged first with a constant current and then 
+with a constant voltage of 3.6 V\cite{batteryDatasheet}. The implemented charging 
+algorithm follows this specification as much as possible. The state machine starts 
+in state 0 where the output current is set to 0. It waits in this state until the 
+OL/CL switch is set to 1, after which it moves to the constant current state. 
+In the constant current state the current is nominally 
 250 mA. However, as will be discussed later, if the solar panels do not produce enough
 power to charge at 250 mA, the MPPT algorithm might impose another lower value for 
-the constant current in this state. Moreover, technically the current is not constant
-in this state as 40 ms of each second is used to measure cell voltages, and there will 
-therefore be zero current. These short charge breaks were not found to have an impact 
-on the performance of the charging process. However, charging LiFePO4 battery cells with a
-pulsating current has even been found to severly reduce battery degradation\cite{PulseCharging},
-which might even mean better performance than truly constant current in the long term. The
-charging algorithm leaves the constant current state for the constant voltage state
-once any cell reaches a cell voltage of 3600 mV.
+the constant current in this state. Moreover, technically the current is not 
+constant as 40 ms of each second is used to measure cell voltages, and for a 
+short period there will be zero current. These short charge breaks were not found 
+to have an impact on the performance of the charging process. In fact, 
+charging $LiFePO_{4}$ battery cells with a pulsating current has even been 
+found to severely reduce battery degradation\cite{PulseCharging}, which might 
+mean better performance than truly constant current in the long term. The 
+charging algorithm leaves the constant current state for the constant voltage 
+state once any cell reaches a cell voltage of 3600 mV.
 
-Implementing the constant voltage state of the charging algorithm was a challenge. The
-reason being that for a series battery pack, even if the voltage across the battery pack
-as a whole is constant this does not mean that the voltage across individual cells is constant.
-Testing revealed that if the output voltage was kept constant the weaker cells would rise 
-quickly in voltage as the current died down. To avoid this problem the constant voltage
-state was redesigned from keeping the voltage across the battery pack constant, to trying
-to keep the voltage of each individual cell constant. This was done in two steps. Firstly,
-the battery input current is regulated so as to keep the highest cell voltage in the range
-3600 to 3630 mV. Secondly, balancing ensures that cells of lower voltage catch up to the highest
-voltage. The code for this is shown in Figure~\ref{fig:Constant_Voltage}. Initial test of this code
-gave promising results, but it could not fully be tested due to the ban on working with batteries.
-However, in Figure~\ref{fig:balancing} the ability of the code to stabilise all cell voltages
-around 3600 mV is shown. After all cell voltages had reached 3600 mV and the current had died
-to below 30 mA, the charging algorithm is done and the state machine enters an idle state, where
-it stays until the OL/CL switch is flipped to reset the system.
+Initially the output voltage was kept constant in the constant voltage 
+state. However, even if the voltage across the battery pack as a whole is 
+constant this does not mean that the voltage across individual cells is constant. 
+Testing revealed that with a constant output voltage, weaker cells could sometimes 
+reach a cell voltage over 3700 mV as current died down. To prevent this, the 
+constant voltage state was redesigned from keeping the voltage across the battery 
+pack constant, to trying to keep the voltage of each individual cell constant. 
+This was done in two steps. Firstly, the battery input current is regulated so 
+as to keep the highest cell voltage in the range 3600 to 3630 mV. Secondly, 
+balancing ensured that cells of lower voltage catch up to the highest voltage. 
+The code used to control the constant voltage state is shown in 
+Figure~\ref{fig:Constant_Voltage}. Initial test of this code gave promising 
+results, but it could not fully be tested due to the ban on working with 
+batteries. However, Figure~\ref{fig:balancing} shows the ability of the code 
+to stabilise all cell voltages around 3600 mV. After all cell voltages have 
+reached 3600 mV and the current has died to below 30 mA, the charging algorithm 
+is done and the state machine enters an idle state. 
 
 \begin{figure}[H]
     \centering
@@ -1686,10 +1652,7 @@ it stays until the OL/CL switch is flipped to reset the system.
     \label{fig:Constant_Voltage}
 \end{figure}
 
-
-\textbf{Balancing}
-\vspace{10pt} 
-\newline
+\paragraph*{SOH and Cell Balancing}
 As such, the 
 implemented charging algorithm only does balancing during the constant 
 voltage part of charging. The balancing is done using the code shown in 
@@ -1700,10 +1663,19 @@ the voltage to the voltage set point.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width = \textwidth]{Balancing_code.png}
-    \caption{Function called while charging at high SOC to balance out the voltage of the cells.}
-    \vspace{-10pt}
-    \label{fig:balancingCode}
+    \begin{minipage}[b]{0.49\textwidth}
+        \raisebox{30pt}[\dimexpr\height-3\baselineskip\relax]{%
+        \includegraphics[width=\textwidth]{Balancing_code2.png}
+        }%
+        \caption{Function called while charging at high SOC to balance out the voltage of the cells.}
+        \label{fig:balancingCode}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.49\textwidth}
+      \includegraphics[width=\textwidth]{balancing.png}
+      \caption{Cell voltages as they are being balanced, ignore voltage spikes at end as they are not related to the balancing.}
+      \label{fig:balancing}
+    \end{minipage}
 \end{figure}
 
 Alongside the constant voltage charging algorithm this code was extremely 
@@ -1711,14 +1683,6 @@ successful at balancing the cells. The balancing is shown in action in Figure~\r
 One by one, the cell voltages are brought up to and kept at 3600 mV. Even with 
 an initial voltage difference of 200 mV, balancing only takes about 
 1000 seconds = 17 minutes. 
-
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.48\textwidth]{balancing.png}
-    \caption{Cell voltages as they are being balanced, ignore voltage spikes at end as they are not related to the balancing.}
-    \label{fig:balancing}
-\end{figure}
 
 \textbf{MPPT}
 \vspace{10pt} 
@@ -1755,10 +1719,6 @@ the BMS logs the energy output of the battery alongside the SOC. From this data
 it is possible to create a lookup table which relates the current SOC to how 
 much energy it is still possible to draw from the battery. This is the method 
 which will be used to find the energy left in the battery.
-
-\textbf{SOH}
-\vspace{10pt} 
-\newline
 
 \textbf{Discharging}
 \vspace{10pt} 
