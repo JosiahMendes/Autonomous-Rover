@@ -1497,19 +1497,26 @@ Regarding the Current Controller, it was not tuned because the voltage controlle
 
 
 
-\pagebreak
+
 \subsection{Vision}
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width = \textwidth]{./media/ImageProcessingStream.pdf}
+    \caption{Image Processing Pipeline}
+    \label{fig:ImageProcPipeline}
+\end{figure}
 
 The purpose of the Vision module as aforementioned was to find different coloured
 ping-pong balls and draw bounding boxes around them to find their estimated location, 
 the desired outcome is shown in Figure \ref{fig:DesiredVisionResult}. The following 
 section is organised in order of the video processing stream: first the raw data to 
 RGB data, then the transformation to the HSV colour space, followed by the object 
-detection, then finally the calculation for the estimated distance of each ball. 
+detection, then finally the calculation for the estimated distance of each ball.
+The operation is summarised by the diagram in Figure \ref{fig:ImageProcPipeline}.  
 
 \begin{figure}[H]
 	\begin{Center}
-		\includegraphics[scale = 0.5]{./images/AnnotatedBalls.png}
+		\includegraphics[scale = 0.3]{./images/AnnotatedBalls.png}
 		\caption{Desired Outcome of Image Processing applied in Vision module }
 		\label{fig:DesiredVisionResult}
 	\end{Center}
@@ -1529,7 +1536,8 @@ namely the Clocked Video Output and Frame Buffer Core. The system is compromised
 of several modules, that take the raw data from the camera in Bayer filter form\cite{TerasicD8MWeb},
 transform it into RGB video packets with a resolution of 640*480, buffer the frames to allow camera and output
 to run at different frame rates, process the image data and convert the video 
-data to serial data for output over VGA.\cite{EEE2Rover} As this system and its 
+data to serial data for output over VGA.\cite{EEE2Rover} The components are shown in
+Figure \ref{fig:ImageProcPipeline}. As this system and its 
 corresponding documentation is openly available, the implementation outside of 
 the image processor will not be described in more depth, interested readers can 
 consult the referenced repository and starter project for more information. 
@@ -1809,7 +1817,14 @@ compression is applied on the sender's side before compression, but as memory an
 power is limited, it is not possible to implement any sort of encoding onboard the FPGA and the
 only option is to offload it to either the ESP32 or the webserver for encoding and display. 
 
-The module's structure is shown in Figure ... It acts as an SPI peripheral that provides 
+\begin{wrapfigure}{r}{0.6\textwidth}
+    \centering
+    \includegraphics[width = 0.48\textwidth]{./media/SPI_ImageTransfer.pdf}
+    \caption{SPI Image Transfer Module Block Diagram}
+    \label{fig:SPIImageTransfer}
+\end{wrapfigure}
+
+The module's structure is shown in Figure \ref{fig:SPIImageTransfer}. It acts as an SPI peripheral that provides 
 data whenever it is read from by an SPI controller, with pixel values being stored in a FIFO 
 buffer that is written into by the image processing module. 26 bits are stored within the FIFO
 with the first two bytes used to indicate a start of frame or an empty FIFO, this indicates to the 
@@ -1834,7 +1849,7 @@ The first problem that arised was an error in distances greater than \(20cm\) wh
     \caption{Serial Monitor output showing the overflow of distance.}
     \label{image:Overflow of Distance}
  \end{figure}
-As it can be seen in Figure ... the distance measured went from \(201mm\) to \(-207mm\) which indicated a bug. I communicated my foundings with the member that 
+As it can be seen in Figure \ref{image:Overflow of Distance} the distance measured went from \(201mm\) to \(-207mm\) which indicated a bug. I communicated my foundings with the member that 
 was in charge of Driving and we concluded that it is an overflow caused by the multiplication operations of the code which can be easily fixed by prioritising divisions.
 
 After having received the fixed code and continuing testing it was concluded that the floor material affects the optical flow sensor's accuracy greatly. Trial and Error showed that the best floor material in the area of testing operations was wood which gave the most reliable readings.
@@ -1930,7 +1945,7 @@ Lastly, to allow for flexibility of commands, a stop functionality was added whe
     After ensuring that, the x and y components of the balls are projected to the red tapes and then are measured. The measurements combined with the raw image of the camera were given to the Vision module. This procedure was done multiple times and was improved upon throughout the course of the project, and due to the good communication with the Vision team member, an accurate model of distance approximation was made as shown in the video demo.
     \begin{figure}[H]
         \centering
-        \includegraphics[scale=0.1]{./images/Ball_measurement.jpg}
+        \includegraphics[scale=0.08]{./images/Ball_measurement.jpg}
         \caption{Measurement setup}
         \label{image:Measurement setup}
      \end{figure}
