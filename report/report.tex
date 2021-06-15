@@ -551,6 +551,8 @@ The energy submodule must:
 The energy system consists of three main components: the battery cells, the 
 PV panels and the SMPS. To ensure that appropriate design choices are made, 
 it is necessary to determine the behaviour and limitations of these components.
+As the characteristics of the SMPS have already been thoroughly studied in
+the Power lab\cite{powerLogbook}, they will not be reexamined here.
 
 \paragraph*{Battery Cells}
 To determine their behaviour, each cell was tracked through a full charge/discharge 
@@ -617,24 +619,6 @@ voltages and a rapid current reduction at high voltages\cite{green}.
 Moreover, it is clear that the provided lamp activates the panels poorly 
 as the peak power for each of the panels is only $\sim$0.5 W.
 
-\paragraph*{SMPS}
-
-The SMPS is rated for 10 W throughput with a maximum boost output voltage 
-of 35 V and maximum output current of 10 A\cite{SMPS_lab}. These ratings 
-are far higher than what is needed to charge the battery and are not 
-expected to impose limitations on the design of the energy module. 
-\begin{wrapfigure}{r}{0.5\textwidth}
-    \centering
-    \includegraphics[width=0.48\textwidth]{Boost_efficiency_wduty.png}
-    \caption{SMPS efficiency versus output current with input voltage of 5V\cite{powerLogbook}}
-    \label{fig:efficiency}
-\end{wrapfigure}
-The many characteristics of the SMPS have been thoroughly examined in 
-2nd year labs. However, for the energy submodule the most important 
-characteristic will be the SMPS efficiency during non-synchronous 
-boost operation. A graph of efficiency versus output current is shown 
-in Figure~\ref{fig:efficiency}.
-
 \subsubsection{Initial Design}
 
 \paragraph*{Battery Configuration}
@@ -662,9 +646,9 @@ all other purposes. As such it might be wise to not use all of the
 available cells in the battery pack.
 
 Now consider the PV array. Each PV panel is rated for 1.15 W, meaning that 
-the array as a whole should have a peak power of 4.6 W. As shown in 
-Figure~\ref{fig:efficiency} the peak efficiency of the SMPS in boost mode 
-is about 80\% giving a maximum usable power on the SMPS output of 
+the array as a whole should have a peak power of 4.6 W. The peak efficiency 
+of the SMPS in boost mode is about 80\% \cite{powerLogbook} giving a maximum usable 
+power on the SMPS output of 
 \(0.8 * 4.6 \unit{W} \approx 3.7 \unit{W} \). Assuming 12 hours of 
 sunlight in a day, this means that the PV array produces less energy 
 each day than the rover uses in 24 hours. It is therefore of high 
@@ -778,11 +762,12 @@ to provide the power demanded by the charging algorithm. As such, the system
 does not need conventional MPPT. However, if the PV panels cannot provide the 
 demanded power some sort of power tracking must be used. 
 
-\begin{wrapfigure}[20]{r}[0pt]{0.45\textwidth}
-    \begin{center}
+\begin{wrapfigure}[14]{r}[0pt]{0.45\textwidth}
+    \centering
+    \raisebox{-5pt}[\dimexpr\height-3\baselineskip\relax]{%
         \includegraphics[width=0.45\textwidth]{Combined.png}
+    }%
     \vspace{-15pt}
-    \end{center}
     \caption{IV-curve (blue) and power curve (red) of the parallel configured PV array lit by a lamp.}
     \label{fig:parallelArray}
 \end{wrapfigure}
@@ -812,7 +797,7 @@ simplest SOC estimation method is to measure the open circuit voltage (OCV)
 of the battery and then calculate the SOC using a formula or a lookup table. 
 For many types of battery this is a good estimation method. An example is 
 lead-acid batteries, for which the OCV varies approximately linearly with the 
-SOC. However, as was shown figure ~\ref{fig:efficiency}, this is not the case 
+SOC. However, as was shown figure ~\ref{fig:charge_cycle}, this is not the case 
 for LiFePO4 batteries. For LiFePO4 cells the voltage is nearly constant for 
 a majority of each charge/discharge cycle. Any measurement error or change in 
 OCV due to current recently flowing through the battery, would therefore produce large 
