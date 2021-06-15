@@ -148,12 +148,20 @@ contains our design process for the rover and how it was implemented.
 
 \subsection{Control}
 
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[scale = 0.5]{./images/ControlFR.png}
+		\caption{Functional Design Diagram showing Dataflow for Control Subsystem}
+		\label{fig:DesiredVisionResult}
+	\end{Center}
+\end{figure}
+
 \subsubsection{Requirements}
 
 The Control module within the context of the rover has one main goal: 
 to act as the communication hub between all the subsystems, delivering
 the relevant data where it is required to allow for the rover to integrate
-as a whole \cite{MarsRoverSpec}.  These functional requirements can be 
+as a whole \cite{MarsRoverSpec}. These functional requirements can be 
 obtained from the Functional Design diagram for control, outlining all the 
 data flow for the Control subsystem. There are a couple of core objectives 
 which must be achieved in order to fulfil this role as outlined below:
@@ -199,13 +207,13 @@ Arduino or device with similar pins to directly interface through
 physical connections. 
 
 For wired communications, the ESP32 has limitations for the type of 
-communication peripherals it can pursue with peer microcontrollers. 
-However, unlike Arduinos which have at most 1 SPI, 2 I2C and 1 UART port, 
-the ESP32 can support up to 3 SPI, 2 I2C and 3 UART ports which are 
-configurable to most of the GPIO pins available. Considering the ESP32 
-will have to interface with at most three other subsystems through wired 
-communication, there is a lot of choice with peripherals that must be 
-investigated.
+communication peripherals it can use with peer microcontrollers. 
+Unlike Arduinos which have at most 1 SPI, 2 I2C and 1 UART port 
+\cite{ArduinoPeripheral}, the ESP32 can support up to 3 SPI, 2 I2C and 
+3 UART ports \cite{ESP32Datasheet} which are configurable to most of 
+the GPIO pins available. Considering the ESP32 will have to interface with 
+at most three other subsystems through wired communication, 
+there is a lot of choice with peripherals that must be evaluated.
 
 \subsubsection{Initial Design Choices} 
 
@@ -215,9 +223,10 @@ that the Arduino IDE and supporting libraries for the ESP32 would be
 enough for developing what is necessary. As there are stringent practices 
 for the base Arduino Libraries and ESP8266 Libraries, this was extended 
 to a majority of the functionality available to the ESP32 including WiFi, 
-Bluetooth, UART, SPI and I2C. Seeing as the ESP32 through Espressif is 
-programmed through C, most of this can be imported through the Arduino IDE 
-which supports simpler methods for flashing software onto the ESP32.
+Bluetooth, UART, SPI and I2C \cite{ESP32ArduinoGithub}. Seeing as the ESP32 
+through Espressif is programmed through C, most of this can be imported 
+through the Arduino IDE which supports simpler methods for flashing 
+software onto the ESP32.
 
 As there is no requirement imposed upon the data being transferred 
 and displayed, this results in complete freedom for the form in which 
@@ -229,7 +238,7 @@ subsystems. This is to ensure that bottlenecks would not appear due to a
 sizable processing time in between transmission of data, as this would 
 cause crippling delays for communication. The simplest way to ensure the 
 integrity of the data is to standardise the type for data being 
-transferred. Since initially, the formatting and content of the data is 
+transferred. Since initially, the formatting and content of the data was 
 unclear, receiving and sending them as bytes or characters would be the 
 most versatile solution. Internal buffers for the ESP32 would store 
 individual commands or data lines and send them to the required subsystem 
@@ -243,19 +252,20 @@ more simplistic with regards to the type of data being communicated, we
 opted for the transport layer protocol, TCP. This is due to the need for 
 consistent transmission of data, retransmitting if packets are lost and 
 ensuring the data does reach its destination. Speed by comparison is a 
-less stringent requirement and as such, UDP was discarded as a choice.
+less stringent requirement and as such, UDP was discarded as a choice
+\cite{TCPvsUDP}.
 
 For both Drive and Energy, the Arduino Nano Everything provided by the 
 project organisers had it’s UART ports exposed through the specific 
 hardware and it’s connections. As such, there was little need for 
-deliberation over the protocol. The peripheral chosen for both these 
-groups was UART. For the Energy submodule specifically, since it can’t 
-be integrated into the Rover physically, it was decided that any necessary 
-data would be transmitted directly to Command. This is through the UART 
-USB connection from the Arduino to the computer, which would then 
-communicate with Command over TCP. However, to ensure Energy can be 
-integrated if necessary, one UART port for the ESP32 was set aside for 
-Energy.
+deliberation over the protocol being used \cite{ArduinoSerial}. The 
+peripheral chosen for both these groups was UART. For the Energy 
+submodule specifically, since it can’t be integrated into the Rover 
+physically, it was decided that any necessary data would be transmitted 
+directly to Command. This is through the UART USB connection from the 
+Arduino to the computer, which would then communicate with Command over 
+TCP. However, to ensure Energy can be integrated if necessary, one UART 
+port for the ESP32 was set aside for Energy.
 
 For Vision, there are two types of data which need to be transferred 
 through the ESP32; the image from the camera and data regarding object 
@@ -859,45 +869,47 @@ and Control. From the requirements set out, it was clear that the ESP32
 had to use it’s WiFi capabilities to interface with Command. The two 
 options available to the ESP32 are as follows: to act as either it's own 
 router through the Access Point mode or it's own station under an existing 
-router through the Stationary mode. As the Access Point mode would mean 
-that the rover is not connected to the internet, since it would create a 
-private inaccessible network, instead the stationary mode was opted for. 
-Having the capability to communicate with the rover through an existing 
-router allows for communication from anywhere in the world through WiFi. 
-This would be much more flexible and representative of communicating with 
-a rover on Mars. A working prototype for communication was built using 
-TCP. In order to test whether it was functioning, since Command was still 
-in very early stages, a python-based TCP server was created. When running, 
-it would take the text put into the terminal and send it to the ESP32 
-while displaying the messages incoming from the ESP32. The ESP32 was 
-configured to echo back all messages. Through this simple system, the 
-connection was successfully implemented by debugging the connection and 
-the messages being sent back and forth.
+router through the Stationary mode \cite{ESPWIFI}. As the Access Point mode 
+would mean that the rover is not connected to the internet, since 
+it would create a private inaccessible network, the stationary mode was chosen 
+instead. Having the capability to communicate with the rover through an 
+existing router allows for communication from anywhere in the world 
+through WiFi. This would be much more flexible and representative of 
+communicating with a rover on Mars. A working prototype for communication 
+was built using TCP. In order to test whether it was functioning, since 
+Command was still in very early stages, a python-based TCP server was created. 
+When running, it would take the text put into the terminal and send it 
+to the ESP32 while displaying the messages incoming from the ESP32. 
+The ESP32 was configured to echo back all messages. Through this 
+simple system, the connection was successfully implemented by d
+ebugging the connection and the messages being sent back and forth.
 
 \subsubsection{Drive Communication}
 
 As the first physical connection between the ESP32 and a peer 
 microcontroller, it was decided that the best course of action would 
-be to completely test communication with the simplest of devices. Since 
-the Arduino has an extensive and well-documented library for UART 
-communication, Drive was the best subsystem to test out initial 
-communication. When testing out the UART communication, two methods 
-documented through the Arduino IDE were used. SoftwareSerial, which uses 
-code to imitate a UART connection allowing you to map the peripheral to 
-any GPIO pin, or directly assigning the pins through hardware assignment. 
+be to completely test communication with the simplest of devices, 
+the Arduino Nano Everything. Since the Arduino has an extensive 
+and well-documented library for UART communication, Drive was the 
+best subsystem to test out initial communication. When testing out the 
+UART communication, two methods documented through the Arduino IDE were used. 
+SoftwareSerial \cite{ESPSoftwareSerial}, which uses code to imitate a 
+UART connection allowing you to map the peripheral to any GPIO pin, 
+or directly assigning the pins through hardware assignment. 
 Initially the former was utilised, but it was quickly realised that the 
 multiplexing feature of the ESP32 chip allows for hardware configuration 
-to most of the GPIO pins of your own choice. However, an interesting 
-interaction that was recorded was that the 3 UART connections that are 
-available to the ESP32 aren’t completely unused. One of the UART 
-connections is used to communicate with the laptop when connected via USB. 
-This UART connection by default is assigned to pins 0\_RX and 1\_TX on the 
-Arduino Adapter Board. As a result, mapping a secondary UART on these 
-same pins and serially writing to your laptop would also write to the 
-peripheral connected to 0\_RX and 1\_TX. Once this was determined, these 
-two pins were discarded as options for communication. UART between Drive 
-and Control was tested with some movement functionality on Drive and test 
-code on the ESP32 allowing for commands to be sent by the terminal of the 
+to most of the GPIO pins of your own choice \cite{ESP32PinOut}. However, 
+an interesting interaction that was recorded was that the 3 UART connections 
+that are available to the ESP32 aren’t completely unused \cite{ESPHardwareUART}. 
+One of the UART connections is used to communicate with the laptop when 
+connected via USB. This UART connection by default is assigned to pins 
+0\_RX and 1\_TX on the Arduino Adapter Board. As a result, 
+mapping a secondary UART on these same pins and serially writing 
+to your laptop would also write to the peripheral connected to 
+0\_RX and 1\_TX. Once this was determined, these two pins were 
+discarded as options for communication. UART between Drive and Control 
+was tested with some movement functionality on Drive and test code on the 
+ESP32 allowing for commands to be sent by the terminal of the 
 Serial Monitor through the UART connection between the laptop and the 
 ESP32. This was then forwarded to Drive. This allowed for imitating the 
 entire chain of communication from Command to Drive, but by only using the 
@@ -909,30 +921,32 @@ As described in the functional requirements for Control, the initial
 design was to set up two SPI connections with the FPGA due to the 
 overabundance of pins between the two devices. SPI as a peripheral was 
 superior as well since it would take less overhead for the FPGA and 
-would be a faster method for communication when compared to UART. 
-Alongside this, due to the ESP32 being dual-core, a task scheduler could 
-be used to simultaneously support image transfer while standard data was 
-being transferred. Initially, to test out the SPI capabilities of the 
-ESP32, the ESP32 was set up as an SPI controller, while an Arduino was set 
-up as an SPI peripheral. Through SPI.h, a library designed for the ESP32 
-and ESP8266, this was accomplished and communication between the two 
-devices was successful. It was discovered that the FPGA only supported 
-acting as an SPI controller and as such it would force the ESP32 to act 
-as an SPI peripheral. This, however, proved to be much more problematic 
-than expected. Although there is an immense amount of support for the 
-ESP32 on the Arduino, when it comes to acting as an SPI peripheral, this 
-has yet to be implemented from the Espressif documentation in C. Although 
-SPI peripheral libraries have been created for the older ESP8266, this 
-unfortunately has not extended to the ESP32. There have been some projects 
-which attempted to develop and use their own SPI peripheral functionality. 
-This is done by translating and porting over the libraries from the 
-original Espressif documentation into Arduino, setting them up as Arduino 
-libraries. After attempting to rework these libraries so that they could 
-support the functionality we needed, it was eventually discarded as an 
-option. Even if the ESP32 could function successfully as an SPI 
-controller, it wouldn’t matter since the FPGA had the same limitation 
-as it only had SPI controller functionality. Eventually it was agreed 
-that this would have to change to UART for standard data transmission. 
+would be a faster method for communication when compared to UART 
+\cite{CommProtocolComp}. Alongside this, due to the ESP32 being dual-core
+, a task scheduler \cite{ESP32DualCore} could be used to simultaneously support 
+image transfer while standard data was being transferred. Initially, to test out 
+the SPI capabilities of the ESP32, the ESP32 was set up as an SPI controller, 
+while an Arduino was set up as an SPI peripheral. Through SPI.h, 
+a library designed for the ESP32 and ESP8266 \cite{ESP32ArduinoGithub}, 
+this was accomplished and communication between the two 
+devices was successful. It was discovered that although the NIOS2 processor 
+supported acting as an SPI controller, acting as an SPI peripheral was not 
+well-supported. This proved problematic when instantiating an SPI peripheral 
+using the NIOS2, even if the FPGA itself supported it. Although there is an 
+immense amount of support for the ESP32 on the Arduino, when it comes 
+to acting as an SPI peripheral, this has yet to be implemented from the 
+Espressif documentation in C. Although SPI peripheral libraries have 
+been created for the older ESP8266, this unfortunately has not extended 
+to the ESP32. There have been some projects which attempted to develop 
+and use their own SPI peripheral functionality. This is done by 
+translating and porting over the libraries from the original Espressif 
+documentation into Arduino, setting them up as Arduino libraries. 
+After attempting to rework these libraries \cite{ESPSPISlaveMaster} \cite{ESPSPISlave}so that they could support 
+the functionality we needed, it was eventually discarded as an option. 
+Even if the ESP32 could function successfully as an SPI controller, 
+it wouldn’t matter since the FPGA had the same limitation as it only 
+had SPI controller functionality. Eventually it was agreed that this 
+would have to change to UART for standard data transmission. 
 As for image transfer, since this was meant to be done through SPI, a 
 framework for the ESP32 acting as an SPI controller to transfer these 
 images was created. However, as it proved too difficult to use the FPGA 
