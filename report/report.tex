@@ -2245,9 +2245,6 @@ what type of data is being sent.
 %End of energy implementation
 %End of implementation section
 
-\section{Evaluation and Conclusion}
-   
-
 
 \begin{comment}
     Could write about how we had to tune data for different lighting conditions, 
@@ -2305,56 +2302,45 @@ available for viewing under the maintained GitHub repository linked in the Appen
 
 %TODO #7!
 \section{Intellectual Property}
-Intellectual Property (IP) is a complex topic that has financial, technological, 
-and moral significance when developing products or inventions. In short, IP rights are what
-lets companies, inventors and creators prevent other people from using their work\cite{perea}.
-Many types of IP rights exists including copyrights, trademarks, design rights and patents.  
+Intellectual Property (IP) is a complex topic that has financial, 
+technological, and moral significance when developing products or 
+inventions. In short, IP rights are what lets companies, inventors 
+and creators prevent other people from using their work~\cite{perea}. 
+Many types of IP rights exists including trademarks, copyrights, 
+design rights and patents. In the context of our design project, 
+there are sections within IP which are less applicable than others. 
+These include trademarks, as no brand is being developed, and design 
+rights, as the rover's physical design has been provided by the 
+college and will not be significantly altered by students. Note 
+however, that as the college has created the rover design, it owns 
+the design rights and could stop students from using its appearance 
+if desired. Patents protect new inventions. To be eligible for a 
+patent an invention must be new, useful and not obvious. Unfortunately, 
+most of the technology used in the rover is not new, but has been 
+developed by others. This includes the hardware, communication protocols, 
+vision algorithms. As such, it is unlikely that the project has 
+produced any patent opportunities. That being said, a lot of the 
+code and algorithms written could be considered as original expression, 
+which would grant the group a copyright license. However, as the 
+Arduino and its libraries are under the GNU General Public 
+License \cite{ArduinoLicense}, an open-source license, users 
+need to follow the same license when using these libraries and 
+we would hence be restricted to an (L)GPL license as well. A more 
+complex situation is the system that is running on the FPGA, although 
+all components are available for testing in what is known as the Intel 
+FPGA IP Evaluation Mode, any commercial use of the IP would require a 
+license to be bought from Intel\cite{IntelEvalMode}. There are few 
+individual modules written in SystemVerilog that could be copyrighted, 
+like the Image processing module and the image transfer over SPI module, 
+if the FIFO and divider components were replaced with either 
+open-source/self-designed modules. 
 
-In the context of our design project, there are sections within IP which are less applicable than others. 
-These include trademarks, as no brand is being developed, and design rights, as the rover's physical design has
-been provided by the college and will not be significantly altered by students. Note however,
-that as the college has created the rover design, it owns the design rights and could stop students
-from using its appearance if desired, but would probably fail to obtain legal orders for it as the design
-has been "publicly" circulated and freely provided.
-Patenting is a vital step which should be encouraged for inventors to apply their negative rights and 
-protect themselves from any infringement which seeks to use their original inventive work without permission. 
-There are clear guidelines in place to determine what constitutes a patent and unfortunately, 
-this is not the case for our rover. By no means is it a novel idea; all the technology being 
-applied to the rover, like the hardware, communication protocols, vision algorithms and functionality 
-have all been explored in depth and this could not be clearer when we look at the countless missions, 
-development and papers that have been written for true Mars Rovers like Perseverance. 
-Although there is a case to be made for industrial applicability, this first requirement being 
-violated immediately nullifies the possibility of a patent. What is relevant is copyright as 
-the combination of software algorithms being applied could be considered complex enough to assert 
-copyright as it is original expression. However, as the Arduino and its libraries are under the GNU General 
-Public License \cite{ArduinoLicense}, an open-source license, users need to follow the same license 
-when using these libraries and we would hence be restricted to an (L)GPL license as well. A more complex 
-situation is the system that is running on the FPGA, although all components are available for testing 
-in what is known as the Intel FPGA IP Evaluation Mode, any commerical use of the IP would require a   
-license to be bought from Intel\cite{IntelEvalMode}. There are few individual modules written in SystemVerilog that could be copyrighted, 
-like the Image processing module and the image transfer over SPI module, if the FIFO and divider components were replaced
-with either open-source/self-designed modules. 
-
-\begin{comment}
-This is just a draft, feel free to edit, add, remove, and change what you want.
-Currently at 264 words
-\end{comment}
 \begin{comment}
 Could link stuff about how we are using Intel IP in the FPGA, as well as things
 like licencing and how some companies make their entire business based on it,
 like Arm, hence ethically it is important to maintain standards and rules for IP
 through the use of legislation and governmental regulatory authorities. 
 \end{comment}
-\begin{comment}
-A lot of the technologies that we have used in this project is probably covered
-by a patent.
-\end{comment}
-\begin{comment}
-Could also talk about how some of the Libraries for the Arduino are open source
-and the benefits that those bring to development in projects like these which
-are not funded and the benefits of open source in general maybe?
-\end{comment}
-
  
 \newpage
 
