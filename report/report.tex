@@ -215,6 +215,21 @@ the GPIO pins available. Considering the ESP32 will have to interface with
 at most three other subsystems through wired communication, 
 there is a lot of choice with peripherals that must be evaluated.
 
+As the three most common hardware peripherals to use in any engineering
+project, there is a discussion to be had about the differences between
+UART, SPI and I2C \cite{CommProtocolComp}. UART and I2C utilise 2 ports 
+for connections on eachdevice while SPI uses 4. While UART and SPI 
+are full-duplex, allowing for simultaneous data transfer between devices, 
+this is not the case for I2C. With regards to complexity, UART is the 
+simplest form of transfer that is available. Due to the number of 
+devices in SPI and I2C able to exceed 2, in comparison to UART, they 
+can be much harder to set up as they include additional checks to reflect
+their multiple device support. While I2C and SPI may be faster methods for 
+data transfer, they limit flexibility in design as I2C for example, 
+requires one device to designate itself as a controller and another as a 
+peripheral, which is not ideal for devices which need to regularly 
+instantiate communication with one another as controllers.
+
 \subsubsection{Initial Design Choices} 
 
 There are many options available for programming the ESP32. Due to the 
