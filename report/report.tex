@@ -404,7 +404,7 @@ core requirements that are listed below:
 The Vision module comprises of two main hardware elements: 
     the Terasic DE10-Lite, a cost-effective Intel MAX 10 based FPGA board 
     \cite{TerasicDE10Web} 
-    and the Terasic D8M-GPIO camera package \cite{TerasicD8MWeb}
+    and the Terasic D8M-GPIO camera package that has a OV8865 image sensor \cite{TerasicD8MWeb}
 that interfaces with the FPGA through the onboard GPIO connectors. 
 
 These hardware choices were made by the project organisers, 
@@ -420,6 +420,7 @@ This particular FPGA is also equipped with a 4-bit VGA output
 which is useful for debugging object detection live, 
 and also has a connector for an Arduino Uno R3 shield, \cite{TerasicDE10Web} 
 which can be used to interface with the ESP32 used for Control.  
+
 
 \paragraph*{Initial Design Choices}
 
@@ -477,7 +478,7 @@ In order to perform general purpose operations like
     and to provide a debugging interface,
 the decision was made to instantiate a Nios\textsuperscript{\textregistered} II/f ``Fast'' soft core on the FPGA. 
 This would also allow for a quicker development cycle as the compilation of Quartus projects
-is upwards of 6 minutes, but C files can be changed and compiled in seconds. But as the Nios II 
+is upwards of 6 minutes, but C files can be changed and compiled in seconds. But as the Nios\textsuperscript{\textregistered} II 
 is limited in processing power and also in available memory, it is not capable of performing 
 the tasks for the actual detection of the objects.  
 Alternatively, to implement more advanced image processing algorithms
@@ -949,10 +950,10 @@ the SPI capabilities of the ESP32, the ESP32 was set up as an SPI controller,
 while an Arduino was set up as an SPI peripheral. Through SPI.h, 
 a library designed for the ESP32 and ESP8266 \cite{ESP32ArduinoGithub}, 
 this was accomplished and communication between the two 
-devices was successful. It was discovered that although the NIOS2 processor 
+devices was successful. It was discovered that although the Nios\textsuperscript{\textregistered} II processor 
 supported acting as an SPI controller, acting as an SPI peripheral was not 
 well-supported. This proved problematic when instantiating an SPI peripheral 
-using the NIOS2, even if the FPGA itself supported it. Although there is an 
+using the Nios\textsuperscript{\textregistered} II, even if the FPGA itself supported it. Although there is an 
 immense amount of support for the ESP32 on the Arduino, when it comes 
 to acting as an SPI peripheral, this has yet to be implemented from the 
 Espressif documentation in C. Although SPI peripheral libraries have 
@@ -1677,7 +1678,7 @@ environment included changes in gradient or if objects of interest were located
 on top of other objects. 
 
 Secondly, as there were still occasional inaccurate bounding boxes, conditions 
-were implemented on the software running on the Nios II processor to filter out 
+were implemented on the software running on the Nios\textsuperscript{\textregistered} II processor to filter out 
 boxes larger or smaller than certain values, and boxes that had a ratio that did 
 not resemble a square. 
 
@@ -1686,9 +1687,9 @@ not resemble a square.
 \subsubsection{Object Location Calculations}
 
 With the bounding boxes obtained from the Verilog module, the coordinates of the
-bounding box for each colour is sent to the Nios II processor using a FIFO buffer.
+bounding box for each colour is sent to the Nios\textsuperscript{\textregistered} II processor using a FIFO buffer.
 The calculations for how far away the object is and it's relative position in 
-comparison to the camera module was are done on the Nios II processor. 
+comparison to the camera module was are done on the Nios\textsuperscript{\textregistered} II processor. 
 
 There are multiple ways to calculate the location of a 3D object in space on a plane
 with some ways being more precise than others. Some methods rely on using the 
@@ -1704,7 +1705,7 @@ to the camera was based on the following form: \begin{align*}
     y & = A_y m^2 + B_y n^2 + C_y mn + D_y m + E_y n + F_y  
 \end{align*} This is a relatively simple quadratic mapping between the pixel coordinates 
 and the real world coordinate system which is a good choice for this system as the 
-Nios II is limited in both processing power and available memory. 
+Nios\textsuperscript{\textregistered} II is limited in both processing power and available memory. 
 By taking a picture of multiple balls in different locations and 
 measuring the actual corresponding mapping distance and the pixel locations with
 a set of at least 6 measurements, 
@@ -1751,7 +1752,7 @@ The Nios\textsuperscript{\textregistered} II processor does not include floating
 this algorithm requires floating point calculations as some of the coefficients 
 tend to be very small, and this algorithm is run for each set of colours, it was
 prudent to include hardware support for single precision floating point adds 
-and multiplications. This was done by adding the Nios II Custom Floating Point Instruction module from Intel's IP catalogue 
+and multiplications. This was done by adding the Nios\textsuperscript{\textregistered} II Custom Floating Point Instruction module from Intel's IP catalogue 
 for custom floating point instructions, which reduces the amount of cycles 
 necessary to carry out a floating point multiplication to 4 cycles using a single
 instruction and a floating point add to 5 cycles\cite{NiosIICustomInstruction}.
@@ -2062,10 +2063,10 @@ sent. What data do we send?
     the gain settings. This resulted in unsatisfactory performance as the testing enviroment
     was tinted yellow and there was no way of adjusting for that. 
 
-    After researching the camera, and going through the OV8865's datasheet, it was discovered
+    After researching the camera, and going through the OV8865's datasheet, \cite{OV8865DataSheet} it was discovered
     that white balance - the gains of the Red, Green and Blue pixels could be individual manipulated
     and manually calibrated. By testing these values with trial and error in conjunction with the 
-    MATLAB colour threshold tool, a set of gains were found that maximised the colour detection and
+    MATLAB Colour Threshold Tool, a set of gains were found that maximised the colour detection and
     reduced the number of false positives in the bounding box detection. This fixed the problem that 
     had occurred due to the tint of the room. 
 
