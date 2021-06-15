@@ -10,7 +10,7 @@
 % Colour Management
 \usepackage{color}
 
-% Multi-Line Comments
+% Multi-Line Com ments
 \usepackage{comment}
 
 % Customisable Sections
@@ -79,7 +79,7 @@
 
 
 \title{Engineering Design Project}
-\author{Georgios Chaimali \and 
+\author{Georgios Chaimalas \and 
         Dimitrios Georgakopoulos \and 
         Edvard J. Skaarberg Holen \and 
         Hyunjoon Jeon \and 
@@ -137,24 +137,50 @@ To fulfil this broad goal, the design and development of the rover is separated 
 six distinct subsystems: \textbf{Command, Control, Drive, Energy, Integration and Vision},
 each of which will be led by a single team member. These modules will work semi-independently to 
 achieve the functional requirements as defined by the problem and 
-eventually integrate their findings and goals to achieve the specification 
+eventually integrate their findings and goals to achieve the goals set out by the specification 
 at hand. We will work under the main consideration that our rover is meant 
-to be a proof of concept for one that can function on Mars. This report 
-contains our design process for the rover and how it was implemented.
+to be a proof of concept for one that could function on Mars. This report 
+contains our design process for the rover, how it was implemented and challenges that were faced. 
 
-\section{Structural Design}
+\section{Structural Design }
+
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[width = \linewidth]{./media/export.pdf}
+		\caption[Structural Design Diagram showing Hardware and Parameters of Subsystems for Mars Rover]{\protect\raggedright Structural Design Diagram showing Hardware and Parameters of Subsystems for Mars Rover}
+		
+        \label{fig:StructuralDesignDiagram}
+	\end{Center}
+\end{figure}
+
+The structural design of the Rover as shown in Figure \ref{fig:StructuralDesignDiagram}, shows
+the 5 main subsystems of the rover together with their main hardware components. 
+This presents an overview of the entire Rover system and how the different components 
+interact with each other. Both power connections and data connections are shown, 
+together with corresponding arrows where directional transfer is necessary. 
+Each subsystem's hardware has a set of configurable parameters that are also shown,
+these parameters are determined as part of the functional design process and 
+implementation.  
 
 \section{Functional Design}
 
 \subsection{Control}
 
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[scale = 0.5]{./images/ControlFR.png}
+		\caption{Functional Design Diagram showing Dataflow for Control Subsystem}
+		\label{fig:ControlFunctional}
+	\end{Center}
+\end{figure}
+
 \subsubsection{Requirements}
 
 The Control module within the context of the rover has one main goal: 
-to act as the communication hub between all the subsystems, delivering
+\textbf{to act as the communication hub between all the subsystems, delivering
 the relevant data where it is required to allow for the rover to integrate
-as a whole \cite{MarsRoverSpec}.  These functional requirements can be 
-obtained from the Functional Design diagram for control, outlining all the 
+as a whole} \cite{MarsRoverSpec}.  These functional requirements can be 
+obtained from the Functional Design diagram for control, see Figure \ref{fig:ControlFunctional}, outlining all the 
 data flow for the Control subsystem. There are a couple of core objectives 
 which must be achieved in order to fulfil this role as outlined below:
 
@@ -196,16 +222,31 @@ WiFi capabilities at 2.4GHz and Bluetooth \cite{ESP32Datasheet} to
 interface wirelessly with other devices. Using the Arduino Adapter 
 board \cite{ESP32ArduinoAdapter}, it can sit directly on top of an 
 Arduino or device with similar pins to directly interface through 
-physical connections. 
+physical connections like the FPGA in this case. 
 
 For wired communications, the ESP32 has limitations for the type of 
-communication peripherals it can pursue with peer microcontrollers. 
-However, unlike Arduinos which have at most 1 SPI, 2 I2C and 1 UART port, 
-the ESP32 can support up to 3 SPI, 2 I2C and 3 UART ports which are 
-configurable to most of the GPIO pins available. Considering the ESP32 
-will have to interface with at most three other subsystems through wired 
-communication, there is a lot of choice with peripherals that must be 
-investigated.
+communication peripherals it can use with peer microcontrollers. 
+Unlike Arduinos which have at most 1 SPI, 2 I2C and 1 UART port 
+\cite{ArduinoPeripheral}, the ESP32 can support up to 3 SPI, 2 I2C and 
+3 UART ports \cite{ESP32Datasheet} which are configurable to most of 
+the GPIO pins available. Considering the ESP32 will have to interface with 
+at most three other subsystems through wired communication, 
+there is a lot of choice with peripherals that must be evaluated.
+
+As the three most common hardware peripherals to use in any engineering
+project, there is a discussion to be had about the differences between
+UART, SPI and I2C \cite{CommProtocolComp}. UART and I2C utilise 2 ports 
+for connections on eachdevice while SPI uses 4. While UART and SPI 
+are full-duplex, allowing for simultaneous data transfer between devices, 
+this is not the case for I2C. With regards to complexity, UART is the 
+simplest form of transfer that is available. Due to the number of 
+devices in SPI and I2C able to exceed 2, in comparison to UART, they 
+can be much harder to set up as they include additional checks to reflect
+their multiple device support. While I2C and SPI may be faster methods for 
+data transfer, they limit flexibility in design as I2C for example, 
+requires one device to designate itself as a controller and another as a 
+peripheral, which is not ideal for devices which need to regularly 
+instantiate communication with one another as controllers.
 
 \subsubsection{Initial Design Choices} 
 
@@ -215,9 +256,10 @@ that the Arduino IDE and supporting libraries for the ESP32 would be
 enough for developing what is necessary. As there are stringent practices 
 for the base Arduino Libraries and ESP8266 Libraries, this was extended 
 to a majority of the functionality available to the ESP32 including WiFi, 
-Bluetooth, UART, SPI and I2C. Seeing as the ESP32 through Espressif is 
-programmed through C, most of this can be imported through the Arduino IDE 
-which supports simpler methods for flashing software onto the ESP32.
+Bluetooth, UART, SPI and I2C \cite{ESP32ArduinoGithub}. Seeing as the ESP32 
+through Espressif is programmed through C, most of this can be imported 
+through the Arduino IDE which supports simpler methods for flashing 
+software onto the ESP32.
 
 As there is no requirement imposed upon the data being transferred 
 and displayed, this results in complete freedom for the form in which 
@@ -229,7 +271,7 @@ subsystems. This is to ensure that bottlenecks would not appear due to a
 sizable processing time in between transmission of data, as this would 
 cause crippling delays for communication. The simplest way to ensure the 
 integrity of the data is to standardise the type for data being 
-transferred. Since initially, the formatting and content of the data is 
+transferred. Since initially, the formatting and content of the data was 
 unclear, receiving and sending them as bytes or characters would be the 
 most versatile solution. Internal buffers for the ESP32 would store 
 individual commands or data lines and send them to the required subsystem 
@@ -243,19 +285,20 @@ more simplistic with regards to the type of data being communicated, we
 opted for the transport layer protocol, TCP. This is due to the need for 
 consistent transmission of data, retransmitting if packets are lost and 
 ensuring the data does reach its destination. Speed by comparison is a 
-less stringent requirement and as such, UDP was discarded as a choice.
+less stringent requirement and as such, UDP was discarded as a choice
+\cite{TCPvsUDP}.
 
 For both Drive and Energy, the Arduino Nano Everything provided by the 
 project organisers had it’s UART ports exposed through the specific 
 hardware and it’s connections. As such, there was little need for 
-deliberation over the protocol. The peripheral chosen for both these 
-groups was UART. For the Energy submodule specifically, since it can’t 
-be integrated into the Rover physically, it was decided that any necessary 
-data would be transmitted directly to Command. This is through the UART 
-USB connection from the Arduino to the computer, which would then 
-communicate with Command over TCP. However, to ensure Energy can be 
-integrated if necessary, one UART port for the ESP32 was set aside for 
-Energy.
+deliberation over the protocol being used \cite{ArduinoSerial}. The 
+peripheral chosen for both these groups was UART. For the Energy 
+submodule specifically, since it can’t be integrated into the Rover 
+physically, it was decided that any necessary data would be transmitted 
+directly to Command. This is through the UART USB connection from the 
+Arduino to the computer, which would then communicate with Command over 
+TCP. However, to ensure Energy can be integrated if necessary, one UART 
+port for the ESP32 was set aside for Energy.
 
 For Vision, there are two types of data which need to be transferred 
 through the ESP32; the image from the camera and data regarding object 
@@ -379,7 +422,7 @@ core requirements that are listed below:
 The Vision module comprises of two main hardware elements: 
     the Terasic DE10-Lite, a cost-effective Intel MAX 10 based FPGA board 
     \cite{TerasicDE10Web} 
-    and the Terasic D8M-GPIO camera package \cite{TerasicD8MWeb}
+    and the Terasic D8M-GPIO camera package that has a OV8865 image sensor \cite{TerasicD8MWeb}
 that interfaces with the FPGA through the onboard GPIO connectors. 
 
 These hardware choices were made by the project organisers, 
@@ -394,33 +437,36 @@ for signal processing applications like multiplication.
 This particular FPGA is also equipped with a 4-bit VGA output 
 which is useful for debugging object detection live, 
 and also has a connector for an Arduino Uno R3 shield, \cite{TerasicDE10Web} 
-which can be used to interface with the ESP32 used for control.  
+which can be used to interface with the ESP32 used for Control.  
+
 
 \paragraph*{Initial Design Choices}
 
 There are several common approaches to object detection, with the two most 
-prominent being the use of classic Computer Vision algorithms like the Canny edge-
+prominent being the use of classic Computer Vision algorithms like the Canny edge
 detection technique and Hough transforms or the more recent use of convolutional
 neural networks (CNN) and deep learning to perform object detection through a 
-combination of layers that perform convolution, pooling and fully connected layers. 
+combination of layers that perform convolution and pooling and a fully connected network
+at the end. 
 According to \cite{DBLP:journals/corr/abs-1806-01683}, CNNs have in recent years 
 become the de-facto standard for machine vision applications such as object 
 classification, object detection and object segmentation; but as there is a desire 
-for more performant and power- efficient systems, there has been a shift to 
+for more performant and power-efficient systems, there has been a shift to 
 using dedicated hardware tailored to the operations used for CNNs. There was a 
 deep interest from the technical lead for the Vision module on this and attempts
 were made to implement this on the FPGA using various tools such as Intel's High 
-Level Synthesis Compiler \cite{IntelHLS} and hls4ml - a python package for machine learning 
-optimised high level synthesis \cite{HLS4ML} as well as a manual implementation of neurons using
-multiply-accumulate operations in SystemVerilog. 
+Level Synthesis Compiler \cite{IntelHLS} and hls4ml - a recently developed 
+python package for machine learning optimised high level synthesis \cite{HLS4ML} 
+as well as a manual implementation of neurons using multiply-accumulate operations in SystemVerilog. 
 However, there were far too many challenges for implementing a CNN within the 
 current project with key issues being the system is a real-time system that 
 processes video data pixel-by-pixel in a fixed order and in contrast, most CNNs for object 
 detection working with multiple pixels in different locations simultaneously. 
 A lot of previous work on the subject is also on FPGAs being used as accelerators for 
 CNNs running on hard cores rather than standalone embedded systems as seen in \cite{DBLP:journals/corr/abs-1806-01683}
-, which is the use case here. The only possible neural network that could be applied in this period of time
-would be a non-convolutional one that just acted based on the individual colours of each pixel
+, which is the use case here. The field in itself is also still in development and is quite niche, 
+with most work being done and implemented by experienced researchers. The only feasible neural network that could be applied in this period of time
+would be a non-convolutional fully connected layer network that just acted based on the individual colours of each pixel
 and possibly the temporal location, but there are other more straightforward methods 
 and equally effective methods for object detection at a pixel level. 
 These challenges are also faced when trying to implement popular traditional computer vision 
@@ -437,7 +483,7 @@ blue, grey and green. As these colours cover a wide range of the colour spectrum
 and even overlap with each other (orange and pink, blue and grey), it was thought 
 to be necessary to do some preprocessing on the incoming image from the camera 
 to ensure optimal colour detection for object detection.  
-As the colour overlap in the RGB spectrum was significant, the decision was made to apply
+As the channel spectrum overlap in the RGB spectrum for different colours was significant, the decision was made to apply
 a transform from the RGB (Red, Green, Blue) colour space to the HSV (Hue, 
 Saturation, Value) colour space.  HSV has been shown to be a theoretically better colour space
 for image processing tasks like colour segmentation in road sign detection for 
@@ -450,19 +496,22 @@ In order to perform general purpose operations like
     and to provide a debugging interface,
 the decision was made to instantiate a Nios\textsuperscript{\textregistered} II/f ``Fast'' soft core on the FPGA. 
 This would also allow for a quicker development cycle as the compilation of Quartus projects
-is upwards of 6 minutes, but C files can be changed and compiled in seconds. 
+is upwards of 6 minutes, but C files can be changed and compiled in seconds. But as the Nios\textsuperscript{\textregistered} II 
+is limited in processing power and also in available memory, it is not capable of performing 
+the tasks for the actual detection of the objects.  
 Alternatively, to implement more advanced image processing algorithms
 or to reduce other hardware components in the system like the multiple Arduinos, 
 a FPGA with a hard core connected via PCIe, 
 known as a FPGA System-On-Chip (FPGA SoC) \cite{FPGASoC} could be used, 
-which would provide both the advantages of having reconfigurable hardware,
-a more capable general purpose processor and a higher bandwidth limit.
+which would provide the advantages of having reconfigurable hardware, and
+a more capable general purpose processor and a higher bandwidth limit for communications
+between the general purpose software core and the FPGA's hardware. 
 
 
 
 
 \subsection{Drive}
-\subsubsection{The purpose of the Driving module is the following:}
+The purpose of the Driving module is the following:
 \begin{enumerate}
   \item Make the rover able to move forward, backward, rotate clockwise and anticlockwise.
   \item Measure the distance that the rover has covered. 
@@ -859,45 +908,47 @@ and Control. From the requirements set out, it was clear that the ESP32
 had to use it’s WiFi capabilities to interface with Command. The two 
 options available to the ESP32 are as follows: to act as either it's own 
 router through the Access Point mode or it's own station under an existing 
-router through the Stationary mode. As the Access Point mode would mean 
-that the rover is not connected to the internet, since it would create a 
-private inaccessible network, instead the stationary mode was opted for. 
-Having the capability to communicate with the rover through an existing 
-router allows for communication from anywhere in the world through WiFi. 
-This would be much more flexible and representative of communicating with 
-a rover on Mars. A working prototype for communication was built using 
-TCP. In order to test whether it was functioning, since Command was still 
-in very early stages, a python-based TCP server was created. When running, 
-it would take the text put into the terminal and send it to the ESP32 
-while displaying the messages incoming from the ESP32. The ESP32 was 
-configured to echo back all messages. Through this simple system, the 
-connection was successfully implemented by debugging the connection and 
-the messages being sent back and forth.
+router through the Stationary mode \cite{ESPWIFI}. As the Access Point mode 
+would mean that the rover is not connected to the internet, since 
+it would create a private inaccessible network, the stationary mode was chosen 
+instead. Having the capability to communicate with the rover through an 
+existing router allows for communication from anywhere in the world 
+through WiFi. This would be much more flexible and representative of 
+communicating with a rover on Mars. A working prototype for communication 
+was built using TCP. In order to test whether it was functioning, since 
+Command was still in very early stages, a python-based TCP server was created. 
+When running, it would take the text put into the terminal and send it 
+to the ESP32 while displaying the messages incoming from the ESP32. 
+The ESP32 was configured to echo back all messages. Through this 
+simple system, the connection was successfully implemented by debugging
+ the connection and the messages being sent back and forth.
 
 \subsubsection{Drive Communication}
 
 As the first physical connection between the ESP32 and a peer 
 microcontroller, it was decided that the best course of action would 
-be to completely test communication with the simplest of devices. Since 
-the Arduino has an extensive and well-documented library for UART 
-communication, Drive was the best subsystem to test out initial 
-communication. When testing out the UART communication, two methods 
-documented through the Arduino IDE were used. SoftwareSerial, which uses 
-code to imitate a UART connection allowing you to map the peripheral to 
-any GPIO pin, or directly assigning the pins through hardware assignment. 
+be to completely test communication with the simplest of devices, 
+the Arduino Nano Every. Since the Arduino has an extensive 
+and well-documented library for UART communication, Drive was the 
+best subsystem to test out initial communication. When testing out the 
+UART communication, two methods documented through the Arduino IDE were used. 
+SoftwareSerial \cite{ESPSoftwareSerial}, which uses code to imitate a 
+UART connection allowing you to map the peripheral to any GPIO pin, 
+or directly assigning the pins through hardware assignment. 
 Initially the former was utilised, but it was quickly realised that the 
 multiplexing feature of the ESP32 chip allows for hardware configuration 
-to most of the GPIO pins of your own choice. However, an interesting 
-interaction that was recorded was that the 3 UART connections that are 
-available to the ESP32 aren’t completely unused. One of the UART 
-connections is used to communicate with the laptop when connected via USB. 
-This UART connection by default is assigned to pins 0\_RX and 1\_TX on the 
-Arduino Adapter Board. As a result, mapping a secondary UART on these 
-same pins and serially writing to your laptop would also write to the 
-peripheral connected to 0\_RX and 1\_TX. Once this was determined, these 
-two pins were discarded as options for communication. UART between Drive 
-and Control was tested with some movement functionality on Drive and test 
-code on the ESP32 allowing for commands to be sent by the terminal of the 
+to most of the GPIO pins of your own choice \cite{ESP32PinOut}. However, 
+an interesting interaction that was recorded was that the 3 UART connections 
+that are available to the ESP32 aren’t completely unused \cite{ESPHardwareUART}. 
+One of the UART connections is used to communicate with the laptop when 
+connected via USB. This UART connection by default is assigned to pins 
+0\_RX and 1\_TX on the Arduino Adapter Board. As a result, 
+mapping a secondary UART on these same pins and serially writing 
+to your laptop would also write to the peripheral connected to 
+0\_RX and 1\_TX. Once this was determined, these two pins were 
+discarded as options for communication. UART between Drive and Control 
+was tested with some movement functionality on Drive and test code on the 
+ESP32 allowing for commands to be sent by the terminal of the 
 Serial Monitor through the UART connection between the laptop and the 
 ESP32. This was then forwarded to Drive. This allowed for imitating the 
 entire chain of communication from Command to Drive, but by only using the 
@@ -909,30 +960,32 @@ As described in the functional requirements for Control, the initial
 design was to set up two SPI connections with the FPGA due to the 
 overabundance of pins between the two devices. SPI as a peripheral was 
 superior as well since it would take less overhead for the FPGA and 
-would be a faster method for communication when compared to UART. 
-Alongside this, due to the ESP32 being dual-core, a task scheduler could 
-be used to simultaneously support image transfer while standard data was 
-being transferred. Initially, to test out the SPI capabilities of the 
-ESP32, the ESP32 was set up as an SPI controller, while an Arduino was set 
-up as an SPI peripheral. Through SPI.h, a library designed for the ESP32 
-and ESP8266, this was accomplished and communication between the two 
-devices was successful. It was discovered that the FPGA only supported 
-acting as an SPI controller and as such it would force the ESP32 to act 
-as an SPI peripheral. This, however, proved to be much more problematic 
-than expected. Although there is an immense amount of support for the 
-ESP32 on the Arduino, when it comes to acting as an SPI peripheral, this 
-has yet to be implemented from the Espressif documentation in C. Although 
-SPI peripheral libraries have been created for the older ESP8266, this 
-unfortunately has not extended to the ESP32. There have been some projects 
-which attempted to develop and use their own SPI peripheral functionality. 
-This is done by translating and porting over the libraries from the 
-original Espressif documentation into Arduino, setting them up as Arduino 
-libraries. After attempting to rework these libraries so that they could 
-support the functionality we needed, it was eventually discarded as an 
-option. Even if the ESP32 could function successfully as an SPI 
-controller, it wouldn’t matter since the FPGA had the same limitation 
-as it only had SPI controller functionality. Eventually it was agreed 
-that this would have to change to UART for standard data transmission. 
+would be a faster method for communication when compared to UART 
+\cite{CommProtocolComp}. Alongside this, due to the ESP32 being dual-core
+, a task scheduler \cite{ESP32DualCore} could be used to simultaneously support 
+image transfer while standard data was being transferred. Initially, to test out 
+the SPI capabilities of the ESP32, the ESP32 was set up as an SPI controller, 
+while an Arduino was set up as an SPI peripheral. Through SPI.h, 
+a library designed for the ESP32 and ESP8266 \cite{ESP32ArduinoGithub}, 
+this was accomplished and communication between the two 
+devices was successful. It was discovered that although the Nios\textsuperscript{\textregistered} II processor 
+supported acting as an SPI controller, acting as an SPI peripheral was not 
+well-supported. This proved problematic when instantiating an SPI peripheral 
+using the Nios\textsuperscript{\textregistered} II, even if the FPGA itself supported it. Although there is an 
+immense amount of support for the ESP32 on the Arduino, when it comes 
+to acting as an SPI peripheral, this has yet to be implemented from the 
+Espressif documentation in C. Although SPI peripheral libraries have 
+been created for the older ESP8266, this unfortunately has not extended 
+to the ESP32. There have been some projects which attempted to develop 
+and use their own SPI peripheral functionality. This is done by 
+translating and porting over the libraries from the original Espressif 
+documentation into Arduino, setting them up as Arduino libraries. 
+After attempting to rework these libraries \cite{ESPSPISlaveMaster} \cite{ESPSPISlave}so that they could support 
+the functionality we needed, it was eventually discarded as an option. 
+Even if the ESP32 could function successfully as an SPI controller, 
+it wouldn’t matter since the FPGA had the same limitation as it only 
+had SPI controller functionality. Eventually it was agreed that this 
+would have to change to UART for standard data transmission. 
 As for image transfer, since this was meant to be done through SPI, a 
 framework for the ESP32 acting as an SPI controller to transfer these 
 images was created. However, as it proved too difficult to use the FPGA 
@@ -945,7 +998,7 @@ Command for mapping and detecting obstacles.
  
 Although the communication between peer devices was successfully set
 up and tested, there was still a small challenge. To be able to
-ncorporate all communication such that it could occur simultaneously and
+incorporate all communication such that it could occur simultaneously and
 effectively, with as limited of a delay as possible. In order to achieve
 this, it was noted that the UART and TCP communication between devices
 are always held within internal buffers and as such there is no need to
@@ -1018,7 +1071,7 @@ the following formula was used: \( RPM=\frac{60}{T} \)
 \begin{figure}[H]
 	\begin{Center}
 		\includegraphics[width=2.16in,height=3.15in]{./media/image1.jpeg}
-		\caption{During the recording process}
+		\caption{Equipment Setup for Measuring RPM}
 		\label{figDuring_the_process_of_recording}
 	\end{Center}
 \end{figure}
@@ -1302,7 +1355,7 @@ To conclude, by using only a PI controller and by setting P=2.6 and I=27 the
 rover has a stable driving system that does not take a lot of time to stabilise 
 its reference voltage (in other words, its reference speed), and most importantly, 
 it does not overshoot and oscillate before it takes its reference value. 
-These findings can be confirmed by the graph shown in Figure ~\ref{graph:PIDController}.
+These findings can be confirmed by the graph shown in Figure ~\ref{graph:Initial vs Final PI controller}
 
 %%%%%%%%%%%%%%%%%%%% Figure/Image No: 4 starts here %%%%%%%%%%%%%%%%%%%%
 
@@ -1474,7 +1527,7 @@ by Terasic Inc for the D8M Camera module that was modified by Dr Edward Stott
 several IP components from the Intel Video and Image Processing Suite,
 namely the Clocked Video Output and Frame Buffer Core. The system is compromised
 of several modules, that take the raw data from the camera in Bayer filter form\cite{TerasicD8MWeb},
-transform it into RGB video packets, buffer the frames to allow camera and output
+transform it into RGB video packets with a resolution of 640*480, buffer the frames to allow camera and output
 to run at different frame rates, process the image data and convert the video 
 data to serial data for output over VGA.\cite{EEE2Rover} As this system and its 
 corresponding documentation is openly available, the implementation outside of 
@@ -1538,18 +1591,16 @@ output speed necessary to produce a VGA output. As the provided Intel LPM Divisi
 IP Core has a configurable pipeline latency, the decision was taken to pipeline this division
 process in order to maintain the clock speed. By gradually increase the pipeline 
 and testing the critical path delay, the decision was made to use a 5 cycle latency
-for the divider, which allowed the FPGA's image processing module to run at 100MHz. 
-
-As there are two divide operations for each HSV calculation, one for H and one for S,
+for the divider, which allowed the FPGA's image processing module to run at 100MHz. As there are two divide operations for each HSV calculation, one for H and one for S,
 two dividers were instantiated with different parameters to account for the differences 
 in the calculations as H values require signed values and S values do not. 
 
-In order to maintain the video stream and process one pixel per cycle, this operation 
+In order to maintain the video stream and process one pixel per cycle, this conversion 
 was implemented with a 6 stage cycle that took in a new RGB value every cycle and
 produced a new HSV value every cycle. This included storing the maximum RGB value \( M \) and difference
 values \(C \) for each input for 6 cycles, to ensure that the data being used for 
 comparison and output is correct. In order to use the pipeline, 12 separate dividers
-were instantiated, 6 for each type. Although this would have used a lot of logic 
+were instantiated, 6 for each type. Although this used a lot of logic 
 elements and hardware, it comes at the benefit of being able to maintain the clock 
 speed and optimise the processor for speed. 
 
@@ -1574,15 +1625,31 @@ it's bounding box.
 In order to determine the colour thresholds for detecting each of the different 
 coloured balls, images from the camera were taken after adjusting the camera settings
 for gain, exposure and white balance to maximise the difference between the balls 
-and the background as well as the balls and each other. 
+and the background as well as the balls and each other.  
 
 An image was then obtained from the camera by taking an image from the output VGA 
 port. This image was then imported into a MATLAB tool from the Image Processing toolbox - 
 the Colour Thresholder App. This application allows colour images to be segmented by changing
 thresholds in different colour channels, supporting RGB, HSV, YCbCR and L*a*b*. An example of 
-the user interface for this tool is shown in Figure .......
+the user interface for this tool is shown in Figure \ref{image:MatlabColourThresholder}
 
-As can be seen in the figure, the tool provides an accurate way to select the values 
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{.5\linewidth}
+        \centering
+        \includegraphics[scale=0.17]{./images/MatlabColourThresholder}
+        \caption{MATLAB Colour Thresholder Tool}
+        \label{image:MatlabColourThresholder}
+    \end{minipage}\hfill
+    \begin{minipage}{.5\linewidth}
+        \centering
+        \includegraphics[scale=0.18]{./images/GreenThreshold.png}
+        \caption{Tool Produced Composite for Green Ball}
+        \label{image:GreenThreshold}
+    \end{minipage}
+\end{figure}
+
+As can be seen in Figure \ref{image:GreenThreshold}, the tool provides an accurate way to select the values 
 for each of the HSV channels, as the binary mode can be used to ensure that the regions
 of interest are maximised and the other regions are ignored. 
 
@@ -1590,7 +1657,9 @@ However, the accuracy of the colour threshold is not perfect for several reasons
 Firstly, even though the HSV colour scheme is used to reduce the effect of illumination, 
 the differences in light as the rover approaches the table-tennis balls from different angles
 can vary by a large amount, causing differences in the H and S channels, 
-hence multiple pictures have to be used for this calibration step. 
+hence multiple pictures have to be used for this calibration step. This is also
+because the materials used for the construction of the ping pong balls have a specular 
+reflectance that causes non-uniform colour dependent on the angle of the light. 
 Secondly, as the pictures being used for calibration are from the 4-bit VGA output, 
 the output image's colour spectrum is reduced compared to the colour that can be
  ``seen'' by the camera is the full 24-bit colour, that has much more depth and 
@@ -1598,16 +1667,45 @@ a wider range of colours than what is perceived in the output image. Additionall
 as the data is obtained from the VGA output and captured using an application on 
 a computer, there may be some processing that is carried out on the image, meaning 
 that the image's data may be different in terms of RGB values from the raw RGB values
-that the camera is capturing. 
+that the camera is capturing.
+
+\paragraph*{Use of Pixel Location for Filtering}
+
+A purely colour based pixel approach to object detection has significant flaws unless
+the difference between the environment's colours and the object of interest's colours 
+are significantly different from each other and the background's colour is plain and
+singular. As the testing environment was not ideal, there would be other colours
+in the scene that would conflict with the objects causing inaccurate bounding boxes that
+were usually too large. In order to filter out these errors and glitches, the 
+location of the pixel was taken into account.
+
+Firstly, it was observed that as the testing environment was a flat surface, the 
+location of the balls and hence the individual pixels would never be smaller than 
+a certain value (since y values are counted from the top down with the top of 
+the frame being the 0 value), so this was taken into account and bounding boxes
+were only updated on the following conditions: when a colour was detected AND the
+video packet was valid AND the pixel y-coordinate \(> 280\). The value of 280 was 
+chosen as objects near the horizon level at around 240 pixels would be very far 
+away and could be easily mistaken.
+
+This simple adjustment and addition to the object detection algorithm reduced false 
+positives by a significant amount. However, it would not be useful if the testing
+environment included changes in gradient or if objects of interest were located 
+on top of other objects. 
+
+Secondly, as there were still occasional inaccurate bounding boxes, conditions 
+were implemented on the software running on the Nios\textsuperscript{\textregistered} II processor to filter out 
+boxes larger or smaller than certain values, and boxes that had a ratio that did 
+not resemble a square. 
 
 
 
 \subsubsection{Object Location Calculations}
 
 With the bounding boxes obtained from the Verilog module, the coordinates of the
-bounding box for each colour is sent to the Nios II processor using a FIFO buffer.
+bounding box for each colour is sent to the Nios\textsuperscript{\textregistered} II processor using a FIFO buffer.
 The calculations for how far away the object is and it's relative position in 
-comparison to the camera module was are done on the Nios II processor. 
+comparison to the camera module was are done on the Nios\textsuperscript{\textregistered} II processor. 
 
 There are multiple ways to calculate the location of a 3D object in space on a plane
 with some ways being more precise than others. Some methods rely on using the 
@@ -1623,7 +1721,7 @@ to the camera was based on the following form: \begin{align*}
     y & = A_y m^2 + B_y n^2 + C_y mn + D_y m + E_y n + F_y  
 \end{align*} This is a relatively simple quadratic mapping between the pixel coordinates 
 and the real world coordinate system which is a good choice for this system as the 
-Nios II is limited in both processing power and available memory. 
+Nios\textsuperscript{\textregistered} II is limited in both processing power and available memory. 
 By taking a picture of multiple balls in different locations and 
 measuring the actual corresponding mapping distance and the pixel locations with
 a set of at least 6 measurements, 
@@ -1666,6 +1764,17 @@ balls that were closer to the camera.
 These calculations for the coefficients were carried out in MATLAB, and then 
 implemented in C to be run on the Nios\textsuperscript{\textregistered} II processor. 
 
+The Nios\textsuperscript{\textregistered} II processor does not include floating point hardware by default, but as 
+this algorithm requires floating point calculations as some of the coefficients 
+tend to be very small, and this algorithm is run for each set of colours, it was
+prudent to include hardware support for single precision floating point adds 
+and multiplications. This was done by adding the Nios\textsuperscript{\textregistered} II Custom Floating Point Instruction module from Intel's IP catalogue 
+for custom floating point instructions, which reduces the amount of cycles 
+necessary to carry out a floating point multiplication to 4 cycles using a single
+instruction and a floating point add to 5 cycles\cite{NiosIICustomInstruction}.
+If this hardware was not used, it would be implemented using software, and hence
+would take multiple instructions and more hence more cycles. 
+
 This method is satisfactory in its performance, with a worst case error of \(\pm5\unit{cm}\)
 in difference between calculated position and actual position when the bounding box is accurately detected. 
 For the rover's path finding algorithm, this is a value that is easily taken into account and as
@@ -1676,22 +1785,14 @@ fully in the frame of the camera or not fully detected by the object detector,
 as the rover is moving, all objects should eventually come into frame fully and 
 not be cut off by the sides of the view or receive a better view of the object 
 leading to a better bounding box and hence distance calculation. 
-
-The Nios\textsuperscript{\textregistered} II processor does not include floating point hardware by default, but as 
-this algorithm requires floating point calculations as some of the coefficients 
-tend to be very small, and this algorithm is run for each set of colours, it was
-prudent to include hardware support for single precision floating point adds 
-and multiplications. This was done by adding the Nios II Custom Floating Point Instruction module from Intel's IP catalogue 
-for custom floating point instructions, which reduces the amount of cycles 
-necessary to carry out a floating point multiplication to 4 cycles using a single
-instruction and a floating point add to 5 cycles\cite{NiosIICustomInstruction}.
-If this hardware was not used, it would be implemented using software, and hence
-would take multiple instructions and more hence more cycles. 
-
-This algorithm's performance is satisfactory in the current testing environment, 
+Additionally, this algorithm's performance is ideal in the current testing environment, 
 but if tested on a surface with changing gradients or elevated objects, this algorithm
 would be inaccurate due to it's inability to take into account objects on the real
 world z-axis (i.e. the height of an object relative to the plane).
+
+
+
+
 
 \subsubsection{Image Transfer over SPI}
 
@@ -1718,13 +1819,69 @@ clock and the sck provided by the SPI controller is used as the clock for the re
 
 
 \subsection{Integration}
+The purpose of Integration is to ensure and test the work of all the subsystems together. The following section is organised in a 
+way that shows the progress of the system and all the testings and measurements done to allow the delivery of this working system. 
+The good communication and will to work hard that was shared by all the team members was a crucial factor that led to the completion of the tasks.
 
-\begin{comment}
-    Could write about how we had to tune data for different lighting conditions, 
-    taking pictures from different angles to compare how the objects looked in 
-    different lighting, and changing the threshold values. 
-\end{comment}
+\subsubsection{Drive}
+Having an accurate and reliable driving system was the first important milestone for this project as it is the means of the Rover to navigate its environment.
+The first test done to ensure that was measuring fixed distances traversed by the Rover and callibrating the optical flow sensor using the sample code. The testing procedure was fairly simple but produces consistent results.
+By using some fixed tiles on the floor that have a dimension of \(25cm\times 25cm\). By using these I could measure how accurate the Rover moves and rotates and also minimizing human errors that would arise if the reference distance and angle was not in place. 
+The first problem that arised was an error in distances greater than \(20cm\) where there was a sudden sign change  in the measured distance of the sensor.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.3]{./images/overflow_example.png}
+    \caption{Serial Monitor output showing the overflow of distance.}
+    \label{image:Overflow of Distance}
+ \end{figure}
+As it can be seen in Figure ... the distance measured went from \(201mm\) to \(-207mm\) which indicated a bug. I communicated my foundings with the member that 
+was in charge of Driving and we concluded that it is an overflow caused by the multiplication operations of the code which can be easily fixed by prioritising divisions.
 
+After having received the fixed code and continuing testing it was concluded that the floor material affects the optical flow sensor's accuracy greatly. Trial and Error showed that the best floor material in the area of testing operations was wood which gave the most reliable readings.
+Having a proof of concept is crucial when deciding to move to more complex operations for the system and during the initial testing of the Drive module, it was concluded that it had a good accuracy that would be essential for the later stage of mapping the balls.
+
+When trying to measure considerably bigger distances with the Rover, it was identified that the strain from the cables connected could impose some considerable torques on the system which could result in innacuracies.
+This could possibly be solved by implementing a PID that ensures no rotation while moving forward and backward, but after consultation with the appropriate team member it was decided that because the purpose of the cables is for debugging, capturing of data and supplying power, in a real-life scenario it would not affect the rover.
+For the demonstration and all the testing it was also decided that the cables should be placed in positions that would cause minimal strain in the system. 
+
+After ensuring that the navigation of the Rover is accurate enough, the next logical step is to test and implement the communication procedure with the control module.
+\subsubsection{Communications between Drive and Control}
+Knowing that the team member in charge of Control only has the ESP32 board, it was crucial to establish a close contact so that the feedback from the Integration testing is relayed back and used to improve the Control code.
+Having a Rover that can navigate is important, but there needs to be a communications framework that will allow it to receive and execute commands. When researching the different communication protocols, it was concluded that UART is a reliable and good hardware device that allows the transmission and reception of data. After consulting with the team member of Control and receiving the available UART pins of the ESP32, the cable connections were made. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.05, angle = 180]{./images/ESP32_UART.jpg}
+    \includegraphics[scale=0.05, angle =  180]{./images/Arduino_UART.jpg}
+    \vspace{-10pt}
+    \caption{From left to right: ESP32 cable connection to UART pins,Arduino Nano Every cable connection to UART pins.}
+    \vspace{-10pt}
+    \label{image:UART}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{./images/UART_test.png}
+    \caption{Test code to ensure UART functionality}
+    \label{image:Simple UART test}
+ \end{figure}
+To test the connection, a fairly simple program was made that reads the Serial buffer when it is available. To achieve reliable Integration of the systems, a modular approach is chosen where the testing of even the simplest components is of great importance.
+This is to confirm funcionality and detect faulty hardware without having to debug complex programs that may or may not contain bugs.
+After ensuring UART functionality, a more complex program was implemented to allow driving to receive commands from Control. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.3]{./images/Command_decoder.png}
+    \caption{Command decoder}
+    \label{image:Code flashed on Arduino}
+ \end{figure}
+ The command structure was fairly simple and not resource heavy. The Rover does a series of rotations and movements. The starting character of a command is \("["\) which allows the system to identify the start of a command being transmitted by Control. To move the Rover a transmitted character should be \(M\) and after that the speed should be identified using a character between \("A-E"\) with \("A"\) being the fastest available option and \("E"\) the slowest.
+Because rotations are the only other option, an arbitrary character can be used acompanied with the angle of rotation. The code also handles signs denoting direction of rotation and movement.
+For example, \("[MA300,R-90]"\) is a command that when executed by the Rover will result in a forward movement of \(300mm\) and an anticlockwise rotation of \(90\) degrees.
+Lastly, to allow for flexibility of commands, a stop functionality was added when Control sent the character \("S"\) while executing a movement command which stops the motors and transmitts the distance covered back to Control.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{./images/Stop_functionality.png}
+    \caption{Command decoder}
+    \label{image:Code flashed on Arduino}
+ \end{figure}
 %Start of energy implementation
 \subsection{Energy}
 \vspace{-10pt}
@@ -2011,6 +2168,44 @@ what type of data is being sent.
 %End of energy implementation
 %End of implementation section
 
+\section{Evaluation and Conclusion}
+\subsection{Testing}
+
+
+    When testing the image processing and the Vision module, the camera had to 
+    be recalibrated to match the testing enviroment. Initially, the only configurable
+    parameters were the HSV thresholds as described in section 4.4.3, the exposure and
+    the gain settings. This resulted in unsatisfactory performance as the testing enviroment
+    was tinted yellow and there was no way of adjusting for that. 
+
+    After researching the camera, and going through the OV8865's datasheet, \cite{OV8865DataSheet} it was discovered
+    that white balance - the gains of the Red, Green and Blue pixels could be individual manipulated
+    and manually calibrated. By testing these values with trial and error in conjunction with the 
+    MATLAB Colour Threshold Tool, a set of gains were found that maximised the colour detection and
+    reduced the number of false positives in the bounding box detection. This fixed the problem that 
+    had occurred due to the tint of the room. 
+
+    It was also noted in 
+    initial testing that the corners of the camera were darker and dimmer than the rest 
+    of the image, leading to difficulties in detecting objects that were in the corner
+    of the frame due to different HSV values. This is a commonly seen phenomenon known as vignetting
+    Although to the human eye, this may seem
+    like a minor problem, for a computer vision algorithm, it can have highly detrimental 
+    effects. \cite{zheng2008single} While also looking through the camera datasheet, 
+    we realised that the OV8865 had a built in lens correction function that was not initially
+    used. The lens correction algorithm on the OV8665 compensates for the vignetting effect by 
+    calculating a gain for each pixel and correcting each pixel to compensate for the illumination
+    drop off. \cite{OV8865DataSheet} By turning this on and using the default settings, 
+    the problem was reduced and there was better illumination and colour pickup in the corners
+    of the frame. Due to time constraints, the algorithm was not manually tuned to achieve
+    the best results. 
+
+
+\begin{comment}
+    Could write about how we had to tune data for different lighting conditions, 
+    taking pictures from different angles to compare how the objects looked in 
+    different lighting, and changing the threshold values. 
+\end{comment}
 
 \section{Project Management and Organisation}
 %Also had frequent teams meetings and used WhatsApp
