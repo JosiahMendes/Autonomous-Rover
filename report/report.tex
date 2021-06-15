@@ -137,10 +137,10 @@ To fulfil this broad goal, the design and development of the rover is separated 
 six distinct subsystems: \textbf{Command, Control, Drive, Energy, Integration and Vision},
 each of which will be led by a single team member. These modules will work semi-independently to 
 achieve the functional requirements as defined by the problem and 
-eventually integrate their findings and goals to achieve the specification 
+eventually integrate their findings and goals to achieve the goals set out by the specification 
 at hand. We will work under the main consideration that our rover is meant 
-to be a proof of concept for one that can function on Mars. This report 
-contains our design process for the rover and how it was implemented.
+to be a proof of concept for one that could function on Mars. This report 
+contains our design process for the rover, how it was implemented and challenges that were faced. 
 
 \section{Structural Design}
 
@@ -159,9 +159,9 @@ contains our design process for the rover and how it was implemented.
 \subsubsection{Requirements}
 
 The Control module within the context of the rover has one main goal: 
-to act as the communication hub between all the subsystems, delivering
+\textbf{to act as the communication hub between all the subsystems, delivering
 the relevant data where it is required to allow for the rover to integrate
-as a whole \cite{MarsRoverSpec}. These functional requirements can be 
+as a whole} \cite{MarsRoverSpec}.  These functional requirements can be 
 obtained from the Functional Design diagram for control, outlining all the 
 data flow for the Control subsystem. There are a couple of core objectives 
 which must be achieved in order to fulfil this role as outlined below:
@@ -204,7 +204,7 @@ WiFi capabilities at 2.4GHz and Bluetooth \cite{ESP32Datasheet} to
 interface wirelessly with other devices. Using the Arduino Adapter 
 board \cite{ESP32ArduinoAdapter}, it can sit directly on top of an 
 Arduino or device with similar pins to directly interface through 
-physical connections. 
+physical connections like the FPGA in this case. 
 
 For wired communications, the ESP32 has limitations for the type of 
 communication peripherals it can use with peer microcontrollers. 
@@ -419,33 +419,35 @@ for signal processing applications like multiplication.
 This particular FPGA is also equipped with a 4-bit VGA output 
 which is useful for debugging object detection live, 
 and also has a connector for an Arduino Uno R3 shield, \cite{TerasicDE10Web} 
-which can be used to interface with the ESP32 used for control.  
+which can be used to interface with the ESP32 used for Control.  
 
 \paragraph*{Initial Design Choices}
 
 There are several common approaches to object detection, with the two most 
-prominent being the use of classic Computer Vision algorithms like the Canny edge-
+prominent being the use of classic Computer Vision algorithms like the Canny edge
 detection technique and Hough transforms or the more recent use of convolutional
 neural networks (CNN) and deep learning to perform object detection through a 
-combination of layers that perform convolution, pooling and fully connected layers. 
+combination of layers that perform convolution and pooling and a fully connected network
+at the end. 
 According to \cite{DBLP:journals/corr/abs-1806-01683}, CNNs have in recent years 
 become the de-facto standard for machine vision applications such as object 
 classification, object detection and object segmentation; but as there is a desire 
-for more performant and power- efficient systems, there has been a shift to 
+for more performant and power-efficient systems, there has been a shift to 
 using dedicated hardware tailored to the operations used for CNNs. There was a 
 deep interest from the technical lead for the Vision module on this and attempts
 were made to implement this on the FPGA using various tools such as Intel's High 
-Level Synthesis Compiler \cite{IntelHLS} and hls4ml - a python package for machine learning 
-optimised high level synthesis \cite{HLS4ML} as well as a manual implementation of neurons using
-multiply-accumulate operations in SystemVerilog. 
+Level Synthesis Compiler \cite{IntelHLS} and hls4ml - a recently developed 
+python package for machine learning optimised high level synthesis \cite{HLS4ML} 
+as well as a manual implementation of neurons using multiply-accumulate operations in SystemVerilog. 
 However, there were far too many challenges for implementing a CNN within the 
 current project with key issues being the system is a real-time system that 
 processes video data pixel-by-pixel in a fixed order and in contrast, most CNNs for object 
 detection working with multiple pixels in different locations simultaneously. 
 A lot of previous work on the subject is also on FPGAs being used as accelerators for 
 CNNs running on hard cores rather than standalone embedded systems as seen in \cite{DBLP:journals/corr/abs-1806-01683}
-, which is the use case here. The only possible neural network that could be applied in this period of time
-would be a non-convolutional one that just acted based on the individual colours of each pixel
+, which is the use case here. The field in itself is also still in development and is quite niche, 
+with most work being done and implemented by experienced researchers. The only feasible neural network that could be applied in this period of time
+would be a non-convolutional fully connected layer network that just acted based on the individual colours of each pixel
 and possibly the temporal location, but there are other more straightforward methods 
 and equally effective methods for object detection at a pixel level. 
 These challenges are also faced when trying to implement popular traditional computer vision 
@@ -462,7 +464,7 @@ blue, grey and green. As these colours cover a wide range of the colour spectrum
 and even overlap with each other (orange and pink, blue and grey), it was thought 
 to be necessary to do some preprocessing on the incoming image from the camera 
 to ensure optimal colour detection for object detection.  
-As the colour overlap in the RGB spectrum was significant, the decision was made to apply
+As the channel spectrum overlap in the RGB spectrum for different colours was significant, the decision was made to apply
 a transform from the RGB (Red, Green, Blue) colour space to the HSV (Hue, 
 Saturation, Value) colour space.  HSV has been shown to be a theoretically better colour space
 for image processing tasks like colour segmentation in road sign detection for 
@@ -475,19 +477,22 @@ In order to perform general purpose operations like
     and to provide a debugging interface,
 the decision was made to instantiate a Nios\textsuperscript{\textregistered} II/f ``Fast'' soft core on the FPGA. 
 This would also allow for a quicker development cycle as the compilation of Quartus projects
-is upwards of 6 minutes, but C files can be changed and compiled in seconds. 
+is upwards of 6 minutes, but C files can be changed and compiled in seconds. But as the Nios II 
+is limited in processing power and also in available memory, it is not capable of performing 
+the tasks for the actual detection of the objects.  
 Alternatively, to implement more advanced image processing algorithms
 or to reduce other hardware components in the system like the multiple Arduinos, 
 a FPGA with a hard core connected via PCIe, 
 known as a FPGA System-On-Chip (FPGA SoC) \cite{FPGASoC} could be used, 
-which would provide both the advantages of having reconfigurable hardware,
-a more capable general purpose processor and a higher bandwidth limit.
+which would provide the advantages of having reconfigurable hardware, and
+a more capable general purpose processor and a higher bandwidth limit for communications
+between the general purpose software core and the FPGA's hardware. 
 
 
 
 
 \subsection{Drive}
-\subsubsection{The purpose of the Driving module is the following:}
+The purpose of the Driving module is the following:
 \begin{enumerate}
   \item Make the rover able to move forward, backward, rotate clockwise and anticlockwise.
   \item Measure the distance that the rover has covered. 
@@ -1331,7 +1336,7 @@ To conclude, by using only a PI controller and by setting P=2.6 and I=27 the
 rover has a stable driving system that does not take a lot of time to stabilise 
 its reference voltage (in other words, its reference speed), and most importantly, 
 it does not overshoot and oscillate before it takes its reference value. 
-These findings can be confirmed by the graph shown in Figure ~\ref{graph:PIDController}.
+These findings can be confirmed by the graph shown in Figure ~\ref{graph:Initial vs Final PI controller}
 
 %%%%%%%%%%%%%%%%%%%% Figure/Image No: 4 starts here %%%%%%%%%%%%%%%%%%%%
 
@@ -1503,7 +1508,7 @@ by Terasic Inc for the D8M Camera module that was modified by Dr Edward Stott
 several IP components from the Intel Video and Image Processing Suite,
 namely the Clocked Video Output and Frame Buffer Core. The system is compromised
 of several modules, that take the raw data from the camera in Bayer filter form\cite{TerasicD8MWeb},
-transform it into RGB video packets, buffer the frames to allow camera and output
+transform it into RGB video packets with a resolution of 640*480, buffer the frames to allow camera and output
 to run at different frame rates, process the image data and convert the video 
 data to serial data for output over VGA.\cite{EEE2Rover} As this system and its 
 corresponding documentation is openly available, the implementation outside of 
@@ -1609,9 +1614,25 @@ An image was then obtained from the camera by taking an image from the output VG
 port. This image was then imported into a MATLAB tool from the Image Processing toolbox - 
 the Colour Thresholder App. This application allows colour images to be segmented by changing
 thresholds in different colour channels, supporting RGB, HSV, YCbCR and L*a*b*. An example of 
-the user interface for this tool is shown in Figure .......
+the user interface for this tool is shown in Figure \ref{image:MatlabColourThresholder}
 
-As can be seen in the figure, the tool provides an accurate way to select the values 
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{.5\linewidth}
+        \centering
+        \includegraphics[scale=0.17]{./images/MatlabColourThresholder}
+        \caption{MATLAB Colour Thresholder Tool}
+        \label{image:MatlabColourThresholder}
+    \end{minipage}\hfill
+    \begin{minipage}{.5\linewidth}
+        \centering
+        \includegraphics[scale=0.18]{./images/GreenThreshold.png}
+        \caption{Produced Composite for Analysis of \ref{fig:DesiredVisionResult} for Green }
+        \label{image:GreenThreshold}
+    \end{minipage}
+\end{figure}
+
+As can be seen in Figure \ref{image:GreenThreshold}, the tool provides an accurate way to select the values 
 for each of the HSV channels, as the binary mode can be used to ensure that the regions
 of interest are maximised and the other regions are ignored. 
 
@@ -1627,7 +1648,36 @@ a wider range of colours than what is perceived in the output image. Additionall
 as the data is obtained from the VGA output and captured using an application on 
 a computer, there may be some processing that is carried out on the image, meaning 
 that the image's data may be different in terms of RGB values from the raw RGB values
-that the camera is capturing. 
+that the camera is capturing.
+
+\paragraph*{Use of Pixel Location for Filtering}
+
+A purely colour based pixel approach to object detection has significant flaws unless
+the difference between the environment's colours and the object of interest's colours 
+are significantly different from each other and the background's colour is plain and
+singular. As the testing environment was not ideal, there would be other colours
+in the scene that would conflict with the objects causing inaccurate bounding boxes that
+were usually too large. In order to filter out these errors and glitches, the 
+location of the pixel was taken into account.
+
+Firstly, it was observed that as the testing environment was a flat surface, the 
+location of the balls and hence the individual pixels would never be smaller than 
+a certain value (since y values are counted from the top down with the top of 
+the frame being the 0 value), so this was taken into account and bounding boxes
+were only updated on the following conditions: when a colour was detected AND the
+video packet was valid AND the pixel y-coordinate \(> 280\). The value of 280 was 
+chosen as objects near the horizon level at around 240 pixels would be very far 
+away and could be easily mistaken.
+
+This simple adjustment and addition to the object detection algorithm reduced false 
+positives by a significant amount. However, it would not be useful if the testing
+environment included changes in gradient or if objects of interest were located 
+on top of other objects. 
+
+Secondly, as there were still occasional inaccurate bounding boxes, conditions 
+were implemented on the software running on the Nios II processor to filter out 
+boxes larger or smaller than certain values, and boxes that had a ratio that did 
+not resemble a square. 
 
 
 
