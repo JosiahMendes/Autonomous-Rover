@@ -39,29 +39,26 @@ float choose_speed(char sp)
   return ret_speed;
   
 }
+bool c = true;
 void loop() {
-  vref = 0.5;
+ 
   rover.VoltageRegulationStep();
+ 
   bool rcvd = false;
   if (Serial1.available())
   {
-    Serial.println("in1");
     char TempChar = Serial1.read();
-    if (TempChar == '[') {
-      Serial.println("in2");
-      delay(7);
-      int n = Serial1.available();
-      char Command[32];
+    if (TempChar == '[') { // check for valid initial character of command 
+      delay(7); // small delay to allow data to arrive to the Serial buffer
+      int n = Serial1.available(); // number of characters available to be read in the Serial
+      char Command[32]; // Command buffer
       int count = 0;
-      Serial.println("in3");
-      while (n > 0) {
+      while (n > 0) { 
         rover.VoltageRegulationStep();
-        Serial.println("in4");
-        char TermChar = Serial1.read();
-        Serial.println(TermChar);
+        char TermChar = Serial1.read(); // read character of command
         Command[count] = TermChar;
-        Command[count + 1] = '\0';
-        n--;
+        Command[count + 1] = '\0';//String end
+        n--; // decrease available characters
         count++;
         rcvd = true;
       }
@@ -80,35 +77,28 @@ void loop() {
          if(i==0)
          {
           command = Command[i];
-          if(command == 'M')
+          if(command == 'M')// this character is for the move_forward and move_backward command
           {
-            sp = Command[i+1];
+            sp = Command[i+1]; // this character denotes the required speed of the rover (ranges from A-E)
             i++;
           }
           continue;
          }
           
-          if (Command[i] == ',' || i == 31) {
+          if (Command[i] == ',' || i == 31) { // comma seperates commands and i = 31 when we read the last character of the Command buffer
             if (command == 'M')
             {
               
-              Serial.print("Paramter1 is: "); Serial.println(parameter);
-              
+              Serial.print("Distance is: "); Serial.println(parameter); //example 
               float ret_speed = choose_speed(sp);
-              vref = ret_speed;
-                for(int i = 0;i< 500;++i)
-                  rover.VoltageRegulationStep();
               if(atoi(parameter) > 0)
-                rover.move_forward(ret_speed,atoi(parameter));
+                rover.move_forward(ret_speed,atoi(parameter));// if the value is positive then move forward
               else 
-                rover.move_backward(ret_speed,abs(atoi(parameter)));
+                rover.move_backward(ret_speed,abs(atoi(parameter)));// if it is negative then backward
             }
             else {
-              Serial.print("Paramter2 is: "); Serial.println(parameter);
-              vref=1.6;
-               for(int i = 0;i< 500;++i)
-                  rover.VoltageRegulationStep();
-               if(atoi(parameter) > 0)
+              Serial.print("Angle is: "); Serial.println(parameter);
+               if(atoi(parameter) > 0)//if angle is positive rotate clockwise else anticlockwise
                 rover.rotate_clockwise(atoi(parameter));
                else
                 rover.rotate_anticlockwise(abs(atoi(parameter)));
@@ -116,22 +106,22 @@ void loop() {
             count++;
             count_param = 0;
             strcpy(parameter, "");
-            command = i!= 31 ? Command[i+1] : ' ';
+            command = i!= 31 ? Command[i+1] : ' ';//read next command
             i = i+1;
             if(command == 'M')
             {
-              sp = Command[i+1];
+              sp = Command[i+1]; // read speed
               i++;
             }
 
           }
-         else if (Command[i] != ',') {
+         else if (Command[i] != ',') {// if the current character is not a comma then add it to the parameter
             parameter[count_param] = Command[i];
             count_param++;
             
           }
         }
-        Serial1.write('@');
+        Serial1.write('@');// send to Control when a command is finished
 
       }
 
