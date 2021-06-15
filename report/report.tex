@@ -107,7 +107,7 @@
         \vfill
         \begin{flushright}
             \textsl{ \large
-            Georgios Chaimali \\ 
+            Georgios Chaimalas \\ 
             Dimitrios Georgakopoulos \\ 
             Edvard J. Skaarberg Holen \\ 
             Hyunjoon Jeon \\ 
@@ -528,11 +528,6 @@ In addition, the need for voltage regulation was important. Specifically, the ro
 Finally, there was a thought of designing a program that could assist the rover if it diverged from its path, but by having a very good voltage regulation and by programming the optical flow sensor to measure the distance covered, precisely, it was not needed. 
 
 
-
-\subsection{Integration}
-\subsubsection{Requirements}
-\subsubsection{Initial Design}
-
 %Start of functional energy section
 \subsection{Energy}
 
@@ -921,7 +916,12 @@ When running, it would take the text put into the terminal and send it
 to the ESP32 while displaying the messages incoming from the ESP32. 
 The ESP32 was configured to echo back all messages. Through this 
 simple system, the connection was successfully implemented by debugging
- the connection and the messages being sent back and forth.
+ the connection and the messages being sent back and forth. Once the 
+ Command Web server was nearing completion, this process was tested, 
+ with commands being sent from the server and data being sent from the 
+ ESP32. As prior individual testing on either side was extremely 
+ effective, there was little to no extra fixes required for this 
+ connection to function as intended.
 
 \subsubsection{Drive Communication}
 
@@ -2224,9 +2224,6 @@ what type of data is being sent.
 %End of implementation section
 
 \section{Evaluation and Conclusion}
-\subsection{Testing}
-
-
    
 
 
@@ -2251,6 +2248,20 @@ involving many different libraries and with each submodule being capable as a
 standalone project, it was vital to have a version control system in place. 
 Being able to keep a history of commits and changes made to a project was useful,
 especially when trying to track down the origin of a bug and what caused it. 
+
+There were different structures for communication during the designing phase 
+and testing phase of the product. During the designing phase, there was a lot 
+of one-on-one communication with other subteams to try to determine the functional 
+requirements and design aspects which involved more than one subsystem. This 
+was vital to try to limit time spent on researching topics which had been 
+researched by other team members while establishing a framework for the project 
+as a whole. It also allowed for swift documentation and planning for 
+implementation. When it came to the testing phase, in order to effectively 
+communicate improvements between Integration and the individual subsystems, 
+there was clear documentation for feedback delivered through WhatsApp and 
+Microsoft Teams to improve upon project work. Likewise, there were documents 
+maintained for data transmission and formatting to ensure subsystems could 
+communicate effectively with one another.
 
 The team also made use of GitHub Issues to track progress and accountability in 
 the initial design phase. A thread was opened for each submodule to show what 
