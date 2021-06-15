@@ -528,11 +528,6 @@ In addition, the need for voltage regulation was important. Specifically, the ro
 Finally, there was a thought of designing a program that could assist the rover if it diverged from its path, but by having a very good voltage regulation and by programming the optical flow sensor to measure the distance covered, precisely, it was not needed. 
 
 
-
-\subsection{Integration}
-\subsubsection{Requirements}
-\subsubsection{Initial Design}
-
 %Start of functional energy section
 \subsection{Energy}
 \vspace{-5pt}
@@ -928,7 +923,12 @@ When running, it would take the text put into the terminal and send it
 to the ESP32 while displaying the messages incoming from the ESP32. 
 The ESP32 was configured to echo back all messages. Through this 
 simple system, the connection was successfully implemented by debugging
- the connection and the messages being sent back and forth.
+ the connection and the messages being sent back and forth. Once the 
+ Command Web server was nearing completion, this process was tested, 
+ with commands being sent from the server and data being sent from the 
+ ESP32. As prior individual testing on either side was extremely 
+ effective, there was little to no extra fixes required for this 
+ connection to function as intended.
 
 \subsubsection{Drive Communication}
 
@@ -1886,9 +1886,65 @@ Lastly, to allow for flexibility of commands, a stop functionality was added whe
 \begin{figure}[H]
     \centering
     \includegraphics[scale=0.5]{./images/Stop_functionality.png}
-    \caption{Command decoder}
+    \caption{Stop functionality}
     \label{image:Code flashed on Arduino}
  \end{figure}
+
+ \subsubsection{Vision}
+    When testing the image processing and the Vision module, the camera had to 
+    be recalibrated to match the testing enviroment. Initially, the only configurable
+    parameters were the HSV thresholds as described in section 4.4.3, the exposure and
+    the gain settings. This resulted in unsatisfactory performance as the testing enviroment
+    was tinted yellow and there was no way of adjusting for that. 
+
+    After researching the camera, and going through the OV8865's datasheet, \cite{OV8865DataSheet} it was discovered
+    that white balance - the gains of the Red, Green and Blue pixels could be individual manipulated
+    and manually calibrated. By testing these values with trial and error in conjunction with the 
+    MATLAB Colour Threshold Tool, a set of gains were found that maximised the colour detection and
+    reduced the number of false positives in the bounding box detection. This fixed the problem that 
+    had occurred due to the tint of the room. 
+
+    It was also noted in 
+    initial testing that the corners of the camera were darker and dimmer than the rest 
+    of the image, leading to difficulties in detecting objects that were in the corner
+    of the frame due to different HSV values. This is a commonly seen phenomenon known as vignetting
+    Although to the human eye, this may seem
+    like a minor problem, for a computer vision algorithm, it can have highly detrimental 
+    effects. \cite{zheng2008single} While also looking through the camera datasheet, 
+    we realised that the OV8865 had a built in lens correction function that was not initially
+    used. The lens correction algorithm on the OV8665 compensates for the vignetting effect by 
+    calculating a gain for each pixel and correcting each pixel to compensate for the illumination
+    drop off. \cite{OV8865DataSheet} By turning this on and using the default settings, 
+    the problem was reduced and there was better illumination and colour pickup in the corners
+    of the frame. Due to time constraints, the algorithm was not manually tuned to achieve
+    the best results. 
+    
+    During Integration testing, it was realised that because of the lengthy procedures the sunlight was affecting the testing environment differently
+    throughout the day. To accommodate for that, many callibrations were done based on how dark or lit the testing enviroment was.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[scale=0.27]{./images/sunlight.jpg}
+        \includegraphics[scale=0.27]{./images/no_sunlight_lamp.jpg}
+        \vspace{-10pt}
+        \caption{From left to right: sunlight example, room lighting.}
+        \vspace{-10pt}
+        \label{image:UART}
+    \end{figure}
+    One more important measurement done during Integration testing was an accurate measurement of the distances of balls from the camera. This was done 
+    so that these values could be used to tune a model that approximates the \(x\) and \(y\) distances of the balls relative to the camera. An accurate method 
+    of measurement is using a flat surface with a reference straight line which is used to accurately place two pieces of red tape to represent the \(x\) and \(y\) axis. 
+    Then, the rover is placed directly in the middle and the camera is set at a perfect 90 degree angle relative to the floor which is done by using 2 triangles, one to ensure that the y axis is alligned with the camera len's center, and one more to allign the camera with the x axis.
+    After ensuring that, the x and y components of the balls are projected to the red tapes and then are measured. The measurements combined with the raw image of the camera were given to the Vision module. This procedure was done multiple times and was improved upon throughout the course of the project, and due to the good communication with the Vision team member, an accurate model of distance approximation was made as shown in the video demo.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[scale=0.1]{./images/Ball_measurement.jpg}
+        \caption{Measurement setup}
+        \label{image:Measurement setup}
+     \end{figure}
+
+
+
+
 %Start of energy implementation
 \subsection{Energy}
 \vspace{-10pt}
@@ -1898,7 +1954,6 @@ Lastly, to allow for flexibility of commands, a stop functionality was added whe
     \caption{Circuit diagram of the finished energy system.}
     \label{fig:circuitDiagram}
 \end{figure}
-
 \paragraph*{SMPS Configuration}
 The voltage of the series battery pack is higher than the voltage of 
 the parallel connected PV panels. The voltage of the PV array must 
@@ -2176,36 +2231,7 @@ what type of data is being sent.
 %End of implementation section
 
 \section{Evaluation and Conclusion}
-\subsection{Testing}
-
-
-    When testing the image processing and the Vision module, the camera had to 
-    be recalibrated to match the testing enviroment. Initially, the only configurable
-    parameters were the HSV thresholds as described in section 4.4.3, the exposure and
-    the gain settings. This resulted in unsatisfactory performance as the testing enviroment
-    was tinted yellow and there was no way of adjusting for that. 
-
-    After researching the camera, and going through the OV8865's datasheet, \cite{OV8865DataSheet} it was discovered
-    that white balance - the gains of the Red, Green and Blue pixels could be individual manipulated
-    and manually calibrated. By testing these values with trial and error in conjunction with the 
-    MATLAB Colour Threshold Tool, a set of gains were found that maximised the colour detection and
-    reduced the number of false positives in the bounding box detection. This fixed the problem that 
-    had occurred due to the tint of the room. 
-
-    It was also noted in 
-    initial testing that the corners of the camera were darker and dimmer than the rest 
-    of the image, leading to difficulties in detecting objects that were in the corner
-    of the frame due to different HSV values. This is a commonly seen phenomenon known as vignetting
-    Although to the human eye, this may seem
-    like a minor problem, for a computer vision algorithm, it can have highly detrimental 
-    effects. \cite{zheng2008single} While also looking through the camera datasheet, 
-    we realised that the OV8865 had a built in lens correction function that was not initially
-    used. The lens correction algorithm on the OV8665 compensates for the vignetting effect by 
-    calculating a gain for each pixel and correcting each pixel to compensate for the illumination
-    drop off. \cite{OV8865DataSheet} By turning this on and using the default settings, 
-    the problem was reduced and there was better illumination and colour pickup in the corners
-    of the frame. Due to time constraints, the algorithm was not manually tuned to achieve
-    the best results. 
+   
 
 
 \begin{comment}
@@ -2229,6 +2255,20 @@ involving many different libraries and with each submodule being capable as a
 standalone project, it was vital to have a version control system in place. 
 Being able to keep a history of commits and changes made to a project was useful,
 especially when trying to track down the origin of a bug and what caused it. 
+
+There were different structures for communication during the designing phase 
+and testing phase of the product. During the designing phase, there was a lot 
+of one-on-one communication with other subteams to try to determine the functional 
+requirements and design aspects which involved more than one subsystem. This 
+was vital to try to limit time spent on researching topics which had been 
+researched by other team members while establishing a framework for the project 
+as a whole. It also allowed for swift documentation and planning for 
+implementation. When it came to the testing phase, in order to effectively 
+communicate improvements between Integration and the individual subsystems, 
+there was clear documentation for feedback delivered through WhatsApp and 
+Microsoft Teams to improve upon project work. Likewise, there were documents 
+maintained for data transmission and formatting to ensure subsystems could 
+communicate effectively with one another.
 
 The team also made use of GitHub Issues to track progress and accountability in 
 the initial design phase. A thread was opened for each submodule to show what 
