@@ -10,7 +10,7 @@
 % Colour Management
 \usepackage{color}
 
-% Multi-Line Comments
+% Multi-Line Com ments
 \usepackage{comment}
 
 % Customisable Sections
@@ -142,7 +142,25 @@ at hand. We will work under the main consideration that our rover is meant
 to be a proof of concept for one that could function on Mars. This report 
 contains our design process for the rover, how it was implemented and challenges that were faced. 
 
-\section{Structural Design}
+\section{Structural Design }
+
+\begin{figure}[H]
+	\begin{Center}
+		\includegraphics[width = \linewidth]{./media/export.pdf}
+		\caption[Structural Design Diagram showing Hardware and Parameters of Subsystems for Mars Rover]{\protect\raggedright Structural Design Diagram showing Hardware and Parameters of Subsystems for Mars Rover}
+		
+        \label{fig:StructuralDesignDiagram}
+	\end{Center}
+\end{figure}
+
+The structural design of the Rover as shown in Figure \ref{fig:StructuralDesignDiagram}, shows
+the 5 main subsystems of the rover together with their main hardware components. 
+This presents an overview of the entire Rover system and how the different components 
+interact with each other. Both power connections and data connections are shown, 
+together with corresponding arrows where directional transfer is necessary. 
+Each subsystem's hardware has a set of configurable parameters that are also shown,
+these parameters are determined as part of the functional design process and 
+implementation.  
 
 \section{Functional Design}
 
@@ -152,7 +170,7 @@ contains our design process for the rover, how it was implemented and challenges
 	\begin{Center}
 		\includegraphics[scale = 0.5]{./images/ControlFR.png}
 		\caption{Functional Design Diagram showing Dataflow for Control Subsystem}
-		\label{fig:DesiredVisionResult}
+		\label{fig:ControlFunctional}
 	\end{Center}
 \end{figure}
 
@@ -162,7 +180,7 @@ The Control module within the context of the rover has one main goal:
 \textbf{to act as the communication hub between all the subsystems, delivering
 the relevant data where it is required to allow for the rover to integrate
 as a whole} \cite{MarsRoverSpec}.  These functional requirements can be 
-obtained from the Functional Design diagram for control, outlining all the 
+obtained from the Functional Design diagram for control, see Figure \ref{fig:ControlFunctional}, outlining all the 
 data flow for the Control subsystem. There are a couple of core objectives 
 which must be achieved in order to fulfil this role as outlined below:
 
@@ -1573,18 +1591,16 @@ output speed necessary to produce a VGA output. As the provided Intel LPM Divisi
 IP Core has a configurable pipeline latency, the decision was taken to pipeline this division
 process in order to maintain the clock speed. By gradually increase the pipeline 
 and testing the critical path delay, the decision was made to use a 5 cycle latency
-for the divider, which allowed the FPGA's image processing module to run at 100MHz. 
-
-As there are two divide operations for each HSV calculation, one for H and one for S,
+for the divider, which allowed the FPGA's image processing module to run at 100MHz. As there are two divide operations for each HSV calculation, one for H and one for S,
 two dividers were instantiated with different parameters to account for the differences 
 in the calculations as H values require signed values and S values do not. 
 
-In order to maintain the video stream and process one pixel per cycle, this operation 
+In order to maintain the video stream and process one pixel per cycle, this conversion 
 was implemented with a 6 stage cycle that took in a new RGB value every cycle and
 produced a new HSV value every cycle. This included storing the maximum RGB value \( M \) and difference
 values \(C \) for each input for 6 cycles, to ensure that the data being used for 
 comparison and output is correct. In order to use the pipeline, 12 separate dividers
-were instantiated, 6 for each type. Although this would have used a lot of logic 
+were instantiated, 6 for each type. Although this used a lot of logic 
 elements and hardware, it comes at the benefit of being able to maintain the clock 
 speed and optimise the processor for speed. 
 
@@ -1609,7 +1625,7 @@ it's bounding box.
 In order to determine the colour thresholds for detecting each of the different 
 coloured balls, images from the camera were taken after adjusting the camera settings
 for gain, exposure and white balance to maximise the difference between the balls 
-and the background as well as the balls and each other. 
+and the background as well as the balls and each other.  
 
 An image was then obtained from the camera by taking an image from the output VGA 
 port. This image was then imported into a MATLAB tool from the Image Processing toolbox - 
@@ -1628,7 +1644,7 @@ the user interface for this tool is shown in Figure \ref{image:MatlabColourThres
     \begin{minipage}{.5\linewidth}
         \centering
         \includegraphics[scale=0.18]{./images/GreenThreshold.png}
-        \caption{Produced Composite for Analysis of \ref{fig:DesiredVisionResult} for Green }
+        \caption{Tool Produced Composite for Green Ball}
         \label{image:GreenThreshold}
     \end{minipage}
 \end{figure}
