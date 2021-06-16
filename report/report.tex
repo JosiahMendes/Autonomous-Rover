@@ -118,7 +118,7 @@
         \vfill
 
         % Bottom of the page
-        {\large Word Count: XXXX Words \\ \today\par}
+        {\large Word Count: 18990 Words \\ \today\par}
         \vfill
     \end{center}
 \end{titlepage}
@@ -2065,6 +2065,16 @@ SPI controller the position of the image and also when to stop asserting the sck
 transmission should stop. The FIFO used is a dual-clock FIFO that uses the main clock as the input
 clock and the sck provided by the SPI controller is used as the clock for the read.  
 
+\subsubsection{Evaluation of Image Processing}
+The algorithm applied was simple, but adequate for our use. By filtering out poor 
+results, it has a low false positive rate. But as it is purely colour based, glitches
+do occur. Improvements that could be made include applying a noise filter for better
+low light performance, or an edge detection filter to combine colour detection with 
+edge detection. Attempts were made to do this using a 3x3 kernel filter and the Filter IP 
+provided by Intel, but due to limited memory constraints (See Appendix 1 \& 2), it was not possible. If there
+was more time, we would try to reduce the memory usage of other components, such as by 
+switching to SPI communications or to reduce the size of the FIFOs in the design and the frame
+buffer. 
 
 \subsection{Integration}
 The purpose of Integration is to ensure and test the work of all the subsystems together. The following section is organised in a 
@@ -2594,7 +2604,30 @@ title={References}
 %    \label{fig:circuitDiagram2}
 %\end{figure}
 
+\section{Appendix 1: FPGA Resource Usage Summary}
+\begin{table}[H]
+    \begin{tabular}{lllll}
+                              &                      &      &  &  \\
+    Total Logic Elements      & 16,994/49,760        & 34\% &  &  \\
+    Total Registers           & 8907/51,907          & 17\% &  &  \\
+    Total Pins                & 171/360              & 48\% &  &  \\
+    Total Memory Bits         & 1,341,898/ 1,677,312 & 80\% &  &  \\
+    Total M9K Blocks          & 177/182              & 97\% &  &  \\
+    Embedded Multipliers      & 10/288               & 3\%  &  &  \\
+    Total PLLs                & 1/4                  & 25\% &  &  \\
+    Total Power Dissipation   & 469.83mW             & N/A  &  &  \\
+    Dynamic Power Dissipation & 280.97mW             & N/A  &  & 
+ \end{tabular}
+ \end{table}
 
+ \section{Appendix 2: FPGA Resource Usage by Entity}
+ \begin{figure}[H]
+     \centering
+     \includegraphics[width=\textwidth]{FPGAResourceUtilisation.pdf}
+ \end{figure}
 \end{appendices}
+
+\section{Appendix 3: GitHub Repository Source Code}
+\url{https://github.com/JosiahMendes/Engineering-Design-Project-MARS-Rover}
 
 \end{document}
