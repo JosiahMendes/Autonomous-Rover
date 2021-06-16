@@ -10,46 +10,47 @@ module colour_threshold(
 	output     			yellow_detect
 );
 	// Detect red areas
-	assign red_detect = 		(8'd245   < hue) & (hue < 8'd30  ) 
-							  & (8'd94  < sat) & (sat < 8'd121 ) 
-							  & (8'd111  < val) & (val < 8'd180 );
+//	assign red_detect = 		(((8'd178  < hue) & (hue < 8'd246  )))
+//							  & (8'd30  < sat) & (sat < 8'd132 ) 
+//							  & (8'd125  < val) & (val < 8'd255 );
+//
+//	assign green_detect =  		(8'd90 < hue) & (hue < 8'd130 ) 
+//							  & (8'd90 < sat) & (sat < 8'd191 )
+//							  & (8'd96 < val) & (val < 8'd255 );
+//								 
+//	assign blue_detect = 		(8'd12 < hue) & (hue < 8'd212 ) 
+//							  & (8'd128  < sat) & (sat < 8'd193 )
+//							  & (8'd105 < val) & (val < 8'd230 );
+//
+//	assign yellow_detect = 		(8'd14  < hue) & (hue < 8'd70  )  
+//							  & (8'd60 < sat) & (sat < 8'd212 )
+//							  & (8'd140  < val) & (val < 8'd255 );
+//
+//	assign grey_detect = 		(((8'd137  < hue) & (hue < 8'd182 ) ))
+//							  & (8'd99  < sat) & (sat < 8'd173 )
+//							  & (8'd30  < val) & (val < 8'd130 );
 
-	assign green_detect =  		(8'd78 < hue) & (hue < 8'd99 ) 
-							  & (8'd123 < sat) & (sat < 8'd227 )
-							  & (8'd56 < val) & (val < 8'd231 );
-								 
-	assign blue_detect = 		(8'd110 < hue) & (hue < 8'd145 ) 
-							  & (8'd60  < sat) & (sat < 8'd150 )
-							  & (8'd34  < val) & (val < 8'd255 );
-
-	assign yellow_detect = 		(8'd16  < hue) & (hue < 8'd45  )  
-							  & (8'd183 < sat) & (sat < 8'd255 )
-							  & (8'd54  < val) & (val < 8'd120 );
-
-	assign grey_detect = 		(8'd65  < hue) & (hue < 8'd140 ) 
-							  & (8'd50  < sat) & (sat < 8'd130 )
-							  & (8'd50  < val) & (val < 8'd100 );
 
 //DARK MODE
-//	assign red_detect = 		((8'd244   < hue) & (hue < 8'd255  ) || (8'd0   < hue) & (hue < 8'd18  ))
-//							  & (8'd203  < sat) & (sat < 8'd236 ) 
-//							  & (8'd163  < val) & (val < 8'd255 );
-//
-//   assign green_detect =  		(8'd46 < hue) & (hue < 8'd78 ) 
-//							  & (8'd158 < sat) & (sat < 8'd255 )
-//							  & (8'd37 < val) & (val < 8'd139 );
-//								 
-//	assign blue_detect = 		(8'd31 < hue) & (hue < 8'd48 ) 
-//							  & (8'd32  < sat) & (sat < 8'd136 )
-//							  & (8'd45  < val) & (val < 8'd153 );
-//
-//	assign yellow_detect = 		(8'd8  < hue) & (hue < 8'd20  )  
-//							  & (8'd220 < sat) & (sat < 8'd255 )
-//							  & (8'd179  < val) & (val < 8'd255 );
-//
-//	assign grey_detect = 		(8'd7  < hue) & (hue < 8'd56 ) 
-//							  & (8'd86  < sat) & (sat < 8'd255 )
-//							  & (8'd0  < val) & (val < 8'd36 );
+	assign red_detect = 		((8'd228   < hue) & (hue <= 8'd255  ) || (8'd0   <= hue) & (hue < 8'd9  ))
+							  & (8'd20  < sat) & (sat < 8'd70 ) 
+							  & (8'd126  < val) & (val < 8'd180 );
+
+   assign green_detect =  		(8'd59 < hue) & (hue < 8'd128 ) 
+							  & (8'd122 < sat) & (sat < 8'd183 )
+							  & (8'd43 < val) & (val < 8'd182 );
+								 
+	assign blue_detect = 		(8'd137 < hue) & (hue < 8'd155 ) 
+							  & (8'd117  < sat) & (sat < 8'd183 )
+							  & (8'd121  < val) & (val < 8'd230 );
+
+	assign yellow_detect = 		(8'd10  < hue) & (hue < 8'd42  )  
+							  & (8'd60 < sat) & (sat < 8'd120 )
+							  & (8'd118  < val) & (val < 8'd214 );
+
+	assign grey_detect = 		(8'd104  < hue) & (hue < 8'd174 ) 
+							  & (8'd106  < sat) & (sat < 8'd187 )
+							  & (8'd18  < val) & (val < 8'd80 );
 
 
 	

@@ -119,31 +119,31 @@ reg [10:0] y_x_min, y_y_min, y_x_max, y_y_max;
 always@(posedge clk) begin
 	if (in_valid) begin
 
-        if (red_detect & in_valid & y > 240) begin	//Update bounds when the pixel is red
+        if (red_detect & in_valid & y > 280) begin	//Update bounds when the pixel is red
             if (x < r_x_min) r_x_min <= x;
             if (x > r_x_max) r_x_max <= x;
             if (y < r_y_min) r_y_min <= y;
             r_y_max <= y;
         end
-        else if (blue_detect & in_valid & y > 240 ) begin	//Update bounds when the pixel is red
+        else if (blue_detect & in_valid & y > 280 ) begin	//Update bounds when the pixel is blue
             if (x < b_x_min) b_x_min <= x;
             if (x > b_x_max) b_x_max <= x;
             if (y < b_y_min) b_y_min <= y;
             b_y_max <= y;
         end 
-        else if (green_detect & in_valid & y > 240) begin	//Update bounds when the pixel is red
+        else if (green_detect & in_valid & y > 280) begin	//Update bounds when the pixel is green
             if (x < g_x_min) g_x_min <= x;
             if (x > g_x_max) g_x_max <= x;
             if (y < g_y_min) g_y_min <= y;
             g_y_max <= y;
         end
-        else if (yellow_detect & in_valid & y > 240) begin	//Update bounds when the pixel is red
+        else if (yellow_detect & in_valid & y > 280) begin	//Update bounds when the pixel is yellow
             if (x < y_x_min) y_x_min <= x;
             if (x > y_x_max) y_x_max <= x;
             if (y < y_y_min) y_y_min <= y;
             y_y_max <= y;
         end
-        else if (grey_detect& in_valid & y > 240) begin	//Update bounds when the pixel is red
+        else if (grey_detect& in_valid & y > 280) begin	//Update bounds when the pixel is grey
             if (x < gr_x_min) gr_x_min <= x;
             if (x > gr_x_max) gr_x_max <= x;
             if (y < gr_y_min) gr_y_min <= y;

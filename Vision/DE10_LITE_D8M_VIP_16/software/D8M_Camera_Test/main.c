@@ -32,11 +32,14 @@
 #define EEE_IMGPROC_BBCOL 3
 
 //Default Camera Settings
-#define EXPOSURE_INIT 0x001500
+#define EXPOSURE_INIT 0x001300
 #define EXPOSURE_STEP 0x100
-#define GAIN_INIT 0x120
-#define GAIN_STEP 0x080
+#define GAIN_INIT 0x180
+#define GAIN_STEP 0x020
 #define DEFAULT_LEVEL 3
+
+#define MWB_INIT 0x400
+#define MWB_STEP 0x50
 
 const int color = 5;
 const int coords = 4;
@@ -45,43 +48,45 @@ void calcLoc (int arr[color][coords]){
 	fprintf(stderr, "\nNew Calculation\n");
 	for (int i = 0; i< color; i++){
 		fprintf(stderr, "Colour %d " , i);
+		fprintf(stderr,"X = %d , Y  = %d ",arr[i][0],arr[i][1]);
+		fprintf(stderr,"X = %d , Y  = %d \n",arr[i][2],arr[i][3]);
 		float x, y;
-		alt_u16 xlength, ylength;
-		xlength = arr[i][0] -  arr[i][2];
-		ylength =   arr[i][1] -  arr[i][3];
-		fprintf(stderr, "X = %u , Y  = %u", xlength,  ylength);
+		int xlength, ylength;
+		xlength = - arr[i][0] +  arr[i][2];
+		ylength =   - arr[i][1] +  arr[i][3];
+		fprintf(stderr, "X = %d , Y  = %d", xlength,  ylength);
 
-		if(xlength > 250 || xlength < 10 || ylength > 100 || ylength < 10){
+		if(xlength > 100 || xlength < 10 || ylength > 100 || ylength < 10){
 			fprintf(stdout, "0.0,0.0;");
 			fprintf(stderr, "\tValue too big/small, ignoring and writing 0.0,0.0; \n");
 		} else if (xlength/ylength > 3 || ylength/xlength > 3){
 			fprintf(stdout, "0.0,0.0;");
 			fprintf(stderr, "\tRatio is weird, ignoring and writing 0.0,0.0; \n");
 		} else {
-			int xcenter = (xlength>>1) - 320;
+			int xcenter = (xlength>>1)+ arr[i][0] - 320;
 			int ycenter = arr[i][3];
 
-			//fprintf(stderr,"%d, %d\n", xcenter, ycenter);
-			x = -0.0001319007839 * xcenter * xcenter
-					+ -0.0002756128453 * ycenter * ycenter
-					+ -0.0003309974267 * xcenter * ycenter
-					+ 0.2261460065059 * xcenter
-					+ 0.2046395188248 * ycenter
-					+ -38.4362890776444;
+			fprintf(stderr,"%d, %d\n", xcenter, ycenter);
+			x = -0.0000267750706078921 * xcenter *xcenter
+			 + 0.000362236977958633 * ycenter * ycenter
+			 + -0.000514969732228439 * xcenter * ycenter
+			 + 0.281851572976718 * xcenter
+			 + -0.279845971987078 * ycenter
+			 + 53.1811991001082;
 
-
-			//fprintf(stderr,"x value = %f  ", x);
-			y = -0.0000799620130 * xcenter *xcenter
-					+ 0.0008369838055 * xcenter * ycenter
-					+ 0.0002124200987  * ycenter * ycenter
-					+ -0.0709987899919   * xcenter
-					+ -1.0073736606769   * ycenter
-					+ 317.1882407776660;
+			 y = 0.0000419454036771478 * xcenter *xcenter
+			 + 0.0012174042450394* ycenter * ycenter
+			 + 0.0000314129772376016 * xcenter * ycenter
+			 + -0.00883583925972652 * xcenter
+			 + -1.31880570162837 * ycenter
+			 + 381.614766741501;
 
 			//fprintf(stderr,"y value = %f \n", y);
 
-			fprintf(stdout, "%.2f,%.2f;",x, y);
-			fprintf(stdout, "\t Calculated Values for x is %.2f and y is %.2f;\n",x, y);
+
+				fprintf(stdout, "%.2f,%.2f;",x, y);
+				fprintf(stderr, "\t Calculated Values for x is %.2f and y is %.2f;\n",x, y);
+
 		}
 
 
@@ -129,13 +134,16 @@ int main()
 
 
     //////////////////////////////////////////////////////////
-    alt_u16 bb [5][4];
+    int bb [5][4];
     alt_u16 bin_level = DEFAULT_LEVEL;
     alt_u8  manual_focus_step = 10;
     alt_u16  current_focus = 300;
     int boundingBoxColour = 0;
     alt_u32 exposureTime = EXPOSURE_INIT;
     alt_u16 gain = GAIN_INIT;
+    alt_u16 MWBr = MWB_INIT;
+    alt_u16 MWBg = MWB_INIT;
+    alt_u16 MWBb = MWB_INIT;
 
     OV8865SetExposure(exposureTime);
     OV8865SetGain(gain);
@@ -236,6 +244,37 @@ int main()
         	   OV8865_FOCUS_Move_to(current_focus);
         	   fprintf(stderr,"\nFocus = %x ",current_focus);
        	   	   break;}
+
+       	   case 'i':{
+               MWBr += MWB_STEP;
+               OV8865SetRedMWBGain(MWBr);
+               fprintf(stderr, "\n red MWB = %x", MWBr);
+               break;}
+           case 'j':{
+               MWBr -= MWB_STEP;
+               OV8865SetRedMWBGain(MWBr);
+               fprintf(stderr, "\n red MWB = %x", MWBr);
+               break;}
+           case 'o':{
+               MWBg += MWB_STEP;
+               OV8865SetGreenMWBGain(MWBg);
+               fprintf(stderr, "\n green MWB = %x", MWBg);
+               break;}
+           case 'k':{
+               MWBg -= MWB_STEP;
+               OV8865SetGreenMWBGain(MWBg);
+               fprintf(stderr, "\n green MWB = %x", MWBg);
+               break;}
+           case 'p':{
+               MWBb += MWB_STEP;
+               OV8865SetBlueMWBGain(MWBb);
+               fprintf(stderr, "\n blue MWB = %x", MWBb);
+               break;}
+           case 'l':{
+               MWBb -= MWB_STEP;
+               OV8865SetBlueMWBGain(MWBb);
+               fprintf(stderr, "\n blue MWB = %x", MWBb);
+               break;}
        }
        // fprintf(stderr,"After Getting Char\n");
 

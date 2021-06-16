@@ -301,7 +301,7 @@ static SZ_CONFIG_T MipiCameraReg[] = {
 	     {0x6c,0x4d03, 0xff}, // temperature sensor
 	     {0x6c,0x4d04, 0xff}, // temperature sensor
 	     {0x6c,0x4d05, 0xff}, // temperature sensor
-	     {0x6c,0x5000, 0x16}, // LENC on, MWB on, BPC on, WPC on
+	     {0x6c,0x5000, 0x96}, // LENC on, MWB on, BPC on, WPC on
 	     {0x6c,0x5001, 0x01}, // BLC on
 	     {0x6c,0x5002, 0x08}, // vario pixel off
 	     {0x6c,0x5901, 0x00},
@@ -505,6 +505,59 @@ void OV8865SetGain(alt_u16 gain){
 
 
 	oc_i2c_uninit(I2C_OPENCORES_CAMERA_BASE);
+}
+void OV8865SetRedMWBGain(alt_u16 MWBgainR){
+    Focus_Released();
+ 
+    int bSuccess = oc_i2c_init_ex(I2C_OPENCORES_CAMERA_BASE, 50*1000*1000,400*1000); //I2C: 400K
+ 
+    if (!bSuccess)
+            fprintf(stderr,"failed to init MIPI- Camera i2c\r\n");
+ 
+    if (MWBgainR > 0x3FFF) MWBgainR = 0x3FFF;
+    if (MWBgainR < 0x0000) MWBgainR = 0x0000;
+ 
+    OV8865_write_cmos_sensor_8(0x5018, (MWBgainR >> 6) & 0xFF);
+    OV8865_write_cmos_sensor_8(0x5019, MWBgainR & 0x3F);
+ 
+    oc_i2c_uninit(I2C_OPENCORES_CAMERA_BASE);
+ 
+}
+ 
+void OV8865SetGreenMWBGain(alt_u16 MWBgainG){
+    Focus_Released();
+ 
+    int bSuccess = oc_i2c_init_ex(I2C_OPENCORES_CAMERA_BASE, 50*1000*1000,400*1000); //I2C: 400K
+ 
+    if (!bSuccess)
+            fprintf(stderr,"failed to init MIPI- Camera i2c\r\n");
+ 
+    if (MWBgainG > 0x3FFF) MWBgainG = 0x3FFF;
+    if (MWBgainG < 0x0000) MWBgainG = 0x0000;
+ 
+    OV8865_write_cmos_sensor_8(0x501A, (MWBgainG >> 6) & 0xFF);
+    OV8865_write_cmos_sensor_8(0x501B, MWBgainG & 0x3F);
+ 
+    oc_i2c_uninit(I2C_OPENCORES_CAMERA_BASE);
+ 
+}
+ 
+void OV8865SetBlueMWBGain(alt_u16 MWBgainB){
+    Focus_Released();
+ 
+    int bSuccess = oc_i2c_init_ex(I2C_OPENCORES_CAMERA_BASE, 50*1000*1000,400*1000); //I2C: 400K
+ 
+    if (!bSuccess)
+            fprintf(stderr,"failed to init MIPI- Camera i2c\r\n");
+ 
+    if (MWBgainB > 0x3FFF) MWBgainB = 0x3FFF;
+    if (MWBgainB < 0x0000) MWBgainB = 0x0000;
+ 
+    OV8865_write_cmos_sensor_8(0x501C, (MWBgainB >> 6) & 0xFF);
+    OV8865_write_cmos_sensor_8(0x501D, MWBgainB & 0x3F);
+ 
+    oc_i2c_uninit(I2C_OPENCORES_CAMERA_BASE);
+ 
 }
 
 alt_u32 OV8865ReadExposure(){
