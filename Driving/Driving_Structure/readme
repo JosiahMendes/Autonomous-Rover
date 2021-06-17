@@ -1,0 +1,4 @@
+Driving_structure.ino is the file where a command can be send to the rover in order to test it.
+optical_sensor.h and rover_navigation.h contain the header files-declaration of the functions
+optical_sensor.cpp and rover_navigation.h contain the definition of the functions.
+Driving subpart updated1 contains the latest general specifications of the rover.
